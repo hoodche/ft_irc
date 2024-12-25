@@ -6,12 +6,13 @@
 /*   By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/22 13:18:44 by igcastil          #+#    #+#             */
-/*   Updated: 2024/12/24 19:24:37 by igcastil         ###   ########.fr       */
+/*   Updated: 2024/12/25 23:31:05 by igcastil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <iostream>
 #include <cstring>
+#include <cstdlib> // for atoi
 #include "inc/Server.hpp"
 
 int	argsOk(int argc, char **argv)
@@ -57,7 +58,7 @@ int main(int argc, char **argv)
 	}
 	catch(const std::exception& e)
 	{
-		server.close_fds();
+		server.closeFds();
 		std::cout << e.what() << std::endl;
 	}
 }
