@@ -6,7 +6,7 @@
 #    By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/06/28 14:26:37 by igcastil          #+#    #+#              #
-#    Updated: 2024/12/25 23:40:46 by igcastil         ###   ########.fr        #
+#    Updated: 2024/12/25 23:56:05 by igcastil         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -17,7 +17,7 @@ FLAGS	= -Wall -Wextra -Werror -std=c++98
 all: $(NAME)
 
 $(NAME):
-	$(CC) $(FLAGS) main.cpp src/Server.cpp 
+	$(CC) $(FLAGS) main.cpp src/Server.cpp -o $(NAME)
 clean:
 	rm -rf $(NAME)
 
