@@ -6,7 +6,7 @@
 /*   By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/24 18:26:33 by igcastil          #+#    #+#             */
-/*   Updated: 2024/12/25 23:36:56 by igcastil         ###   ########.fr       */
+/*   Updated: 2024/12/26 11:43:49 by igcastil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,9 +17,19 @@
 #include <fcntl.h>     // for fcntl
 #include <iostream>
 #include <unistd.h> // for read
+#include <csignal> //for SIGINT and SIGQUIT
 
 Server::Server() : serverSocketFd(-1), clientSocketFd(-1)
 {
+}
+bool Server::signalReceived = false;
+void Server::SignalHandler(int signal)
+{
+	if(signal == SIGINT)
+		std::cout << std::endl << "Signal SIGINT Received!" << std::endl;
+	else if(signal == SIGQUIT)
+		std::cout << std::endl << "Signal SIGQUIT Received!" << std::endl;
+	Server::signalReceived = true;
 }
 
 void	Server::closeFds()
@@ -32,7 +42,6 @@ void	Server::closeFds()
 
 void Server::initSocket()
 {
-	char buffer[1000];
 	int socketOptionEnable = 1;
 	this->serverAddress.sin_family = AF_INET; //address family for IPv4 addresses
 	this->serverAddress.sin_port = htons(this->port);//port number. The htons() stands for "Host TO Network Short." It is used to convert a 16-bit number
@@ -52,18 +61,7 @@ void Server::initSocket()
 	if (listen(serverSocketFd, SOMAXCONN) == -1)//The listen function marks a socket as passive, meaning it will be used to accept incoming connection requests. 2nd arg is an int that defines the maximum length of the queue for pending connections (specifies how many connection requests can be queued up while the server is busy handling other connections)
 		throw(std::runtime_error("server can not listen on socket "));
 	std::cout << "Server listening on port " << this->port << std::endl;
-	socklen_t clientAddressLength = sizeof(clientAddress);
-	this->clientSocketFd = accept(serverSocketFd, (struct sockaddr *)&clientAddress, &clientAddressLength);//Await a connection on serverSocketFd. When a connection arrives, opens a new socket to communicate with it (returning its socket descriptor or -1 for errors),sets clientAddress (which is clientAddressLength bytes long) to the address of the connecting peer and clientAddressLength to the address's actual length.
-	if (this->clientSocketFd < 0)
-		throw(std::runtime_error("server could not accept incoming connection "));
-	ssize_t bytes_read = read(this->clientSocketFd, buffer, sizeof(buffer) - 1);//Reads 3rd arg bytes into buffer from clientSocketFd. Returns the number read, -1 for errors or 0 for EOF
-	if (bytes_read < 0)
-		throw(std::runtime_error("server could not read incoming message "));
-	buffer[bytes_read] = '\0'; // Null-terminate the buffer
-	std::cout << "Received message: " << buffer << std::endl;
 
-	// Close the client and server sockets
-	this->closeFds();
 }
 
 
@@ -73,22 +71,22 @@ void Server::init(int port, std::string password)
 	this->port = port;
 	this->initSocket();
 
-/* 	std::cout << GRE << "Server <" << server_fdsocket << "> Connected" << WHI << std::endl;
-	std::cout << "Waiting to accept a connection...\n";
-	while (Server::Signal == false)
+	//________TESTING BLOCK_________
+	char buffer[1000];
+	socklen_t clientAddressLength = sizeof(clientAddress);
+	this->clientSocketFd = accept(serverSocketFd, (struct sockaddr *)&clientAddress, &clientAddressLength);//Await a connection on serverSocketFd. When a connection arrives, opens a new socket to communicate with it (returning its socket descriptor or -1 for errors),sets clientAddress (which is clientAddressLength bytes long) to the address of the connecting peer and clientAddressLength to the address's actual length.
+	if (this->clientSocketFd < 0)
+		throw(std::runtime_error("server could not accept incoming connection "));
+	ssize_t bytes_read = read(this->clientSocketFd, buffer, sizeof(buffer) - 1);//Reads 3rd arg bytes into buffer from clientSocketFd. Returns the number read, -1 for errors or 0 for EOF
+	if (bytes_read < 0)
+		throw(std::runtime_error("server could not read incoming message "));
+	buffer[bytes_read] = '\0'; // Null-terminate the buffer
+	std::cout << "Received message: " << buffer << std::endl;
+	//________END TESTING BLOCK_________
+
+	while (Server::signalReceived == false)
 	{
-		if((poll(&fds[0],fds.size(),-1) == -1) && Server::Signal == false)
-			throw(std::runtime_error("poll() faild"));
-		for (size_t i = 0; i < fds.size(); i++)
-		{
-			if (fds[i].revents & POLLIN)
-			{
-				if (fds[i].fd == server_fdsocket)
-					this->accept_new_client();
-				else
-					this->reciveNewData(fds[i].fd);
-			}
-		}
+		//poll clients fds
 	}
-	close_fds(); */
+	this->closeFds();
 }

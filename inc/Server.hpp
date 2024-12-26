@@ -6,7 +6,7 @@
 /*   By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/24 18:35:03 by igcastil          #+#    #+#             */
-/*   Updated: 2024/12/25 23:26:54 by igcastil         ###   ########.fr       */
+/*   Updated: 2024/12/26 11:20:42 by igcastil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,7 @@
 class Server
 {
 private:
+	
 	int port;
 	std::string password;
 	int serverSocketFd, clientSocketFd;
@@ -30,13 +31,14 @@ private:
 	//struct pollfd new_cli;	//struct pollfd {
 								//					int fd;
 								//					short events; (common event flags include POLLIN: Data other than high-priority data can be read without blocking. POLLOUT: Normal data can be written without blocking. POLLERR: An error has occurred on the file descriptor.
-								//					short revents; (used by the poll function to return the events that actually occurred. This field is set by the poll function and is used to determine which file descriptors are ready for the specified operations)
-								//				};represents a file descriptors to be monitored for events using the poll function.
+								//					short revents; (output parameter, filled by the kernel with the events that actually occurred)
 public:
+	static bool signalReceived;
 	Server();
 	void closeFds();
 	void initSocket();
 	void init(int port, std::string pass);
+	static void SignalHandler(int signum);
 };
 
 #endif

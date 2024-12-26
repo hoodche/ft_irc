@@ -6,7 +6,7 @@
 /*   By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/22 13:18:44 by igcastil          #+#    #+#             */
-/*   Updated: 2024/12/25 23:31:05 by igcastil         ###   ########.fr       */
+/*   Updated: 2024/12/26 11:24:22 by igcastil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 #include <cstring>
 #include <cstdlib> // for atoi
 #include "inc/Server.hpp"
+#include <csignal> //for SIGINT and SIGQUIT
 
 int	argsOk(int argc, char **argv)
 {
@@ -52,6 +53,8 @@ int main(int argc, char **argv)
 	if (!argsOk(argc, argv))
 		return 1;
 	Server server;
+	signal(SIGINT, Server::SignalHandler);
+	signal(SIGQUIT, Server::SignalHandler);
 	try
 	{
 		server.init(atoi(argv[1]), static_cast<std::string>(argv[2]));
