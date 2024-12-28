@@ -6,7 +6,7 @@
 /*   By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/24 18:26:33 by igcastil          #+#    #+#             */
-/*   Updated: 2024/12/28 12:13:39 by igcastil         ###   ########.fr       */
+/*   Updated: 2024/12/28 12:23:05 by igcastil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,19 +73,6 @@ void Server::init(int port, std::string password)
 	this->password = password;
 	this->port = port;
 	this->initSocket();
-
-	//________TESTING BLOCK_________
-/* 	char buffer[1000];
-	socklen_t clientAddressLength = sizeof(clientAddress);
-	this->clientSocketFd = accept(listenSocketFd, (struct sockaddr *)&clientAddress, &clientAddressLength);//Await a connection on listenSocketFd. When a connection arrives, opens a new socket to communicate with it (returning its socket descriptor or -1 for errors),sets clientAddress (which is clientAddressLength bytes long) to the address of the connecting peer and clientAddressLength to the address's actual length.
-	if (this->clientSocketFd < 0)
-		throw(std::runtime_error("server could not accept incoming connection "));
-	ssize_t bytes_read = read(this->clientSocketFd, buffer, sizeof(buffer) - 1);//Reads 3rd arg bytes into buffer from clientSocketFd. Returns the number read, -1 for errors or 0 for EOF.The call to read() is blocking by default.(it will block the execution of the program until data is available to be read from the file descriptor or an error occurs. If there is no data available, the program will wait (block) until data becomes available.)
-	if (bytes_read < 0)
-		throw(std::runtime_error("server could not read incoming message "));
-	buffer[bytes_read] = '\0'; // Null-terminate the buffer
-	std::cout << "Received message: " << buffer << std::endl; */
-	//________END TESTING BLOCK_________
 
 	while (Server::signalReceived == false)
 	{
