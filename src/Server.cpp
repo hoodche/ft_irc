@@ -6,7 +6,7 @@
 /*   By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/24 18:26:33 by igcastil          #+#    #+#             */
-/*   Updated: 2024/12/28 14:42:02 by igcastil         ###   ########.fr       */
+/*   Updated: 2024/12/28 15:10:07 by igcastil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,7 +76,7 @@ void Server::init(int port, std::string password)
 
 	while (Server::signalReceived == false)
 	{
-		if(poll(&fds[0],fds.size(),-1) == -1)//3rd arg of poll() is the timeout in milliseconds (-1 means infinite timeout, that is to say, poll will block indefinitely until an event occurs!!!!)
+		if(poll(&fds[0],fds.size(),-1) == -1  && Server::signalReceived == false)//3rd arg of poll() is the timeout in milliseconds (-1 means infinite timeout, that is to say, poll will block indefinitely until an event occurs!!!!). We need to check on signalReceived because poll is blocked waiting for a fd to contain something to read and if SIGINT or SIGQUIT is received poll will return -1 (error) 
 			throw(std::runtime_error("server could not poll sockets fd's"));
 		for (size_t i = 0; i < this->fds.size(); i++)
 		{
@@ -84,8 +84,8 @@ void Server::init(int port, std::string password)
 			{
 				if (fds[i].fd == listenSocketFd)//socket with event is the server's listen socket, so there is an incoming connection
 					this->acceptClient();
-				//else
-					//read data from client
+				else
+					this->readFromFd(fds[i].fd);
 			}
 		}
 	}
@@ -116,4 +116,16 @@ void Server::acceptClient()
 	clients.push_back(cli); */
 	
 	std::cout << "a new client has been connected with socket fd " << connectedSocketFd << std::endl;
+}
+
+void Server::readFromFd(int clientConnectedfd)
+{
+	//________TESTING BLOCK_________
+	char buffer[1024];
+	ssize_t bytes_read = read(clientConnectedfd, buffer, sizeof(buffer) - 1);//choose between read and recv!! Reads 3rd arg bytes into buffer from clientSocketFd. Returns the number read, -1 for errors or 0 for EOF.The call to read() is blocking by default.(it will block the execution of the program until data is available to be read from the file descriptor or an error occurs. If there is no data available, the program will wait (block) until data becomes available.)
+	if (bytes_read < 0)
+		throw(std::runtime_error("server could not read incoming message "));
+	buffer[bytes_read] = '\0'; // Null-terminate the buffer
+	std::cout << "Received message: " << buffer << std::endl;
+	//________END TESTING BLOCK_________
 }

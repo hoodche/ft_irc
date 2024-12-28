@@ -6,7 +6,7 @@
 /*   By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/24 18:35:03 by igcastil          #+#    #+#             */
-/*   Updated: 2024/12/28 14:42:05 by igcastil         ###   ########.fr       */
+/*   Updated: 2024/12/28 14:52:36 by igcastil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,6 +44,7 @@ public:
 	void init(int port, std::string pass);
 	static void SignalHandler(int signum);
 	void acceptClient();
+	void readFromFd(int fd);
 };
 
 #endif
