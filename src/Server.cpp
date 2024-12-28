@@ -6,7 +6,7 @@
 /*   By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/24 18:26:33 by igcastil          #+#    #+#             */
-/*   Updated: 2024/12/28 12:23:05 by igcastil         ###   ########.fr       */
+/*   Updated: 2024/12/28 14:42:02 by igcastil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,7 +83,7 @@ void Server::init(int port, std::string password)
 			if (fds[i].revents & POLLIN)//bitwise AND - if evaluates to true only when a POLLIN event occurred on this fd
 			{
 				if (fds[i].fd == listenSocketFd)//socket with event is the server's listen socket, so there is an incoming connection
-					this->accept_new_client();
+					this->acceptClient();
 				//else
 					//read data from client
 			}
@@ -91,7 +91,7 @@ void Server::init(int port, std::string password)
 	}
 	this->closeFds();
 }
-void Server::accept_new_client()
+void Server::acceptClient()
 {
 	//Client cli;
 	memset(&clientAddress, 0, sizeof(clientAddress));

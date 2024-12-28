@@ -6,7 +6,7 @@
 /*   By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/24 18:35:03 by igcastil          #+#    #+#             */
-/*   Updated: 2024/12/28 13:03:38 by igcastil         ###   ########.fr       */
+/*   Updated: 2024/12/28 14:42:05 by igcastil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,7 +43,7 @@ public:
 	void initSocket();
 	void init(int port, std::string pass);
 	static void SignalHandler(int signum);
-	void accept_new_client();
+	void acceptClient();
 };
 
 #endif
