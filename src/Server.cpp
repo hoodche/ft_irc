@@ -6,7 +6,7 @@
 /*   By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/24 18:26:33 by igcastil          #+#    #+#             */
-/*   Updated: 2024/12/28 15:10:07 by igcastil         ###   ########.fr       */
+/*   Updated: 2024/12/28 15:48:18 by igcastil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -122,10 +122,10 @@ void Server::readFromFd(int clientConnectedfd)
 {
 	//________TESTING BLOCK_________
 	char buffer[1024];
-	ssize_t bytes_read = read(clientConnectedfd, buffer, sizeof(buffer) - 1);//choose between read and recv!! Reads 3rd arg bytes into buffer from clientSocketFd. Returns the number read, -1 for errors or 0 for EOF.The call to read() is blocking by default.(it will block the execution of the program until data is available to be read from the file descriptor or an error occurs. If there is no data available, the program will wait (block) until data becomes available.)
-	if (bytes_read < 0)
+	ssize_t bytesRead = recv(clientConnectedfd, buffer, sizeof(buffer) - 1 , 0);//Reads 3rd arg bytes into buffer from clientSocketFd. Returns the number read, -1 for errors or 0 for EOF.The call to recv() is blocking by default.(it will block the execution of the program until data is available to be read from the file descriptor or an error occurs. If there is no data available, the program will wait (block) until data becomes available.). But here is not blocking since clientConnectedfd was set to fcntl(connectedSocketFd, F_SETFL, O_NONBLOCK)
+	if (bytesRead < 0)
 		throw(std::runtime_error("server could not read incoming message "));
-	buffer[bytes_read] = '\0'; // Null-terminate the buffer
+	buffer[bytesRead] = '\0'; // Null-terminate the buffer
 	std::cout << "Received message: " << buffer << std::endl;
 	//________END TESTING BLOCK_________
 }
