@@ -6,15 +6,25 @@
 /*   By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/22 13:18:44 by igcastil          #+#    #+#             */
-/*   Updated: 2024/12/26 11:24:22 by igcastil         ###   ########.fr       */
+/*   Updated: 2025/01/01 20:40:01 by igcastil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <iostream>
 #include <cstring>
-#include <cstdlib> // for atoi
+#include <sstream> // for stringstream
 #include "inc/Server.hpp"
 #include <csignal> //for SIGINT and SIGQUIT
+
+/* since ++98 standard has no functions to convert string to numeric types we must do our own with string streams */
+
+int myStoi(const std::string& str)
+{
+	int num;
+	std::stringstream ss(str);
+	ss >> num;
+	return num;
+}
 
 int	argsOk(int argc, char **argv)
 {
@@ -30,7 +40,7 @@ int	argsOk(int argc, char **argv)
 			std::cout << "port number only with digits please" << std::endl;
 			return 0;
 		}
-		if(atoi(argv[1]) < 1024 || atoi(argv[1]) > 65535 )
+		if(myStoi(argv[1]) < 1024 || myStoi(argv[1]) > 65535 )
 		{
 			std::cout << "port number must be >= 1024 and <= 65535" << std::endl;
 			return 0;
@@ -57,7 +67,7 @@ int main(int argc, char **argv)
 	signal(SIGQUIT, Server::SignalHandler);
 	try
 	{
-		server.init(atoi(argv[1]), static_cast<std::string>(argv[2]));
+		server.init(myStoi(argv[1]), static_cast<std::string>(argv[2]));
 	}
 	catch(const std::exception& e)
 	{
