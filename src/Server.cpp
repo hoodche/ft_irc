@@ -6,7 +6,7 @@
 /*   By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/24 18:26:33 by igcastil          #+#    #+#             */
-/*   Updated: 2025/01/02 14:37:31 by igcastil         ###   ########.fr       */
+/*   Updated: 2025/01/02 14:54:10 by igcastil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,7 +46,7 @@ void Server::initSocket()
 	this->serverAddress.sin_port = htons(this->port);//port number. The htons() stands for "Host TO Network Short." It is used to convert a 16-bit number
 													//from host byte order (endianness) to network byte order. In most systems, the host byte order is little-endian,
 													//however, network protocols like TCP/IP use big-endian order.
-	this->serverAddress.sin_addr.s_addr = INADDR_ANY; //This macro allows the socket to bind to all available interfaces on the host machine. It is typically used in server applications to accept connections from any IP address.
+	this->serverAddress.sin_addr.s_addr = htonl(INADDR_ANY); //This macro allows the socket to bind to all available interfaces on the host machine. It is typically used in server applications to accept connections from any IP address. (htonl() is here for the sake of clarity since it is redundant due to macro INADDR_ANY expansion to 0)
 	this->listenSocketFd = socket(AF_INET, SOCK_STREAM, 0);	//SOCK_STREAM indicates that the socket type is stream-oriented, which means it provides a reliable, two-way, connection-based byte stream. This type of socket is typically used for TCP connections. TCP is a protocol that ensures data is delivered in the same order it was sent and without errors, making it suitable for applications that require reliable communication, such as web servers, email clients, and file transfer programs.
 														//3rd arg is the protocol to be used with the socket. Typically, this is set to 0 to use the default protocol for the specified address family (1st arg) and socket type (2nd arg)
 	if(listenSocketFd == -1)
