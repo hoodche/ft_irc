@@ -6,7 +6,7 @@
 /*   By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/24 18:26:33 by igcastil          #+#    #+#             */
-/*   Updated: 2024/12/28 15:48:18 by igcastil         ###   ########.fr       */
+/*   Updated: 2025/01/02 14:36:53 by igcastil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -93,9 +93,8 @@ void Server::init(int port, std::string password)
 }
 void Server::acceptClient()
 {
-	//Client cli;
 	memset(&clientAddress, 0, sizeof(clientAddress));
-	socklen_t clientAddressLength = sizeof(clientAddress);
+	socklen_t clientAddressLength = sizeof(clientAddress);//accepts an incoming connection on a listening socket. The accept function creates a new socket for each incoming connection, allowing the server to communicate with multiple clients simultaneously.2nd arg will be filled with the address of the connecting client
 	int connectedSocketFd = accept(this->listenSocketFd, (sockaddr *)&(clientAddress), &clientAddressLength);
 	if (connectedSocketFd == -1)
 		{
@@ -110,11 +109,7 @@ void Server::acceptClient()
 	this->connectedSocket.fd = connectedSocketFd;
 	this->connectedSocket.events = POLLIN;
 	this->connectedSocket.revents = 0;
-	this->fds.push_back(this->connectedSocket);
-/* 	cli.SetFd(incofd);
-	cli.setIpAdd(inet_ntoa((cliadd.sin_addr)));
-	clients.push_back(cli); */
-	
+	this->fds.push_back(this->connectedSocket);	
 	std::cout << "a new client has been connected with socket fd " << connectedSocketFd << std::endl;
 }
 
