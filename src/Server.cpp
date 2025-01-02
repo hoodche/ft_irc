@@ -6,7 +6,7 @@
 /*   By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/24 18:26:33 by igcastil          #+#    #+#             */
-/*   Updated: 2025/01/02 14:36:53 by igcastil         ###   ########.fr       */
+/*   Updated: 2025/01/02 14:37:31 by igcastil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -94,8 +94,8 @@ void Server::init(int port, std::string password)
 void Server::acceptClient()
 {
 	memset(&clientAddress, 0, sizeof(clientAddress));
-	socklen_t clientAddressLength = sizeof(clientAddress);//accepts an incoming connection on a listening socket. The accept function creates a new socket for each incoming connection, allowing the server to communicate with multiple clients simultaneously.2nd arg will be filled with the address of the connecting client
-	int connectedSocketFd = accept(this->listenSocketFd, (sockaddr *)&(clientAddress), &clientAddressLength);
+	socklen_t clientAddressLength = sizeof(clientAddress);
+	int connectedSocketFd = accept(this->listenSocketFd, (sockaddr *)&(clientAddress), &clientAddressLength);//accepts an incoming connection on a listening socket. The accept function creates a new socket for each incoming connection, allowing the server to communicate with multiple clients simultaneously.2nd arg will be filled with the address of the connecting client
 	if (connectedSocketFd == -1)
 		{
 			std::cout << "server could not accept incoming connection" << std::endl; 
