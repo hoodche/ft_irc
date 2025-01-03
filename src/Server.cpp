@@ -6,7 +6,7 @@
 /*   By: nvillalt <nvillalt@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/24 18:26:33 by igcastil          #+#    #+#             */
-/*   Updated: 2025/01/03 20:04:03 by nvillalt         ###   ########.fr       */
+/*   Updated: 2025/01/03 22:05:34 by nvillalt         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -128,10 +128,8 @@ void Server::readFromFd(int clientConnectedfd)
 		std::cout << "Client has closed the connection" << std::endl;
 		close(clientConnectedfd);//server closes socket belonging to connection closed by client
         
-		for (size_t i = 0; i < clients.size(); ++i)
-        {
-            if (clients[i].getSocketFd() == clientConnectedfd)
-            {
+		for (size_t i = 0; i < clients.size(); i++) {
+            if (clients[i].getSocketFd() == clientConnectedfd) {
                 clients.erase(clients.begin() + i);
                 break;
             }
@@ -151,6 +149,7 @@ void Server::readFromFd(int clientConnectedfd)
 		buffer[bytesRead] = '\0'; // Null-terminate the buffer
 		std::cout << "Received message from fd " << clientConnectedfd << ": " << buffer << std::endl;
 		this->printClients();
+		handler.parseCommand(buffer, clients);
 	}
 	//________END TESTING BLOCK_________
 }

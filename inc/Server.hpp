@@ -6,7 +6,7 @@
 /*   By: nvillalt <nvillalt@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/24 18:35:03 by igcastil          #+#    #+#             */
-/*   Updated: 2025/01/03 20:12:07 by nvillalt         ###   ########.fr       */
+/*   Updated: 2025/01/03 22:07:19 by nvillalt         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,6 @@
 #include <netinet/in.h>
 #include <vector>
 #include <poll.h> // for struct pollfd
-
 
 class Server
 {
