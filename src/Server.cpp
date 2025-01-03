@@ -6,7 +6,7 @@
 /*   By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/24 18:26:33 by igcastil          #+#    #+#             */
-/*   Updated: 2025/01/02 14:54:10 by igcastil         ###   ########.fr       */
+/*   Updated: 2025/01/03 10:46:23 by igcastil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -95,7 +95,7 @@ void Server::acceptClient()
 {
 	memset(&clientAddress, 0, sizeof(clientAddress));
 	socklen_t clientAddressLength = sizeof(clientAddress);
-	int connectedSocketFd = accept(this->listenSocketFd, (sockaddr *)&(clientAddress), &clientAddressLength);//accepts an incoming connection on a listening socket. The accept function creates a new socket for each incoming connection, allowing the server to communicate with multiple clients simultaneously.2nd arg will be filled with the address of the connecting client
+	int connectedSocketFd = accept(this->listenSocketFd, (sockaddr *)&clientAddress, &clientAddressLength);//accepts an incoming connection on a listening socket. The accept function creates a new socket for each incoming connection, allowing the server to communicate with multiple clients simultaneously.2nd arg will be filled with the address of the connecting client
 	if (connectedSocketFd == -1)
 		{
 			std::cout << "server could not accept incoming connection" << std::endl; 
@@ -109,8 +109,8 @@ void Server::acceptClient()
 	this->connectedSocket.fd = connectedSocketFd;
 	this->connectedSocket.events = POLLIN;
 	this->connectedSocket.revents = 0;
-	this->fds.push_back(this->connectedSocket);	
-	std::cout << "a new client has been connected with socket fd " << connectedSocketFd << std::endl;
+	this->fds.push_back(this->connectedSocket);
+	std::cout << "a new client from IP "<< inet_ntoa(clientAddress.sin_addr) << " and port " << ntohs(clientAddress.sin_port) << " has been connected with socket fd " << connectedSocketFd << std::endl;
 }
 
 void Server::readFromFd(int clientConnectedfd)
