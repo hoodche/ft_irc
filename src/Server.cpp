@@ -6,7 +6,7 @@
 /*   By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/24 18:26:33 by igcastil          #+#    #+#             */
-/*   Updated: 2025/01/03 10:46:23 by igcastil         ###   ########.fr       */
+/*   Updated: 2025/01/03 11:30:53 by igcastil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -120,7 +120,23 @@ void Server::readFromFd(int clientConnectedfd)
 	ssize_t bytesRead = recv(clientConnectedfd, buffer, sizeof(buffer) - 1 , 0);//Reads 3rd arg bytes into buffer from clientSocketFd. Returns the number read, -1 for errors or 0 for EOF.The call to recv() is blocking by default.(it will block the execution of the program until data is available to be read from the file descriptor or an error occurs. If there is no data available, the program will wait (block) until data becomes available.). But here is not blocking since clientConnectedfd was set to fcntl(connectedSocketFd, F_SETFL, O_NONBLOCK)
 	if (bytesRead < 0)
 		throw(std::runtime_error("server could not read incoming message "));
-	buffer[bytesRead] = '\0'; // Null-terminate the buffer
-	std::cout << "Received message: " << buffer << std::endl;
+	else if (bytesRead == 0)// Client has closed the connection!!
+	{
+		std::cout << "Client has closed the connection" << std::endl;
+		close(clientConnectedfd);//server closes socket belonging to connection closed by client
+		for (size_t i = 0; i < this->fds.size(); i++)// search through fds vector to erase the closed socket from the pollfd array
+		{
+			if (this->fds[i].fd == clientConnectedfd)
+			{
+				this->fds.erase(this->fds.begin() + i);
+				break;
+			}
+		}
+	}
+	else
+	{
+		buffer[bytesRead] = '\0'; // Null-terminate the buffer
+		std::cout << "Received message: " << buffer << std::endl;
+	}
 	//________END TESTING BLOCK_________
 }
