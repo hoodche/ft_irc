@@ -3,14 +3,15 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+        */
+/*   By: nvillalt <nvillalt@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/24 18:26:33 by igcastil          #+#    #+#             */
-/*   Updated: 2025/01/03 11:30:53 by igcastil         ###   ########.fr       */
+/*   Updated: 2025/01/03 20:04:03 by nvillalt         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../inc/Server.hpp"
+#include "../inc/Handler.hpp"
 #include <arpa/inet.h> // for htons
 #include <stdexcept>   // for std::runtime_error
 #include <poll.h>      // for POLLIN
@@ -110,6 +111,7 @@ void Server::acceptClient()
 	this->connectedSocket.events = POLLIN;
 	this->connectedSocket.revents = 0;
 	this->fds.push_back(this->connectedSocket);
+	clients.push_back(Client(connectedSocketFd)); // Adds new accepted client to the end of the vector
 	std::cout << "a new client from IP "<< inet_ntoa(clientAddress.sin_addr) << " and port " << ntohs(clientAddress.sin_port) << " has been connected with socket fd " << connectedSocketFd << std::endl;
 }
 
@@ -122,8 +124,19 @@ void Server::readFromFd(int clientConnectedfd)
 		throw(std::runtime_error("server could not read incoming message "));
 	else if (bytesRead == 0)// Client has closed the connection!!
 	{
+		// Move all of this to 1 function -> handle dc
 		std::cout << "Client has closed the connection" << std::endl;
 		close(clientConnectedfd);//server closes socket belonging to connection closed by client
+        
+		for (size_t i = 0; i < clients.size(); ++i)
+        {
+            if (clients[i].getSocketFd() == clientConnectedfd)
+            {
+                clients.erase(clients.begin() + i);
+                break;
+            }
+        }
+		
 		for (size_t i = 0; i < this->fds.size(); i++)// search through fds vector to erase the closed socket from the pollfd array
 		{
 			if (this->fds[i].fd == clientConnectedfd)
@@ -136,7 +149,17 @@ void Server::readFromFd(int clientConnectedfd)
 	else
 	{
 		buffer[bytesRead] = '\0'; // Null-terminate the buffer
-		std::cout << "Received message: " << buffer << std::endl;
+		std::cout << "Received message from fd " << clientConnectedfd << ": " << buffer << std::endl;
+		this->printClients();
 	}
 	//________END TESTING BLOCK_________
+}
+
+void Server::printClients() const
+{
+    std::cout << "Currently connected clients:" << std::endl;
+    for (size_t i = 0; i < clients.size(); ++i)
+    {
+        std::cout << "Client " << i + 1 << ": Socket FD = " << clients[i].getSocketFd() << std::endl;
+    }
 }

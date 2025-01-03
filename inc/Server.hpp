@@ -3,16 +3,18 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+        */
+/*   By: nvillalt <nvillalt@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/24 18:35:03 by igcastil          #+#    #+#             */
-/*   Updated: 2024/12/28 14:52:36 by igcastil         ###   ########.fr       */
+/*   Updated: 2025/01/03 20:12:07 by nvillalt         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
+#include "../inc/Client.hpp"
+#include "../inc/Handler.hpp"
 #include <string>
 #include <netinet/in.h>
 #include <vector>
@@ -22,7 +24,8 @@
 class Server
 {
 private:
-	
+	std::vector<Client>	clients;
+	Handler				handler;
 	int port;
 	std::string password;
 	int listenSocketFd;
@@ -45,6 +48,7 @@ public:
 	static void SignalHandler(int signum);
 	void acceptClient();
 	void readFromFd(int fd);
+	void printClients(void) const;
 };
 
 #endif
