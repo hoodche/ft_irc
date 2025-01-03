@@ -33,7 +33,7 @@ int main()
     }
 	while (1) {
         if (fgets(input, sizeof(input), stdin) == NULL)
-            break;
+            break;//client finished with  CTRL + D
 		if (write(sockfd, input, strlen(input)) < 0)
 		{
 			printf("write error");
