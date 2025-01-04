@@ -9,7 +9,7 @@
 #include <vector>
 #include <map>
 
-typedef void (*cmdHandler)(std::string, std::vector<Client>&);
+typedef void (*cmdHandler)(std::string, Client &);
 
 class Handler {
 	private:
@@ -18,7 +18,7 @@ class Handler {
 
 	public:
 		Handler(void);
-		void parseCommand(std::string input, std::vector<Client> &clients);
+		void parseCommand(std::string input, std::vector<Client> &clients, int fd);
 };
 
 #endif
