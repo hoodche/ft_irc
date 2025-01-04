@@ -66,7 +66,7 @@ void handleUserCmd(std::string input, Client &client) {
 // }
 
 void sendResponse(std::string message, int clientFd) {
-	ssize_t bytesSent = send(clientFd, message.c_str(), message.size(), 0); // Flag 0 
+	ssize_t bytesSent = send(clientFd, message.c_str(), message.size(), 0); // Flag 0 = Default behaviour. man send to see further behaviour.
 	if (bytesSent == -1) {
 		std::cerr << "Failed to send response to client" << std::endl;
 	} else {
