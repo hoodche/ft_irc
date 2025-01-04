@@ -149,7 +149,7 @@ void Server::readFromFd(int clientConnectedfd)
 		buffer[bytesRead] = '\0'; // Null-terminate the buffer
 		std::cout << "Received message from fd " << clientConnectedfd << ": " << buffer << std::endl;
 		this->printClients();
-		handler.parseCommand(buffer, clients);
+		handler.parseCommand(buffer, clients, clientConnectedfd);
 	}
 	//________END TESTING BLOCK_________
 }
