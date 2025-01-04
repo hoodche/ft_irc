@@ -13,7 +13,8 @@
 std::string	toUpperCase(std::string str);
 
 // Parser functions
-void handleCapCmd(std::string input, std::vector<Client> &clients);
+void handleUserCmd(std::string input, Client &client);
+void handleNickCmd(std::string input, Client &client);
 
 // Responding to client
 void sendResponse(std::string message, int clientFd);
