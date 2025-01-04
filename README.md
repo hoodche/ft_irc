@@ -2,4 +2,15 @@ Server class in progress. So far it is accepting connections. Compile with make.
 
 A simple client for testing purposes can be compiled with 'make client' and executed with './client'. It will send to the server (ip 127.0.0.1 and port 1234) whatever is typed. Client is finished with CTRL + D
 
-TO DO: start Client class to track every connected "client" (connection). 
+### WEECHAT USAGE
+IRC Client being used at the time: `weechat`.
+
+To Install: `sudo apt-get install weechat`
+To configure localhost server: 
+	1. Open weechat with the `weechat` command on terminal
+	2. Run the following command: `/server add localhost 127.0.0.1/1234`
+	3. TO TEST PASSWORD: /set irc.server.localhost.password "pass" -> Allegedly, my client connects with no password for some reason
+
+DONE: Client class started. Handler class started. NICK, USER and CAP LS 302 commands initially managed.
+
+TO DO: Polish code and check corner cases. Implement PASS, PING, JOIN commands.
