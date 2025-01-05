@@ -9,7 +9,7 @@ void Handler::initCmdMap(void) {
 	// cmdMap["JOIN"] = &handleJoinCmd;
 	cmdMap["USER"] = &handleUserCmd;
 	cmdMap["NICK"] = &handleNickCmd;
-	// cmdMap["PING"] = &handlePingCmd;
+	cmdMap["PING"] = &handlePingCmd;
 }
 
 void Handler::parseCommand(std::string input, std::vector<Client> &clients, int fd){
@@ -55,8 +55,7 @@ void Handler::parseCommand(std::string input, std::vector<Client> &clients, int 
 
 // Pointers to functions methods
 void Handler::handleUserCmd(std::string input, Client &client) {
-     std::cout << "Handling USER command: [" << input << "]" << std::endl;
-	size_t space = input.find(' ');
+    size_t space = input.find(' ');
     if (space == std::string::npos) {
         std::cerr << "Invalid USER command format" << std::endl;
         return;
@@ -69,16 +68,14 @@ void Handler::handleUserCmd(std::string input, Client &client) {
     if (client.getUsername() == "") {
     	client.setUsername(username);
         client.setRegistered(true);
-		std::cout << "PRINT: " << message << std::endl;
+		//std::cout << "PRINT: " << message << std::endl;
 		sendResponse(message, client.getSocketFd());
 	}
-    std::cout << "Debug print: Client fd " << client.getSocketFd() << " set user to " << username << std::endl;
+    //std::cout << "Debug print: Client fd " << client.getSocketFd() << " set user to " << username << std::endl;
 }
 
 void Handler::handleNickCmd(std::string input, Client &client) {
-    std::cout << "Handling NICK command: [" << input << "]" << std::endl;
-
-	size_t space = input.find(' ');
+    size_t space = input.find(' ');
     if (space == std::string::npos) {
         std::cerr << "Invalid NICK command format" << std::endl;
         return;
@@ -89,14 +86,30 @@ void Handler::handleNickCmd(std::string input, Client &client) {
         nickname.erase(nickname.size() - 1);
     }
     client.setNickname(nickname);
-    std::cout << "Debug print: Client fd " << client.getSocketFd() << " set nickname to " << nickname << std::endl;
+    //std::cout << "Debug print: Client fd " << client.getSocketFd() << " set nickname to " << nickname << std::endl;
+}
+
+void Handler::handlePingCmd(std::string input, Client &client) {
+    size_t space = input.find(' ');
+    if (space == std::string::npos) {
+        std::cerr << "Invalid NICK command format" << std::endl;
+        return;
+    }
+
+    std::string pongResponse = input.substr(space + 1);
+    	if (!pongResponse.empty() && pongResponse[pongResponse.size() - 1] == '\n') {
+        pongResponse.erase(pongResponse.size() - 1);
+    }
+
+    std::string message = "PONG " + pongResponse;
+    sendResponse(message, client.getSocketFd());
 }
 
 // Utils
 void Handler::sendResponse(std::string message, int clientFd) {
 	ssize_t bytesSent = send(clientFd, message.c_str(), message.size(), 0); // Flag 0 = Default behaviour. man send to see further behaviour.
 	if (bytesSent == -1) {
-		std::cerr << "Failed to send response to client" << std::endl;
+		std::cout << "Failed to send response to client" << std::endl;
 	} else {
 		// Debug Print
 		std::cout << "Response sent to client: " << message << std::endl;

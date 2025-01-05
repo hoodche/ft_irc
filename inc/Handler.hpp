@@ -28,6 +28,7 @@ class Handler {
 		// Methods for pointers to function
 		static void handleUserCmd(std::string input, Client &client);
 		static void handleNickCmd(std::string input, Client &client);
+		static void handlePingCmd(std::string input, Client &client);
 };
 
 #endif
