@@ -55,6 +55,7 @@ void Handler::parseCommand(std::string input, std::vector<Client> &clients, int 
 
 // Pointers to functions methods
 void Handler::handleUserCmd(std::string input, Client &client) {
+     std::cout << "Handling USER command: [" << input << "]" << std::endl;
 	size_t space = input.find(' ');
     if (space == std::string::npos) {
         std::cerr << "Invalid USER command format" << std::endl;
@@ -65,20 +66,18 @@ void Handler::handleUserCmd(std::string input, Client &client) {
 	if (!username.empty() && username[username.size() - 1] == '\n')
         username.erase(username.size() - 1);
     std::string message = ":ircserv 001 " + client.getNickname() + " :Welcome to our IRC server!\n";
-	if (client.getUsername() == "" && client.isRegistered() == false) {
-        // Debut Print
-        std::cout << "Please, first finish user registration." << std::endl;
-        sendResponse("Please, first finish user registration.", client.getSocketFd());
-    } else if (client.getUsername() == "") {
+    if (client.getUsername() == "") {
     	client.setUsername(username);
         client.setRegistered(true);
 		std::cout << "PRINT: " << message << std::endl;
 		sendResponse(message, client.getSocketFd());
 	}
-    // std::cout << "Debug print: Client fd " << client.getSocketFd() << " set user to " << username << std::endl;
+    std::cout << "Debug print: Client fd " << client.getSocketFd() << " set user to " << username << std::endl;
 }
 
 void Handler::handleNickCmd(std::string input, Client &client) {
+    std::cout << "Handling NICK command: [" << input << "]" << std::endl;
+
 	size_t space = input.find(' ');
     if (space == std::string::npos) {
         std::cerr << "Invalid NICK command format" << std::endl;
@@ -90,7 +89,7 @@ void Handler::handleNickCmd(std::string input, Client &client) {
         nickname.erase(nickname.size() - 1);
     }
     client.setNickname(nickname);
-    // std::cout << "Debug print: Client fd " << client.getSocketFd() << " set nickname to " << nickname << std::endl;
+    std::cout << "Debug print: Client fd " << client.getSocketFd() << " set nickname to " << nickname << std::endl;
 }
 
 // Utils

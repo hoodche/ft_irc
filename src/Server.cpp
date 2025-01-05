@@ -130,7 +130,9 @@ void Server::readFromFd(int clientConnectedfd)
 	else
 	{
 		buffer[bytesRead] = '\0'; // Null-terminate the buffer
+		std::cout << "Raw buffer received: [" << buffer << "]" << std::endl;
 		std::string message = trimMessage(buffer);
+		std::cout << "Trimmed buffer received: [" << message << "]" << std::endl;
 		Client *client = Client::findClientByFd(clientConnectedfd, clients);
 		// Debug print
 		std::cout << "Received message from fd " << clientConnectedfd << ": " << buffer << std::endl;
@@ -141,6 +143,7 @@ void Server::readFromFd(int clientConnectedfd)
 				// std::cout << "Extracted PWD: [" << pwd << "], Expected PWD: [" << this->password << "]" << std::endl;
 				if (pwd == this-> password) {
 					client->setVerified(true);
+					std::cout << "IS THE CLIENT BOOL CHANGED? " << client->isVerified() << std::endl;
 					// Debug print	
 					std::cout << "Client with fd " << clientConnectedfd << " password correct" << std::endl;
 				} else {
@@ -148,11 +151,12 @@ void Server::readFromFd(int clientConnectedfd)
 					std::cout << "Unauthorized client attempting connection. Closing fd..." << std::endl;
 					disconnectClients(clientConnectedfd);
 				}
-			} else {
-				// Debug print
-				this->printClients();
-				handler.parseCommand(buffer, clients, clientConnectedfd);
-			}
+			} 
+		}
+		if (client->isVerified()) {
+			// Debug print
+			this->printClients();
+			handler.parseCommand(buffer, clients, clientConnectedfd);
 		}
 	}
 }
