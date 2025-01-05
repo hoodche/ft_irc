@@ -13,7 +13,7 @@ void Handler::initCmdMap(void) {
 }
 
 void Handler::parseCommand(std::string input, std::vector<Client> &clients, int fd){
-	// Protect empty string input
+	// Protect empty string input -> Check
 	if (input.empty())
         throw std::invalid_argument("Empty command received");
 	std::string	command;
@@ -23,7 +23,7 @@ void Handler::parseCommand(std::string input, std::vector<Client> &clients, int 
         return;
     }
 
-	// Remove leading '/' if present when receiving commands -> REVIEW!!
+	// Remove leading '/' if present when receiving commands -> Check
     if (!input.empty() && input[0] == '/') {
         input = input.substr(1);
     }
@@ -51,5 +51,60 @@ void Handler::parseCommand(std::string input, std::vector<Client> &clients, int 
     } else {
         std::cout << "Unknown command: " << command << std::endl;
     }
+}
+
+// Pointers to functions methods
+void Handler::handleUserCmd(std::string input, Client &client) {
+	size_t space = input.find(' ');
+    if (space == std::string::npos) {
+        std::cerr << "Invalid USER command format" << std::endl;
+        return;
+    }
+
+	std::string username = input.substr(space + 1);
+	if (!username.empty() && username[username.size() - 1] == '\n') {
+        username.erase(username.size() - 1);
+    }
+    std::string message = ":ircserv 001 " + client.getNickname() + " :Welcome to our IRC server!\n";
+	if (client.getUsername() == "") {
+    	client.setUsername(username);
+		std::cout << "PRINT: " << message << std::endl;
+		sendResponse(message, client.getSocketFd());
+	}
+    // std::cout << "Debug print: Client fd " << client.getSocketFd() << " set user to " << username << std::endl;
+}
+
+void Handler::handleNickCmd(std::string input, Client &client) {
+	size_t space = input.find(' ');
+    if (space == std::string::npos) {
+        std::cerr << "Invalid NICK command format" << std::endl;
+        return;
+    }
+
+    std::string nickname = input.substr(space + 1);
+	if (!nickname.empty() && nickname[nickname.size() - 1] == '\n') {
+        nickname.erase(nickname.size() - 1);
+    }
+    client.setNickname(nickname);
+    // std::cout << "Debug print: Client fd " << client.getSocketFd() << " set nickname to " << nickname << std::endl;
+}
+
+// Utils
+void Handler::sendResponse(std::string message, int clientFd) {
+	ssize_t bytesSent = send(clientFd, message.c_str(), message.size(), 0); // Flag 0 = Default behaviour. man send to see further behaviour.
+	if (bytesSent == -1) {
+		std::cerr << "Failed to send response to client" << std::endl;
+	} else {
+		// Debug Print
+		std::cout << "Response sent to client: " << message << std::endl;
+	}
+}
+
+std::string Handler::toUpperCase(std::string str) {
+    std::string	ret = str;
+
+	for (size_t i = 0; i < str.size(); i++)
+		ret[i] = toupper(ret[i]);
+	return ret;
 }
 
