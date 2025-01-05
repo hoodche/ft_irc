@@ -1,14 +1,14 @@
-
 #include "../inc/Handler.hpp"
+#include <algorithm>
 
 Handler::Handler(void) {
 	initCmdMap(); // Initialise the command map
 }
 
 void Handler::initCmdMap(void) {
-	// cmdMap["JOIN"] = &handleJoinCmd;
 	cmdMap["USER"] = &handleUserCmd;
 	cmdMap["NICK"] = &handleNickCmd;
+	cmdMap["JOIN"] = &handleJoinCmd;
 	// cmdMap["PING"] = &handlePingCmd;
 }
 
@@ -53,3 +53,35 @@ void Handler::parseCommand(std::string input, std::vector<Client> &clients, int 
     }
 }
 
+//JOIN command
+
+void Handler::handleJoinCmd(std::string input, Client &client) {
+	(void)client; //-Werror
+	//Find a space to check format
+	size_t space = input.find(' ');
+    if (space == std::string::npos) {
+        std::cerr << "Invalid JOIN command format" << std::endl;
+        return;
+    }
+
+	//Check if the name of the channel begins with #
+    std::string::iterator channelIterator = std::find(input.begin(), input.end(), ' ') + 1;
+	while (*channelIterator != '#' && channelIterator != input.end())
+		channelIterator++;
+	if (*channelIterator != '#'){
+        std::cerr << "Invalid JOIN command format" << std::endl;
+		return;
+	}
+
+	//Get name of the channel
+    std::string::iterator beginChCommand = channelIterator;
+	while (*channelIterator != ' ' && channelIterator != input.end())
+		channelIterator++;
+	std::string channelName(beginChCommand, channelIterator);
+	if (channelName == "#"){
+        std::cerr << "Invalid JOIN command format" << std::endl;
+		return;
+	} //TODO check ###########
+	std::cout << "Correct channel" << std::endl;
+	return;
+}
