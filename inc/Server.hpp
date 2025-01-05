@@ -48,6 +48,7 @@ public:
 	void acceptClient();
 	void readFromFd(int fd);
 	void printClients(void) const;
+	static std::string trimMessage(std::string str);
 };
 
 #endif

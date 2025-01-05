@@ -1,9 +1,13 @@
 
 #include "../inc/Client.hpp"
 
-Client::Client(void): fd(-1), registered(false), oper(false), nick(""), username("") {}
+Client::Client(void): 
+	fd(-1), verified(false), registered(false), 
+	oper(false), nick(""), username("") {}
 
-Client::Client(int receivedFd): fd(receivedFd), registered(false), oper(false), nick(""), username("") {}
+Client::Client(int receivedFd):
+	fd(receivedFd), verified(false) ,registered(false),
+	oper(false), nick(""), username("") {}
 
 Client::~Client(void) {}
 
@@ -19,6 +23,14 @@ std::string Client::getUsername(void) const {
 	return this->username;
 }
 
+bool Client::isVerified(void) const {
+	return this->verified;
+}
+
+bool Client::isRegistered(void) const {
+	return this->registered;
+}
+
 void Client::setNickname(std::string nickname) {
 	nick = nickname;
 	return ;
@@ -26,6 +38,16 @@ void Client::setNickname(std::string nickname) {
 
 void Client::setUsername(std::string user) {
 	username = user;
+	return ;
+}
+
+void Client::setVerified(bool tf) {
+	verified = tf;
+	return ;
+}
+
+void Client::setRegistered(bool tf) {
+	registered = tf;
 	return ;
 }
 

@@ -9,11 +9,11 @@
 class Client {
 	private:
 		int 		fd;
+		bool		verified;
 		bool		registered;
 		bool		oper;
 		std::string	nick;
 		std::string	username;
-		std::string	password; // Needed?
 
 	public:
 		Client(void);
@@ -24,10 +24,14 @@ class Client {
 		int	getSocketFd(void) const;
 		std::string	getNickname(void) const;
 		std::string getUsername(void) const;
+		bool isVerified(void) const;
+		bool isRegistered(void) const;
 
 		// Setters
 		void setNickname(std::string nickname);
 		void setUsername(std::string user);
+		void setVerified(bool tf);
+		void setRegistered(bool tf);
 
 		// Methods
 		static Client *findClientByFd(int fd, std::vector<Client> &clients);

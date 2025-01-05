@@ -62,12 +62,16 @@ void Handler::handleUserCmd(std::string input, Client &client) {
     }
 
 	std::string username = input.substr(space + 1);
-	if (!username.empty() && username[username.size() - 1] == '\n') {
+	if (!username.empty() && username[username.size() - 1] == '\n')
         username.erase(username.size() - 1);
-    }
     std::string message = ":ircserv 001 " + client.getNickname() + " :Welcome to our IRC server!\n";
-	if (client.getUsername() == "") {
+	if (client.getUsername() == "" && client.isRegistered() == false) {
+        // Debut Print
+        std::cout << "Please, first finish user registration." << std::endl;
+        sendResponse("Please, first finish user registration.", client.getSocketFd());
+    } else if (client.getUsername() == "") {
     	client.setUsername(username);
+        client.setRegistered(true);
 		std::cout << "PRINT: " << message << std::endl;
 		sendResponse(message, client.getSocketFd());
 	}
