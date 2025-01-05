@@ -125,23 +125,7 @@ void Server::readFromFd(int clientConnectedfd)
 	{
 		// Move all of this to 1 function -> handle dc
 		std::cout << "Client has closed the connection" << std::endl;
-		close(clientConnectedfd);//server closes socket belonging to connection closed by client
-        
-		for (size_t i = 0; i < clients.size(); i++) {
-            if (clients[i].getSocketFd() == clientConnectedfd) {
-                clients.erase(clients.begin() + i);
-                break;
-            }
-        }
-		
-		for (size_t i = 0; i < this->fds.size(); i++)// search through fds vector to erase the closed socket from the pollfd array
-		{
-			if (this->fds[i].fd == clientConnectedfd)
-			{
-				this->fds.erase(this->fds.begin() + i);
-				break;
-			}
-		}
+		disconnectClients(clientConnectedfd);
 	}
 	else
 	{
@@ -162,23 +146,7 @@ void Server::readFromFd(int clientConnectedfd)
 				} else {
 					// Debug Print. Same as above, move to function.
 					std::cout << "Unauthorized client attempting connection. Closing fd..." << std::endl;
-					close(clientConnectedfd);//server closes socket belonging to connection closed by client
-				
-					for (size_t i = 0; i < clients.size(); i++) {
-						if (clients[i].getSocketFd() == clientConnectedfd) {
-							clients.erase(clients.begin() + i);
-							break;
-						}
-					}
-					
-					for (size_t i = 0; i < this->fds.size(); i++)// search through fds vector to erase the closed socket from the pollfd array
-					{
-						if (this->fds[i].fd == clientConnectedfd)
-						{
-							this->fds.erase(this->fds.begin() + i);
-							break;
-						}
-					}
+					disconnectClients(clientConnectedfd);
 				}
 			} else {
 				// Debug print
@@ -196,6 +164,26 @@ void Server::printClients() const
     {
         std::cout << "Client " << i + 1 << ": Socket FD = " << clients[i].getSocketFd() << std::endl;
     }
+}
+
+void Server::disconnectClients(int clientConnectedfd) {
+	close(clientConnectedfd);//server closes socket belonging to connection closed by client
+				
+	for (size_t i = 0; i < clients.size(); i++) {
+		if (clients[i].getSocketFd() == clientConnectedfd) {
+			clients.erase(clients.begin() + i);
+			break;
+		}
+	}
+	
+	for (size_t i = 0; i < this->fds.size(); i++)// search through fds vector to erase the closed socket from the pollfd array
+	{
+		if (this->fds[i].fd == clientConnectedfd)
+		{
+			this->fds.erase(this->fds.begin() + i);
+			break;
+		}
+	}
 }
 
 std::string Server::trimMessage(std::string str) {
