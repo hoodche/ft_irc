@@ -117,7 +117,6 @@ void Server::acceptClient()
 
 void Server::readFromFd(int clientConnectedfd)
 {
-	//________TESTING BLOCK_________
 	char buffer[1024];
 	ssize_t bytesRead = recv(clientConnectedfd, buffer, sizeof(buffer) - 1 , 0);//Reads 3rd arg bytes into buffer from clientSocketFd. Returns the number read, -1 for errors or 0 for EOF.The call to recv() is blocking by default.(it will block the execution of the program until data is available to be read from the file descriptor or an error occurs. If there is no data available, the program will wait (block) until data becomes available.). But here is not blocking since clientConnectedfd was set to fcntl(connectedSocketFd, F_SETFL, O_NONBLOCK)
 	if (bytesRead < 0)
@@ -126,39 +125,76 @@ void Server::readFromFd(int clientConnectedfd)
 	{
 		// Move all of this to 1 function -> handle dc
 		std::cout << "Client has closed the connection" << std::endl;
-		close(clientConnectedfd);//server closes socket belonging to connection closed by client
-        
-		for (size_t i = 0; i < clients.size(); i++) {
-            if (clients[i].getSocketFd() == clientConnectedfd) {
-                clients.erase(clients.begin() + i);
-                break;
-            }
-        }
-		
-		for (size_t i = 0; i < this->fds.size(); i++)// search through fds vector to erase the closed socket from the pollfd array
-		{
-			if (this->fds[i].fd == clientConnectedfd)
-			{
-				this->fds.erase(this->fds.begin() + i);
-				break;
-			}
-		}
+		disconnectClients(clientConnectedfd);
 	}
 	else
 	{
 		buffer[bytesRead] = '\0'; // Null-terminate the buffer
+		std::string message = trimMessage(buffer);
+		Client *client = Client::findClientByFd(clientConnectedfd, clients);
+		// Debug print
 		std::cout << "Received message from fd " << clientConnectedfd << ": " << buffer << std::endl;
-		this->printClients();
-		handler.parseCommand(buffer, clients, clientConnectedfd);
+		if (client->isVerified() == false) {
+			if (message.substr(0, 5) == "PASS ") {
+				std::string pwd = message.substr(5);
+				// std::cout << "DEBUG RAW MESSAGE: [" << message << "] (length: " << message.length() << ")" << std::endl;
+				// std::cout << "Extracted PWD: [" << pwd << "], Expected PWD: [" << this->password << "]" << std::endl;
+				if (pwd == this-> password) {
+					client->setVerified(true);
+					// Debug print	
+					std::cout << "Client with fd " << clientConnectedfd << " password correct" << std::endl;
+				} else {
+					// Debug Print. Same as above, move to function.
+					std::cout << "Unauthorized client attempting connection. Closing fd..." << std::endl;
+					disconnectClients(clientConnectedfd);
+				}
+			} 
+		}
+		if (client->isVerified()) {
+			// Debug print
+			this->printClients();
+			handler.parseCommand(buffer, clients, clientConnectedfd);
+		}
 	}
-	//________END TESTING BLOCK_________
 }
 
 void Server::printClients() const
 {
     std::cout << "Currently connected clients:" << std::endl;
-    for (size_t i = 0; i < clients.size(); ++i)
+    for (size_t i = 0; i < clients.size(); i++)
     {
         std::cout << "Client " << i + 1 << ": Socket FD = " << clients[i].getSocketFd() << std::endl;
+    }
+}
+
+void Server::disconnectClients(int clientConnectedfd) {
+	close(clientConnectedfd);//server closes socket belonging to connection closed by client
+				
+	for (size_t i = 0; i < clients.size(); i++) {
+		if (clients[i].getSocketFd() == clientConnectedfd) {
+			clients.erase(clients.begin() + i);
+			break;
+		}
+	}
+	
+	for (size_t i = 0; i < this->fds.size(); i++)// search through fds vector to erase the closed socket from the pollfd array
+	{
+		if (this->fds[i].fd == clientConnectedfd)
+		{
+			this->fds.erase(this->fds.begin() + i);
+			break;
+		}
+	}
+}
+
+std::string Server::trimMessage(std::string str) {
+    size_t first = str.find_first_not_of(" \t\r\n");
+    size_t last = str.find_last_not_of(" \t\r\n");
+
+    // Check if the string contains only whitespace
+    if (first == std::string::npos || last == std::string::npos) {
+        return "";
+    } else {
+        return str.substr(first, last - first + 1);  // Return trimmed string, without starting or ending whitespaces
     }
 }
