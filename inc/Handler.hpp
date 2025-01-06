@@ -5,6 +5,7 @@
 #include "../inc/Client.hpp"
 // #include "../inc/utils.hpp"
 #include <sys/socket.h>
+#include "../inc/Channel.hpp"
 #include <iostream>
 #include <string>
 #include <vector>
@@ -15,7 +16,11 @@ typedef void (*cmdHandler)(std::string, Client &);
 class Handler {
 	private:
 		std::map<std::string, cmdHandler> cmdMap;
+		std::vector<Channel> channels;
+
 		void initCmdMap(void);
+		static void handleJoinCmd(std::string input, Client &client); //static cause 
+	//it is common to all the instances
 
 	public:
 		Handler(void);

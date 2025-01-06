@@ -15,6 +15,7 @@
 
 #include "../inc/Client.hpp"
 #include "../inc/Handler.hpp"
+#include "../inc/Channel.hpp"
 #include <string>
 #include <netinet/in.h>
 #include <vector>
