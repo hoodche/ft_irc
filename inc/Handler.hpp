@@ -3,12 +3,14 @@
 # define HANDLER_HPP
 
 #include "../inc/Client.hpp"
+#include "../inc/Channel.hpp"
 // #include "../inc/utils.hpp"
 #include <sys/socket.h>
-#include "../inc/Channel.hpp"
 #include <iostream>
+#include <algorithm>
 #include <string>
 #include <vector>
+#include <set>
 #include <map>
 
 typedef void (*cmdHandler)(std::string, Client &);
@@ -16,10 +18,13 @@ typedef void (*cmdHandler)(std::string, Client &);
 class Handler {
 	private:
 		std::map<std::string, cmdHandler> cmdMap;
-		std::vector<Channel> channels;
+		static std::vector<Channel> channels;
 
-		void initCmdMap(void);
-		static void handleJoinCmd(std::string input, Client &client); //static cause 
+		void			initCmdMap(void);
+		static void		handleJoinCmd(std::string input, Client &client); //static cause 
+		static void		joinCmdExec(std::string channelName, Client &client);
+		static void		createChannel(std::string channelName, Client &client);
+		static void		addClientToChannel(Channel &channel, Client &client);
 	//it is common to all the instances
 
 	public:
@@ -37,3 +42,5 @@ class Handler {
 };
 
 #endif
+
+/* Everything is static because we use function pointers, so they are not dependent of a single instance */

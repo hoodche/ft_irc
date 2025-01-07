@@ -1,5 +1,7 @@
 #include "../inc/Handler.hpp"
-#include <algorithm>
+
+std::vector<Channel> Handler::channels; //Static variable must be declared outside the class so the linker can fint it. It is not vinculated to an object,
+										//so the programmer have to do the job
 
 Handler::Handler(void) {
 	initCmdMap(); // Initialise the command map
@@ -144,17 +146,48 @@ void Handler::handleJoinCmd(std::string input, Client &client) {
 		return;
 	}
 
-	//Get name of the channel
+	//Get name of the channel in channelName
     std::string::iterator beginChCommand = channelIterator;
 	while (*channelIterator != ' ' && channelIterator != input.end())
 		channelIterator++;
 	std::string channelName(beginChCommand, channelIterator);
+
+	//Check that we have something more than hastags
 	channelIterator = channelName.begin();
 	while (*channelIterator == '#')
 		channelIterator++;
 	if (channelIterator == channelName.end())
         std::cerr << "Invalid JOIN command format" << std::endl;
 	else
-		std::cout << "Correct channel" << std::endl;
+		joinCmdExec(channelName, client);
+	return;
+}
+
+// Verify if the channel exists and call the appropriate function accordingly.
+void Handler::joinCmdExec(std::string channelName, Client &client)
+{
+	std::vector<Channel>::iterator chIt = channels.begin();
+	while (chIt != channels.end() && chIt->getName() != channelName)
+		chIt++;
+	if (chIt != channels.end())
+		addClientToChannel(*chIt, client);
+	else
+		createChannel(channelName, client);
+}
+
+void Handler::createChannel(std::string channelName, Client &client)
+{
+	Channel channel(client);
+
+	//std::cout << "createChannel() called" << std::endl;
+	channel.setName(channelName);
+	channels.push_back(channel);
+	return;
+}
+
+void Handler::addClientToChannel(Channel &channel, Client &client)
+{
+	//std::cout << "addClientToChannel() called" << std::endl;
+	channel.addUser(client);
 	return;
 }
