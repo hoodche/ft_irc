@@ -137,7 +137,7 @@ void Handler::handleJoinCmd(std::string input, Client &client) {
 
 	//Check if the name of the channel begins with #
     std::string::iterator channelIterator = std::find(input.begin(), input.end(), ' ') + 1;
-	while (*channelIterator != '#' && channelIterator != input.end())
+	while (*channelIterator == ' ')
 		channelIterator++;
 	if (*channelIterator != '#'){
         std::cerr << "Invalid JOIN command format" << std::endl;
@@ -149,10 +149,12 @@ void Handler::handleJoinCmd(std::string input, Client &client) {
 	while (*channelIterator != ' ' && channelIterator != input.end())
 		channelIterator++;
 	std::string channelName(beginChCommand, channelIterator);
-	if (channelName == "#"){
+	channelIterator = channelName.begin();
+	while (*channelIterator == '#')
+		channelIterator++;
+	if (channelIterator == channelName.end())
         std::cerr << "Invalid JOIN command format" << std::endl;
-		return;
-	} //TODO check ###########
-	std::cout << "Correct channel" << std::endl;
+	else
+		std::cout << "Correct channel" << std::endl;
 	return;
 }

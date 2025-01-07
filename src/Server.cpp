@@ -150,10 +150,10 @@ void Server::readFromFd(int clientConnectedfd)
 				}
 			} 
 		}
-		if (client->isVerified()) {
+		else if (client->isVerified()) {
 			// Debug print
 			this->printClients();
-			handler.parseCommand(buffer, clients, clientConnectedfd);
+			handler.parseCommand(message, clients, clientConnectedfd);
 		}
 	}
 }
