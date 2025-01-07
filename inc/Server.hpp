@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: nvillalt <nvillalt@student.42.fr>          +#+  +:+       +#+        */
+/*   By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/24 18:35:03 by igcastil          #+#    #+#             */
-/*   Updated: 2025/01/03 22:07:19 by nvillalt         ###   ########.fr       */
+/*   Updated: 2025/01/07 17:48:46 by igcastil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,7 +45,7 @@ public:
 	void closeFds();
 	void initSocket();
 	void init(int port, std::string pass);
-	static void SignalHandler(int signum);
+	static void signalHandler(int signum);
 	void acceptClient();
 	void readFromFd(int fd);
 	void printClients(void) const;

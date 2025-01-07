@@ -6,7 +6,7 @@
 /*   By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/22 13:18:44 by igcastil          #+#    #+#             */
-/*   Updated: 2025/01/01 20:40:01 by igcastil         ###   ########.fr       */
+/*   Updated: 2025/01/07 17:48:46 by igcastil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,8 +16,13 @@
 #include "inc/Server.hpp"
 #include <csignal> //for SIGINT and SIGQUIT
 
-/* since ++98 standard has no functions to convert string to numeric types we must do our own with string streams */
-
+/**
+ * @brief		converts a string to an integer (since ++98 standard has no 
+ * 				functions to convert string to numeric types we must do our own
+ * 				 with string streams)
+ * @param		const std::string& str .string to convert
+ * @return		int converted number
+ */
 int myStoi(const std::string& str)
 {
 	int num;
@@ -26,6 +31,14 @@ int myStoi(const std::string& str)
 	return num;
 }
 
+/**
+ * @brief		checks if arguments passed to the program are 3, if the second
+ * 				is a correct port number with just digits and the third is a 
+ * 				password with less than 21 characters
+ * @param		int argc number of arguments passed to the program
+ * @param		char **argv arguments passed to the program
+ * @return		int 0 on error, 1 on success
+ */
 int	argsOk(int argc, char **argv)
 {
 	if (argc != 3)
@@ -63,8 +76,8 @@ int main(int argc, char **argv)
 	if (!argsOk(argc, argv))
 		return 1;
 	Server server;
-	signal(SIGINT, Server::SignalHandler);
-	signal(SIGQUIT, Server::SignalHandler);
+	signal(SIGINT, Server::signalHandler);
+	signal(SIGQUIT, Server::signalHandler);
 	try
 	{
 		server.init(myStoi(argv[1]), static_cast<std::string>(argv[2]));

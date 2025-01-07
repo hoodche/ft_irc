@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: nvillalt <nvillalt@student.42.fr>          +#+  +:+       +#+        */
+/*   By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/24 18:26:33 by igcastil          #+#    #+#             */
-/*   Updated: 2025/01/03 22:05:34 by nvillalt         ###   ########.fr       */
+/*   Updated: 2025/01/07 17:49:43 by igcastil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,14 @@ Server::Server() : listenSocketFd(-1)
 {
 }
 bool Server::signalReceived = false;
-void Server::SignalHandler(int signal)
+
+/**
+ * @brief		triggered when SIGINT or SIGQUIT is received. Prints a message
+ * 				and sets signalReceived to true (which is checked in the polling
+ * 				 loop)
+ * @param		int received signal
+ */
+void Server::signalHandler(int signal)
 {
 	if(signal == SIGINT)
 		std::cout << std::endl << "Signal SIGINT Received!" << std::endl;
@@ -34,12 +41,23 @@ void Server::SignalHandler(int signal)
 	Server::signalReceived = true;
 }
 
+/**
+ * @brief		closes all socket descriptors opened so far in the server 
+ * 				(in the fds vector -listening socket + connected sockets)
+ */
 void	Server::closeFds()
 {
 	for (size_t i = 0; i < this->fds.size(); i++)
 		close(this->fds[i].fd);
 }
 
+
+/**
+ * @brief	opens the server listening socket (on every available network 
+ * 			interface on the host machine and port specified in 2nd argument to 
+ * 			program execution). Sets the socket to non-blocking (as required by 
+ * 			project rules)
+ */
 void Server::initSocket()
 {
 	int socketOptionEnable = 1;
@@ -68,7 +86,14 @@ void Server::initSocket()
 
 }
 
-
+/**
+ * @brief	runs server's main loop, which polls the fds vector for connection 
+ * 			requests (on fds[0] server's listening socket) and irc commands (on 
+ * 			rest of fds vector -"connected sockets"). Loop is exited when SIGINT
+ * 			or SIGQUIT is received (signalReceived is set to true by 
+ * 			signalHandler() function)
+ * @param		int received signal
+ */
 void Server::init(int port, std::string password)
 {
 	this->password = password;
