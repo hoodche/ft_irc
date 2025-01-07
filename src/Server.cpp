@@ -6,7 +6,7 @@
 /*   By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/24 18:26:33 by igcastil          #+#    #+#             */
-/*   Updated: 2025/01/07 19:28:12 by igcastil         ###   ########.fr       */
+/*   Updated: 2025/01/07 21:15:55 by igcastil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -196,7 +196,7 @@ void Server::readFromFd(int clientConnectedfd)
 }
 
 /**
- * @brief	prints every client hold in server
+ * @brief	prints every client held in server
  */
 void Server::printClients() const
 {
@@ -215,7 +215,7 @@ void Server::printClients() const
  */
 void Server::disconnectClient(int clientConnectedfd)
 {
-	close(clientConnectedfd);//server closes socket belonging to connection closed by client 
+	close(clientConnectedfd);
 	for (size_t i = 0; i < clients.size(); i++) {
 		if (clients[i].getSocketFd() == clientConnectedfd) {
 			clients.erase(clients.begin() + i);
@@ -223,7 +223,7 @@ void Server::disconnectClient(int clientConnectedfd)
 		}
 	}
 	
-	for (size_t i = 0; i < this->fds.size(); i++)// search through fds vector to erase the closed socket from the pollfd array
+	for (size_t i = 0; i < this->fds.size(); i++)
 	{
 		if (this->fds[i].fd == clientConnectedfd)
 		{
