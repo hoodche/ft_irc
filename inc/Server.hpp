@@ -6,7 +6,7 @@
 /*   By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/24 18:35:03 by igcastil          #+#    #+#             */
-/*   Updated: 2025/01/07 17:48:46 by igcastil         ###   ########.fr       */
+/*   Updated: 2025/01/07 19:24:31 by igcastil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,7 +50,7 @@ public:
 	void readFromFd(int fd);
 	void printClients(void) const;
 	static std::string trimMessage(std::string str);
-	void disconnectClients(int clientConnectedfd);
+	void disconnectClient(int clientConnectedfd);
 };
 
 #endif

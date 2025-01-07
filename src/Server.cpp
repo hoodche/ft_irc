@@ -6,7 +6,7 @@
 /*   By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/24 18:26:33 by igcastil          #+#    #+#             */
-/*   Updated: 2025/01/07 17:49:43 by igcastil         ###   ########.fr       */
+/*   Updated: 2025/01/07 19:28:12 by igcastil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -92,7 +92,8 @@ void Server::initSocket()
  * 			rest of fds vector -"connected sockets"). Loop is exited when SIGINT
  * 			or SIGQUIT is received (signalReceived is set to true by 
  * 			signalHandler() function)
- * @param		int received signal
+ * @param	int port (2nd arg to program execution)
+ * @param	std::string password (3rd arg to program execution)
  */
 void Server::init(int port, std::string password)
 {
@@ -117,6 +118,11 @@ void Server::init(int port, std::string password)
 	}
 	this->closeFds();
 }
+
+/**
+ * @brief	accepts a client's connection request (before any command is parsed)
+ * 			and adds it and its socket fd to their corresponding vectors
+ */
 void Server::acceptClient()
 {
 	memset(&clientAddress, 0, sizeof(clientAddress));
@@ -140,6 +146,12 @@ void Server::acceptClient()
 	std::cout << "a new client from IP "<< inet_ntoa(clientAddress.sin_addr) << " and port " << ntohs(clientAddress.sin_port) << " has been connected with socket fd " << connectedSocketFd << std::endl;
 }
 
+/**
+ * @brief	reads from a connected socket when poll function detects an event in
+ * 			it (if client closes connection it is an event and 0 bytes are read,
+ * 			hence server proceeds to close that connection)
+ * @param	int clientConnectedfd socket fd to be read
+ */
 void Server::readFromFd(int clientConnectedfd)
 {
 	char buffer[1024];
@@ -150,7 +162,7 @@ void Server::readFromFd(int clientConnectedfd)
 	{
 		// Move all of this to 1 function -> handle dc
 		std::cout << "Client has closed the connection" << std::endl;
-		disconnectClients(clientConnectedfd);
+		disconnectClient(clientConnectedfd);
 	}
 	else
 	{
@@ -171,7 +183,7 @@ void Server::readFromFd(int clientConnectedfd)
 				} else {
 					// Debug Print. Same as above, move to function.
 					std::cout << "Unauthorized client attempting connection. Closing fd..." << std::endl;
-					disconnectClients(clientConnectedfd);
+					disconnectClient(clientConnectedfd);
 				}
 			} 
 		}
@@ -183,6 +195,9 @@ void Server::readFromFd(int clientConnectedfd)
 	}
 }
 
+/**
+ * @brief	prints every client hold in server
+ */
 void Server::printClients() const
 {
     std::cout << "Currently connected clients:" << std::endl;
@@ -192,9 +207,15 @@ void Server::printClients() const
     }
 }
 
-void Server::disconnectClients(int clientConnectedfd) {
-	close(clientConnectedfd);//server closes socket belonging to connection closed by client
-				
+/**
+ * @brief	disconnects a client (closes its socket fd and deletes it and the 
+ * 			client instance from their corresponding vectors). This happens when
+ * 			client sent a wrong password or if client closed connection
+ * @param	int clientConnectedfd socket fd to close
+ */
+void Server::disconnectClient(int clientConnectedfd)
+{
+	close(clientConnectedfd);//server closes socket belonging to connection closed by client 
 	for (size_t i = 0; i < clients.size(); i++) {
 		if (clients[i].getSocketFd() == clientConnectedfd) {
 			clients.erase(clients.begin() + i);
