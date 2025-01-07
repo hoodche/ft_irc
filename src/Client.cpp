@@ -3,11 +3,13 @@
 
 Client::Client(void): 
 	fd(-1), verified(false), registered(false), 
-	oper(false), nick(""), username("") {}
+	//oper(false),
+	 nick(""), username("") {}
 
 Client::Client(int receivedFd):
 	fd(receivedFd), verified(false) ,registered(false),
-	oper(false), nick(""), username("") {}
+	//oper(false),
+	 nick(""), username("") {}
 
 Client::~Client(void) {}
 

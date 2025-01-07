@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: nvillalt <nvillalt@student.42.fr>          +#+  +:+       +#+         #
+#    By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/06/28 14:26:37 by igcastil          #+#    #+#              #
-#    Updated: 2025/01/03 22:34:46 by nvillalt         ###   ########.fr        #
+#    Updated: 2025/01/07 15:55:24 by igcastil         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -17,7 +17,7 @@ FLAGS	= -Wall -Wextra -Werror -std=c++98
 all: $(NAME)
 
 $(NAME):
-	$(CC) $(FLAGS) main.cpp src/utils.cpp src/Server.cpp src/Client.cpp src/Handler.cpp src/Channel.cpp inc/utils.hpp inc/Server.hpp inc/Client.hpp inc/Handler.hpp inc/Channel.hpp -o $(NAME)
+	$(CC) $(FLAGS) main.cpp src/utils.cpp src/Server.cpp src/Client.cpp src/Handler.cpp src/Channel.cpp -o $(NAME)
 
 client:
 	$(CC) $(FLAGS) test_client.cpp -o client

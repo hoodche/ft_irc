@@ -11,7 +11,7 @@ class Client {
 		int 		fd;
 		bool		verified;
 		bool		registered;
-		bool		oper;
+		//bool		oper;
 		std::string	nick;
 		std::string	username;
 
