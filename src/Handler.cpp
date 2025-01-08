@@ -166,6 +166,11 @@ void Handler::handleJoinCmd(std::string input, Client &client) {
 // Verify if the channel exists and call the appropriate function accordingly.
 void Handler::joinCmdExec(std::string channelName, Client &client)
 {
+	if (client.isClientInChannel(channelName))
+	{
+		std::cout << "entra" << std::endl;
+		return;
+	}
 	std::vector<Channel>::iterator chIt = channels.begin();
 	while (chIt != channels.end() && chIt->getName() != channelName) //Checks if the channel exists
 		chIt++;

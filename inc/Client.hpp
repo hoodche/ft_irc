@@ -37,6 +37,7 @@ class Client {
 
 		// Methods
 		static Client	*findClientByFd(int fd, std::vector<Client> &clients);
+		bool			isClientInChannel(std::string channelName);
 		void			addClientChannel(Channel &channel);
 };
 

@@ -1,5 +1,6 @@
 
 #include "../inc/Client.hpp"
+#include "../inc/Channel.hpp"
 
 Client::Client(void): 
 	fd(-1), verified(false), registered(false),
@@ -65,4 +66,15 @@ Client* Client::findClientByFd(int fd, std::vector<Client> &clients) {
 void Client::addClientChannel(Channel &channel)
 {
 	clientChannels.push_back(&channel);
+}
+
+bool Client::isClientInChannel(std::string channelName)
+{
+	std::vector<Channel *>::iterator it = clientChannels.begin();
+	while(!clientChannels.empty() && (*it)->getName() != channelName && it != clientChannels.end())
+		it++;
+	if (it == clientChannels.end())
+		return false;
+	else
+		return true;
 }
