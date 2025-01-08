@@ -26,6 +26,7 @@ Channel::Channel(Client &firstOperator){
 	this->topic = "";
 	this->password = "";
 	this->userLimit = 0; // On 0, there is no limit // On 0, there is no limit
+	firstOperator.setInChannel(true);;
 	this->operators.push_back(&firstOperator);
 	initModeMap();
 }
