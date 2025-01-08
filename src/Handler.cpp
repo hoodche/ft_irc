@@ -181,11 +181,13 @@ void Handler::createChannel(std::string channelName, Client &client)
 
 	channel.setName(channelName);
 	channels.push_back(channel);
+	client.addClientChannel(channels.back());
 	return;
 }
 
 void Handler::addClientToChannel(Channel &channel, Client &client)
 {
 	channel.addUser(client);
+	client.addClientChannel(channel);
 	return;
 }

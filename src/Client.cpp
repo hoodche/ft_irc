@@ -61,3 +61,8 @@ Client* Client::findClientByFd(int fd, std::vector<Client> &clients) {
     }
     return NULL;
 }
+
+void Client::addClientChannel(Channel &channel)
+{
+	clientChannels.push_back(&channel);
+}

@@ -6,6 +6,8 @@
 # include <iostream>
 # include <vector>
 
+class Channel;
+
 class Client {
 	private:
 		int 		fd;
@@ -13,6 +15,7 @@ class Client {
 		bool		registered;
 		std::string	nick;
 		std::string	username;
+		std::vector<Channel *> clientChannels;
 
 	public:
 		Client(void);
@@ -33,7 +36,8 @@ class Client {
 		void setRegistered(bool tf);
 
 		// Methods
-		static Client *findClientByFd(int fd, std::vector<Client> &clients);
+		static Client	*findClientByFd(int fd, std::vector<Client> &clients);
+		void			addClientChannel(Channel &channel);
 };
 
 #endif
