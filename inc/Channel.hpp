@@ -11,6 +11,7 @@ class Channel {
 		void initModeMap(void); //Method to init the mode map
 		Channel();
 
+		std::string					name;
 		std::string					topic;	
 		std::vector<Client *>		operators;
 		std::vector<Client *>		users;
@@ -21,6 +22,11 @@ class Channel {
 	public:
 		Channel(Client &firstOperator);
 		~Channel();
+		
+		std::string getName(void) const;
+		void		setName(const std::string name);
+		void		addUser(Client &client);
+		void		addOperator(Client &client);
 };
 
 #endif

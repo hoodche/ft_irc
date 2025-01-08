@@ -31,3 +31,22 @@ Channel::Channel(Client &firstOperator){
 }
 
 Channel::~Channel(void){}
+std::string Channel::getName(void) const
+{
+	return this->name;
+}
+
+void Channel::setName(std::string const channelName)
+{
+	this->name = channelName;
+}
+
+void Channel::addUser(Client &client)
+{
+	users.push_back(&client);
+}
+
+void Channel::addOperator(Client &client)
+{
+	operators.push_back(&client);
+}
