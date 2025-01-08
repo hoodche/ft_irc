@@ -2,12 +2,12 @@
 #include "../inc/Client.hpp"
 
 Client::Client(void): 
-	fd(-1), verified(false), registered(false), inChannel(false),
+	fd(-1), verified(false), registered(false),
 	//oper(false),
 	 nick(""), username("") {}
 
 Client::Client(int receivedFd):
-	fd(receivedFd), verified(false) ,registered(false), inChannel(false),
+	fd(receivedFd), verified(false) ,registered(false),
 	//oper(false),
 	 nick(""), username("") {}
 
@@ -33,10 +33,6 @@ bool Client::isRegistered(void) const {
 	return this->registered;
 }
 
-bool Client::isInChannel(void) const {
-	return this->inChannel;
-}
-
 void Client::setNickname(std::string nickname) {
 	nick = nickname;
 	return ;
@@ -54,11 +50,6 @@ void Client::setVerified(bool tf) {
 
 void Client::setRegistered(bool tf) {
 	registered = tf;
-	return ;
-}
-
-void Client::setInChannel(bool tf) {
-	inChannel = tf;
 	return ;
 }
 

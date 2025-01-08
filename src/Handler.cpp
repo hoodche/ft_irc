@@ -166,15 +166,13 @@ void Handler::handleJoinCmd(std::string input, Client &client) {
 // Verify if the channel exists and call the appropriate function accordingly.
 void Handler::joinCmdExec(std::string channelName, Client &client)
 {
-	if (client.isInChannel() == true) //Check if the client is already in a channel.
-		return;
 	std::vector<Channel>::iterator chIt = channels.begin();
 	while (chIt != channels.end() && chIt->getName() != channelName) //Checks if the channel exists
 		chIt++;
 	if (chIt != channels.end())
 		addClientToChannel(*chIt, client); //Add if the channel exits and add client as user
 	else
-		createChannel(channelName, client); //Creates the channel and add client as operator
+		createChannel(channelName, client); //Creates the channelxº and add client as operator
 }
 
 void Handler::createChannel(std::string channelName, Client &client)
@@ -188,7 +186,6 @@ void Handler::createChannel(std::string channelName, Client &client)
 
 void Handler::addClientToChannel(Channel &channel, Client &client)
 {
-	client.setInChannel(true);
 	channel.addUser(client);
 	return;
 }
