@@ -31,7 +31,6 @@ Channel::Channel(Client &firstOperator){
 }
 
 Channel::~Channel(void){}
-
 std::string Channel::getName(void) const
 {
 	return this->name;

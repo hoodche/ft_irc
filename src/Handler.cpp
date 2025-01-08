@@ -179,7 +179,6 @@ void Handler::createChannel(std::string channelName, Client &client)
 {
 	Channel channel(client);
 
-	//std::cout << "createChannel() called" << std::endl;
 	channel.setName(channelName);
 	channels.push_back(channel);
 	return;
@@ -187,7 +186,6 @@ void Handler::createChannel(std::string channelName, Client &client)
 
 void Handler::addClientToChannel(Channel &channel, Client &client)
 {
-	//std::cout << "addClientToChannel() called" << std::endl;
 	channel.addUser(client);
 	return;
 }
