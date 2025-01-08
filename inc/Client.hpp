@@ -11,7 +11,7 @@ class Client {
 		int 		fd;
 		bool		verified;
 		bool		registered;
-		//bool		oper;
+		bool		inChannel;
 		std::string	nick;
 		std::string	username;
 
@@ -26,12 +26,14 @@ class Client {
 		std::string getUsername(void) const;
 		bool isVerified(void) const;
 		bool isRegistered(void) const;
+		bool isInChannel(void) const;
 
 		// Setters
 		void setNickname(std::string nickname);
 		void setUsername(std::string user);
 		void setVerified(bool tf);
 		void setRegistered(bool tf);
+		void setInChannel(bool tf);
 
 		// Methods
 		static Client *findClientByFd(int fd, std::vector<Client> &clients);
