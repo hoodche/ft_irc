@@ -1,4 +1,5 @@
 #include "../inc/Handler.hpp"
+#include <sstream>
 
 std::vector<Channel> Handler::channels; //Static variable must be declared outside the class so the linker can fint it. It is not vinculated to an object,
 										//so the programmer have to do the job
@@ -132,41 +133,52 @@ void Handler::handleJoinCmd(std::vector<std::string> input, Client &client) {
 
 	std::vector<std::string>			channelVector;
 	std::vector<std::string>			passVector;
-	std::map<std::string, std::string>	channelPassDictionary;
 
-	bool		passMode = false;
-
-	std::vector<std::string>::iterator argvIt = input.begin();
-	if (input.size() < 1)
+	if (input.size() <= 1 || input.size() > 3)
 	{
 		std::cerr << "Invalid JOIN command format" << std::endl;
 		return;
 	} //Check if we only have JOIN
-	argvIt++; //Jump over JOIN
-	while (argvIt != input.end() && passMode == false)
-	{
-		if ((*argvIt)[0] != '#')
-			passMode = true;
-		if (passmode == false)
-			channelVector.push_back(*argvIt);
-		else
-			passVector.push_back(*argvIt);
-		argvIt++;
+	std::vector<std::string>::iterator argvIt = input.begin();
+	try{
+		argvIt++; //Jump over JOIN
+		channelVector = getChannelVector(*argvIt);
+		argvIt++; //Jump over JOIN
+		if (argvIt != input.end())
+			passVector = getPassVector(*argvIt);
+	}catch(const std::exception &e){
+		std::cout << e.what() << std::endl;
 	}
-	if (channelVector.size() == passVector.size())
+}
+
+std::vector<std::string> getChannelVector(std::string channelString)
+{
+	std::vector<std::string>	channels;
+	std::stringstream			ss(string);
+	std::string					tempChannel;
+
+	while(std::getline(ss, tempChannel, ','))
 	{
-		std::vector<std::string>::iterator channelPtr = channelVector.begin();
-		std::vector<std::string>::iterator passPtr = passVector.begin();
-		while (channelPtr != channelVector.end())
-		{
-			channelPassDictionary[*channelPtr] = *passPtr;
-			channelPtr++;
-			passPtr++;
-		}
-		joinCmdExec(channelName, client);
+		if (*tempChannel.begin() != '#')
+			throw std::invalid_argument("Invalidad JOIN command format");
+		channels.push_back(tempChannel);
 	}
-	else
-		std::cerr << "Invalid JOIN command format" << std::endl;
+	return (channels);
+}
+
+std::vector<std::string> getPassVector(std::string passString)
+{
+	std::vector<std::string>	passwords;
+	std::stringstream			ss(string);
+	std::string					tempPass;
+
+	while(std::getline(ss, tempPass, ','))
+	{
+		if (*tempChannel.begin() == '#')
+			throw std::invalid_argument("Invalidad JOIN command format");
+		passwords.push_back(tempPass);
+	}
+	return (passwords);
 }
 
 // Verify if the channel exists and call the appropriate function accordingly.
