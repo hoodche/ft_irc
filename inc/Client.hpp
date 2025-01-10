@@ -2,18 +2,20 @@
 #ifndef CLIENT_HPP
 # define CLIENT_HPP
 
-#include <string>
-#include <iostream>
-#include <vector>
+# include <string>
+# include <iostream>
+# include <vector>
+
+class Channel;
 
 class Client {
 	private:
 		int 		fd;
 		bool		verified;
 		bool		registered;
-		bool		inChannel;
 		std::string	nick;
 		std::string	username;
+		std::vector<Channel *> clientChannels;
 
 	public:
 		Client(void);
@@ -26,17 +28,17 @@ class Client {
 		std::string getUsername(void) const;
 		bool isVerified(void) const;
 		bool isRegistered(void) const;
-		bool isInChannel(void) const;
 
 		// Setters
 		void setNickname(std::string nickname);
 		void setUsername(std::string user);
 		void setVerified(bool tf);
 		void setRegistered(bool tf);
-		void setInChannel(bool tf);
 
 		// Methods
-		static Client *findClientByFd(int fd, std::vector<Client> &clients);
+		static Client	*findClientByFd(int fd, std::vector<Client> &clients);
+		bool			isClientInChannel(std::string channelName);
+		void			addClientChannel(Channel &channel);
 };
 
 #endif

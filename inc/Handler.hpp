@@ -2,16 +2,16 @@
 #ifndef HANDLER_HPP
 # define HANDLER_HPP
 
-#include "../inc/Client.hpp"
-#include "../inc/Channel.hpp"
+# include "../inc/Client.hpp"
+# include "../inc/Channel.hpp"
 // #include "../inc/utils.hpp"
-#include <sys/socket.h>
-#include <iostream>
-#include <algorithm>
-#include <string>
-#include <vector>
-#include <set>
-#include <map>
+# include <sys/socket.h>
+# include <iostream>
+# include <algorithm>
+# include <string>
+# include <vector>
+# include <set>
+# include <map>
 
 typedef void (*cmdHandler)(std::string, Client &);
 
