@@ -17,7 +17,7 @@ FLAGS	= -Wall -Wextra -Werror -std=c++98
 all: $(NAME)
 
 $(NAME):
-	$(CC) $(FLAGS) main.cpp src/utils.cpp src/Server.cpp src/Client.cpp src/Handler.cpp src/Channel.cpp -o $(NAME)
+	$(CC) $(FLAGS) main.cpp src/Server.cpp src/Client.cpp src/Handler.cpp src/Channel.cpp -o $(NAME)
 
 client:
 	$(CC) $(FLAGS) test_client.cpp -o client
