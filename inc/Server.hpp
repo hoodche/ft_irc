@@ -23,6 +23,8 @@
 #include <map>
 #include <sstream>
 
+# define SERVER_NAME "127.0.0.1"
+
 class Server
 {
 	private:

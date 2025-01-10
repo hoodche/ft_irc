@@ -8,6 +8,7 @@ Handler::Handler(void) {
 }
 
 void Handler::initCmdMap(void) {
+	// Estos se hacen en el flujo de auth, a lo mejo es mejor quitarlos de aquí (USER, NICK, PING)
 	cmdMap["USER"] = &handleUserCmd;
 	cmdMap["NICK"] = &handleNickCmd;
 	cmdMap["PING"] = &handlePingCmd;
@@ -17,63 +18,65 @@ void Handler::initCmdMap(void) {
 void Handler::parseCommand(std::vector<std::string> divMsg, Client &client, std::vector<Client> &clients) {
 	// Check if the command exists in the map. Command extracted as first member of str vector
 	// If command exists and all is good, delete command from str vector
+	// Esto solo está puesto para evitar el -Werror de momento
+	//--------
 	if (divMsg[0] == "NICK") {
 		std::cout << "Found nick";
 	}
 	std::cout << client.getSocketFd() << std::endl;
 	std::cout << clients[0].getSocketFd() << std::endl;
 	std::cout << "GOT TO PARSE COMMAND! \n\n\n";
+	//---------
+	// TO DO: Implementar que cada comando vaya a su respectiva función. Código anterior:
+	// if (cmdMap.find(command) != cmdMap.end()) {
+    //     cmdMap[command](input, *client);
+    // } else {
+    //     std::cout << "Unknown command: " << command << std::endl;
+    // }
+	// Pero ahora hay que cambiarlo al tener el vector de strings, etc. 
 }
 
 // Pointers to functions methods
 void Handler::handleUserCmd(std::string input, Client &client) {
-    size_t space = input.find(' ');
-    if (space == std::string::npos) {
-        std::cerr << "Invalid USER command format" << std::endl;
-        return;
-    }
-
-	std::string username = input.substr(space + 1);
-	if (!username.empty() && username[username.size() - 1] == '\n')
-        username.erase(username.size() - 1);
-    std::string message = ":ircserv 001 " + client.getNickname() + " :Welcome to our IRC server!\n";
-    if (client.getUsername() == "") {
-    	client.setUsername(username);
-        client.setRegistered(true);
-		//std::cout << "PRINT: " << message << std::endl;
-		sendResponse(message, client.getSocketFd());
-	}
-    //std::cout << "Debug print: Client fd " << client.getSocketFd() << " set user to " << username << std::endl;
+	// To Do: Re-implement User Command
 }
 
-void Handler::handleNickCmd(std::string input, Client &client) {
-    size_t space = input.find(' ');
-    if (space == std::string::npos) {
-        std::cerr << "Invalid NICK command format" << std::endl;
-        return;
-    }
+//  TO DO: We will have to keep track of all nicknames, nicknames Cannot repeat
+//    The idea of the nickname on IRC is very convenient for users to use
+//    when talking to each other outside of a channel, but there is only a
+//    finite nickname space and being what they are, it's not uncommon for
+//    several people to want to use the same nick.  If a nickname is chosen
+//    by two people using this protocol, either one will not succeed or
+//    both will removed by use of a server KILL (See Section 3.7.1).
+// 	  RFC: 4.1.2 -More info
 
-    std::string nickname = input.substr(space + 1);
-	if (!nickname.empty() && nickname[nickname.size() - 1] == '\n') {
-        nickname.erase(nickname.size() - 1);
-    }
-    client.setNickname(nickname);
-    //std::cout << "Debug print: Client fd " << client.getSocketFd() << " set nickname to " << nickname << std::endl;
+void Handler::handleNickCmd(std::string input, Client &client) {
+	std::string	message;
+
+	if (input.empty()) {
+		sendResponse(ERR_NONICKNAMEGIVEN, client.getSocketFd());
+		return ;
+	}
+	if (input.size() < 1 || input.size() > 9) {
+		message	= input + " " + ERR_ERRONEUSNICKNAME; // To do: Check if space is needed
+		sendResponse(message, client.getSocketFd());
+		return ;
+	}
+	// Check alphanumeric characters
+	if (!std::all_of(input.begin(), input.end(), [](char c){
+		return std::isalnum(c); // To do: Check other valid characters. If no valid chara is found, return error msg
+	})) {
+		message	= input + " " + ERR_ERRONEUSNICKNAME;
+		sendResponse(message, client.getSocketFd());
+		return ;
+	}
+	client.setNickname(input);
+	// Debug print
+	std::cout << "Client nickname set to: " << input << std::endl;
 }
 
 void Handler::handlePingCmd(std::string input, Client &client) {
-    size_t space = input.find(' ');
-    if (space == std::string::npos) {
-        std::cerr << "Invalid NICK command format" << std::endl;
-        return;
-    }
-
-    std::string pongResponse = input.substr(space + 1);
-    	if (!pongResponse.empty() && pongResponse[pongResponse.size() - 1] == '\n') {
-        pongResponse.erase(pongResponse.size() - 1);
-    }
-
-    std::string message = "PONG " + pongResponse;
+    std::string message = "PONG :" + input;
     sendResponse(message, client.getSocketFd());
 }
 
@@ -87,14 +90,6 @@ void Handler::sendResponse(std::string message, int clientFd) {
 		std::cout << "Response sent to client: " << message << std::endl;
 	}
 }
-
-// std::string Handler::toUpperCase(std::string str) {
-//     std::string	ret = str;
-
-// 	for (size_t i = 0; i < str.size(); i++)
-// 		ret[i] = toupper(ret[i]);
-// 	return ret;
-// }
 
 //JOIN command
 

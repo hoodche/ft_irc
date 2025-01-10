@@ -4,7 +4,6 @@
 
 # include "../inc/Client.hpp"
 # include "../inc/Channel.hpp"
-// #include "../inc/utils.hpp"
 # include <sys/socket.h>
 # include <iostream>
 # include <algorithm>
@@ -12,6 +11,11 @@
 # include <vector>
 # include <set>
 # include <map>
+
+# define ERR_NONICKNAMEGIVEN	":No nickname given"
+# define ERR_ERRONEUSNICKNAME	":Erroneus nickname"
+# define ERR_NICKNAMEINUSE		":Nickname is already in use"
+// To do: See if implementing ERR_NICKCOLLISION is needed to be implemented
 
 typedef void (*cmdHandler)(std::string, Client &);
 

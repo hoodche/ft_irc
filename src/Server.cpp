@@ -201,8 +201,10 @@ void	Server::processMessage(int fd, std::string message) {
 
 	// If the client is not verified, check for PASS command
 	if (client->isVerified() == false) {
+		// Skip the CAP LS command
 		if (trimmedMsg.substr(0, 7) == "CAP LS")
 			return ;
+		// Parse PASS. To do: Double check to protect from segfaults
 		if (trimmedMsg.substr(0, 5) == "PASS ") {
 			std::string pwd = trimmedMsg.substr(5);
 			if (pwd == this->password) {
@@ -216,20 +218,27 @@ void	Server::processMessage(int fd, std::string message) {
 	}
 
 	if (client->isRegistered() == false && client->isVerified()) {
-		// Order Nick, then User
+		// Order Nick, then User. To do; Implement error:  ERR_NONICKNAMEGIVEN
+		// Parse NICK. To do: Double check to protect from segfaults
 		if (trimmedMsg.substr(0, 5) == "NICK ") {
-			client->setNickname(trimmedMsg.substr(5));
-			std::cout << "Got this nick: " << client->getNickname() << std::endl;
+			// Debug print
+			// std::cout << "Got this nick: " << client->getNickname() << std::endl;
+			Handler::handleNickCmd(trimmedMsg.substr(5), *client);
 		}
-		if (trimmedMsg.substr(0, 5) == "USER ") {
-			client->setUsername(trimmedMsg.substr(5));
-			std::cout << "Got this user: " << client->getUsername() << std::endl;
+		// Parse USER. To do: Double check to protect from segfaults
+		if (trimmedMsg.substr(0, 5) == "USER " && !client->getNickname().empty()) {
+			// Debug print
+			// std::cout << "Got this user: " << client->getUsername() << std::endl;
+			Handler::handleUserCmd(trimmedMsg.substr(5), *client);
 		}
 		if (!client->getNickname().empty() && !client->getUsername().empty()) {
 			std::cout << "Setting registered to true" << std::endl;
+			std::string	welcomeMsg = ":" + std::string(SERVER_NAME) + " 001 " + client->getNickname() + " :Welcome to our IRC network " + client->getNickname() + "!\r\n";
 			client->setRegistered(true);
-			// Send registration message
+			Handler::sendResponse(welcomeMsg, client->getSocketFd());
+			std::string pingMsg = "PING :" + std::string(SERVER_NAME) + "\r\n";
 			// Send ping
+			Handler::sendResponse(pingMsg, client->getSocketFd());
 		}
 	} else if (client->isRegistered() && client->isVerified()) {
 		// Divide received message in a vector of strings
@@ -238,6 +247,11 @@ void	Server::processMessage(int fd, std::string message) {
 		handler.parseCommand(divMsg, *client, clients);
 	}
 }
+
+/**
+ * @brief	splits the received message from client into strings to process in handle
+ * @param	std::string received message trimmed without \r\n ending or any other trailing character
+ */
 
 std::vector<std::string>	Server::splitCmd(std::string trimmedMsg) {
 	std::vector<std::string>	divMsg;
@@ -250,10 +264,10 @@ std::vector<std::string>	Server::splitCmd(std::string trimmedMsg) {
 		divMsg.push_back(word);
 
 	// Debug print
-	std::cout << "Debug: Split message into words: " << std::endl;
-    for (size_t i = 0; i < divMsg.size(); i++) {
-        std::cout << "Word " << i + 1 << ": " << divMsg[i] << std::endl;
-    }
+	// std::cout << "Debug: Split message into words: " << std::endl;
+    // for (size_t i = 0; i < divMsg.size(); i++) {
+    //     std::cout << "Word " << i + 1 << ": " << divMsg[i] << std::endl;
+    // }
 
 	return divMsg;
 }
@@ -274,8 +288,6 @@ void Server::printClients() const
         std::cout << "Client FD: " << clientFd << " - Buffer: [" << buffer << "]" << std::endl;
     }
 }
-
-
 
 /**
  * @brief	disconnects a client (closes its socket fd and deletes it and the 
@@ -309,6 +321,11 @@ void Server::disconnectClient(int clientConnectedfd)
 	// Remove client buffer from the buffers map
 	clientBuffers.erase(clientConnectedfd);
 }
+
+/**
+ * @brief	trims any starting or trailing whitespace \r or \n character
+ * @param	std::string received message until \r\n is found
+ */
 
 std::string Server::trimMessage(std::string str) {
     size_t first = str.find_first_not_of(" \t\r\n");
