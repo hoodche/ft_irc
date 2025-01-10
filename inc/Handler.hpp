@@ -13,7 +13,7 @@
 # include <set>
 # include <map>
 
-typedef void (*cmdHandler)(std::string, Client &);
+typedef void (*cmdHandler)(std::vector<std::string>, Client &);
 
 class Handler {
 	private:

@@ -128,52 +128,50 @@ std::string Handler::toUpperCase(std::string str) {
 
 //JOIN command
 
-void Handler::handleJoinCmd(std::string input, Client &client) {
-	(void)client; //-Werror
-	//Find a space to check format
-	size_t space = input.find(' ');
-    if (space == std::string::npos) {
-        std::cerr << "Invalid JOIN command format" << std::endl;
-        return;
-    }
+void Handler::handleJoinCmd(std::vector<std::string> input, Client &client) {
 
-	//Check if the name of the channel begins with #
-    std::string::iterator channelIterator = std::find(input.begin(), input.end(), ' ') + 1;
-	while (*channelIterator == ' ')
-		channelIterator++;
-	if (*channelIterator != '#'){
-        std::cerr << "Invalid JOIN command format" << std::endl;
+	std::vector<std::string>			channelVector;
+	std::vector<std::string>			passVector;
+	std::map<std::string, std::string>	channelPassDictionary;
+
+	bool		passMode = false;
+
+	std::vector<std::string>::iterator argvIt = input.begin();
+	if (input.size() < 1)
+	{
+		std::cerr << "Invalid JOIN command format" << std::endl;
 		return;
+	} //Check if we only have JOIN
+	argvIt++; //Jump over JOIN
+	while (argvIt != input.end() && passMode == false)
+	{
+		if ((*argvIt)[0] != '#')
+			passMode = true;
+		if (passmode == false)
+			channelVector.push_back(*argvIt);
+		else
+			passVector.push_back(*argvIt);
+		argvIt++;
 	}
-
-	//Get name of the channel in channelName
-    std::string::iterator beginChCommand = channelIterator;
-	while (*channelIterator != ' ' && channelIterator != input.end())
-		channelIterator++;
-	std::string channelName(beginChCommand, channelIterator);
-
-	//Check that we have something more than hastags
-	channelIterator = channelName.begin();
-	while (*channelIterator == '#')
-		channelIterator++;
-	if (channelIterator == channelName.end())
-        std::cerr << "Invalid JOIN command format" << std::endl;
-	else
+	if (channelVector.size() == passVector.size())
+	{
+		std::vector<std::string>::iterator channelPtr = channelVector.begin();
+		std::vector<std::string>::iterator passPtr = passVector.begin();
+		while (channelPtr != channelVector.end())
+		{
+			channelPassDictionary[*channelPtr] = *passPtr;
+			channelPtr++;
+			passPtr++;
+		}
 		joinCmdExec(channelName, client);
-	return;
+	}
+	else
+		std::cerr << "Invalid JOIN command format" << std::endl;
 }
 
 // Verify if the channel exists and call the appropriate function accordingly.
-void Handler::joinCmdExec(std::string channelName, Client &client)
+void Handler::joinCmdExec(std::map<std::string, std::string> channelPassDictionary, Client &client)
 {
-	if (client.isClientInChannel(channelName))
-	{
-		std::cout << "entra" << std::endl;
-		return;
-	}
-	std::vector<Channel>::iterator chIt = channels.begin();
-	while (chIt != channels.end() && chIt->getName() != channelName) //Checks if the channel exists
-		chIt++;
 	if (chIt != channels.end())
 		addClientToChannel(*chIt, client); //Add if the channel exits and add client as user
 	else
