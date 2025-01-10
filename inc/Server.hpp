@@ -21,6 +21,7 @@
 #include <vector>
 #include <poll.h> // for struct pollfd
 #include <map>
+#include <sstream>
 
 class Server
 {

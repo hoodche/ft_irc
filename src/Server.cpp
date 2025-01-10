@@ -178,7 +178,7 @@ void Server::readFromFd(int clientConnectedfd)
         clientBuffers[clientConnectedfd].erase(0, pos + 2);  // Remove the processed part from the buffer
         // Process our complete command
 		// Debug print
-		std::cout << "Message: " << message << std::endl;
+		// std::cout << "Message: " << message << std::endl;
         processMessage(clientConnectedfd, message);
     }
 	// Debug print
@@ -218,12 +218,12 @@ void	Server::processMessage(int fd, std::string message) {
 	if (client->isRegistered() == false && client->isVerified()) {
 		// Order Nick, then User
 		if (trimmedMsg.substr(0, 5) == "NICK ") {
-			client->setNickname(trimmedMsg.substr(6));
-			std::cout << "Got to Nick" << client->getNickname() << std::endl;
+			client->setNickname(trimmedMsg.substr(5));
+			std::cout << "Got this nick: " << client->getNickname() << std::endl;
 		}
 		if (trimmedMsg.substr(0, 5) == "USER ") {
-			client->setUsername(trimmedMsg.substr(6));
-			std::cout << "Got to user" << client->getUsername() << std::endl;
+			client->setUsername(trimmedMsg.substr(5));
+			std::cout << "Got this user: " << client->getUsername() << std::endl;
 		}
 		if (!client->getNickname().empty() && !client->getUsername().empty()) {
 			std::cout << "Setting registered to true" << std::endl;
@@ -240,10 +240,22 @@ void	Server::processMessage(int fd, std::string message) {
 }
 
 std::vector<std::string>	Server::splitCmd(std::string trimmedMsg) {
-	std::cout << "Into splitCmd: "<< trimmedMsg << std::endl;
-	std::vector<std::string> ret;
-	ret.push_back(trimmedMsg);
-	return ret;
+	std::vector<std::string>	divMsg;
+	std::istringstream			ss(trimmedMsg);
+	std::string 				word;
+
+	// The >> operator is used to extract data from the stream (ss) and asign it to a variable,
+	// it reads characters from the stream until it encounters a whitespace character
+	while (ss >> word)
+		divMsg.push_back(word);
+
+	// Debug print
+	std::cout << "Debug: Split message into words: " << std::endl;
+    for (size_t i = 0; i < divMsg.size(); i++) {
+        std::cout << "Word " << i + 1 << ": " << divMsg[i] << std::endl;
+    }
+
+	return divMsg;
 }
 
 /**
@@ -275,13 +287,16 @@ void Server::printClients() const
 void Server::disconnectClient(int clientConnectedfd)
 {
 	close(clientConnectedfd);
+
+	// Remove client from the clients vector
 	for (size_t i = 0; i < clients.size(); i++) {
 		if (clients[i].getSocketFd() == clientConnectedfd) {
 			clients.erase(clients.begin() + i);
 			break;
 		}
 	}
-	
+
+	// Remove client fd from the fds vector
 	for (size_t i = 0; i < this->fds.size(); i++)
 	{
 		if (this->fds[i].fd == clientConnectedfd)
@@ -290,6 +305,9 @@ void Server::disconnectClient(int clientConnectedfd)
 			break;
 		}
 	}
+
+	// Remove client buffer from the buffers map
+	clientBuffers.erase(clientConnectedfd);
 }
 
 std::string Server::trimMessage(std::string str) {
