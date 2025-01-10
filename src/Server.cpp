@@ -154,7 +154,6 @@ void Server::acceptClient()
  */
 void Server::readFromFd(int clientConnectedfd)
 {
-	// Map buffer to save each clients read buffer to use later.
 	char	buffer[1024];
 	ssize_t	bytesRead =recv(clientConnectedfd, buffer, sizeof(buffer) - 1, 0);
 	if (bytesRead < 0) // Error handling
@@ -180,10 +179,10 @@ void Server::readFromFd(int clientConnectedfd)
         // Process our complete command
 		// Debug print
 		std::cout << "Message: " << message << std::endl;
-        // processMessage(clientConnectedfd, message);
+        processMessage(clientConnectedfd, message);
     }
 	// Debug print
-	printClients();
+	// printClients();
 }
 
 /**
@@ -195,13 +194,15 @@ void	Server::processMessage(int fd, std::string message) {
 	std::string trimmedMsg = trimMessage(message);
 
 	// Debug print
-	std::cout << "Trimmed message from fd "<< clientConnectedfd << ": " trimMessage << std::endl;
+	std::cout << "Trimmed message from fd "<< fd << ": " << trimmedMsg << std::endl;
 
 	// Find client by FD
 	Client	*client = Client::findClientByFd(fd, clients);
 
 	// If the client is not verified, check for PASS command
 	if (client->isVerified() == false) {
+		if (trimmedMsg.substr(0, 7) == "CAP LS")
+			return ;
 		if (trimmedMsg.substr(0, 5) == "PASS ") {
 			std::string pwd = trimmedMsg.substr(5);
 			if (pwd == this->password) {
@@ -213,11 +214,40 @@ void	Server::processMessage(int fd, std::string message) {
 			}
 		}
 	}
+
+	if (client->isRegistered() == false && client->isVerified()) {
+		// Order Nick, then User
+		if (trimmedMsg.substr(0, 5) == "NICK ") {
+			client->setNickname(trimmedMsg.substr(6));
+			std::cout << "Got to Nick" << client->getNickname() << std::endl;
+		}
+		if (trimmedMsg.substr(0, 5) == "USER ") {
+			client->setUsername(trimmedMsg.substr(6));
+			std::cout << "Got to user" << client->getUsername() << std::endl;
+		}
+		if (!client->getNickname().empty() && !client->getUsername().empty()) {
+			std::cout << "Setting registered to true" << std::endl;
+			client->setRegistered(true);
+			// Send registration message
+			// Send ping
+		}
+	} else if (client->isRegistered() && client->isVerified()) {
+		// Divide received message in a vector of strings
+		std::vector<std::string> divMsg = splitCmd(trimmedMsg);
+		// Forward command to handler
+		handler.parseCommand(divMsg, *client, clients);
+	}
 }
 
+std::vector<std::string>	Server::splitCmd(std::string trimmedMsg) {
+	std::cout << "Into splitCmd: "<< trimmedMsg << std::endl;
+	std::vector<std::string> ret;
+	ret.push_back(trimmedMsg);
+	return ret;
+}
 
 /**
- * @brief	prints every client held in server
+ * @brief	prints every client held in server. Used for debug purposes
  */
 
 void Server::printClients() const
@@ -232,6 +262,8 @@ void Server::printClients() const
         std::cout << "Client FD: " << clientFd << " - Buffer: [" << buffer << "]" << std::endl;
     }
 }
+
+
 
 /**
  * @brief	disconnects a client (closes its socket fd and deletes it and the 

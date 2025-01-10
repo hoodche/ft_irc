@@ -29,7 +29,7 @@ class Handler {
 
 	public:
 		Handler(void);
-		void parseCommand(std::string input, std::vector<Client> &clients, int fd);
+		void parseCommand(std::vector<std::string> divMsg, Client &client, std::vector<Client> &clients);
 
 		// Utils
 		static void sendResponse(std::string message, int clientFd);

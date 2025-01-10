@@ -55,6 +55,7 @@ class Server
 		static std::string trimMessage(std::string str);
 		void disconnectClient(int clientConnectedfd);
 		void processMessage(int fd, std::string message);
+		std::vector<std::string> splitCmd(std::string trimmedMsg);
 };
 
 #endif

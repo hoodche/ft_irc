@@ -14,45 +14,15 @@ void Handler::initCmdMap(void) {
 	cmdMap["JOIN"] = &handleJoinCmd;
 }
 
-void Handler::parseCommand(std::string input, std::vector<Client> &clients, int fd){
-	// Protect empty string input -> Check
-	if (input.empty())
-        throw std::invalid_argument("Empty command received");
-	std::string	command;
-	Client	*client = Client::findClientByFd(fd, clients);
-	if (!client) {
-        std::cerr << "Client not found for fd: " << fd << std::endl;
-        return;
-    }
-
-	// Remove leading '/' if present when receiving commands -> Check
-    if (!input.empty() && input[0] == '/') {
-        input = input.substr(1);
-    }
-
-	// Check if the input starts with "CAP LS 302" and skip it
-    std::string capLsCmd = "CAP LS 302";
-    if (input.rfind(capLsCmd, 0) == 0) { // rfind(capLsCmd, 0) checks if input starts with capLsCmd
-        size_t nextCmdStart = input.find_first_of("\n") + 1;
-        if (nextCmdStart < input.size()) {
-            input = input.substr(nextCmdStart); // Skip CAP LS 302 and focus on the next command
-        } else {
-            return; // If nothing comes after CAP LS 302, return
-        }
-    }
-
-	size_t space = input.find_first_of(" \t\n"); // Find the command until space, tab or enter, make it CAPs
-	// We extract the first command minus / to compare it in our pointers to function structure
-	if (space == std::string::npos)
-		command	= toUpperCase(input);
-	else
-		command	= toUpperCase(input.substr(0, space));
-	// Check if the command exists in the map
-    if (cmdMap.find(command) != cmdMap.end()) {
-        cmdMap[command](input, *client);
-    } else {
-        std::cout << "Unknown command: " << command << std::endl;
-    }
+void Handler::parseCommand(std::vector<std::string> divMsg, Client &client, std::vector<Client> &clients) {
+	// Check if the command exists in the map. Command extracted as first member of str vector
+	// If command exists and all is good, delete command from str vector
+	if (divMsg[0] == "NICK") {
+		std::cout << "Found nick";
+	}
+	std::cout << client.getSocketFd() << std::endl;
+	std::cout << clients[0].getSocketFd() << std::endl;
+	std::cout << "GOT TO PARSE COMMAND! \n\n\n";
 }
 
 // Pointers to functions methods
@@ -118,13 +88,13 @@ void Handler::sendResponse(std::string message, int clientFd) {
 	}
 }
 
-std::string Handler::toUpperCase(std::string str) {
-    std::string	ret = str;
+// std::string Handler::toUpperCase(std::string str) {
+//     std::string	ret = str;
 
-	for (size_t i = 0; i < str.size(); i++)
-		ret[i] = toupper(ret[i]);
-	return ret;
-}
+// 	for (size_t i = 0; i < str.size(); i++)
+// 		ret[i] = toupper(ret[i]);
+// 	return ret;
+// }
 
 //JOIN command
 
