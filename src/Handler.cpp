@@ -39,6 +39,8 @@ void Handler::parseCommand(std::vector<std::string> divMsg, Client &client, std:
 // Pointers to functions methods
 void Handler::handleUserCmd(std::string input, Client &client) {
 	// To Do: Re-implement User Command
+	std::cout << "Client fd: " << client.getSocketFd() << std::endl;
+	std::cout << "Received username: " << input << std::endl;
 }
 
 //  TO DO: We will have to keep track of all nicknames, nicknames Cannot repeat
@@ -63,13 +65,13 @@ void Handler::handleNickCmd(std::string input, Client &client) {
 		return ;
 	}
 	// Check alphanumeric characters
-	if (!std::all_of(input.begin(), input.end(), [](char c){
-		return std::isalnum(c); // To do: Check other valid characters. If no valid chara is found, return error msg
-	})) {
-		message	= input + " " + ERR_ERRONEUSNICKNAME;
-		sendResponse(message, client.getSocketFd());
-		return ;
-	}
+    for (std::string::size_type i = 0; i < input.size(); ++i) {
+        if (!std::isalnum(input[i])) {
+            message = input + " " + ERR_ERRONEUSNICKNAME;
+            sendResponse(message, client.getSocketFd());
+            return;
+        }
+    }
 	client.setNickname(input);
 	// Debug print
 	std::cout << "Client nickname set to: " << input << std::endl;
