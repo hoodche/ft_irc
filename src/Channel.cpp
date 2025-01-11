@@ -43,6 +43,7 @@ void Channel::setName(std::string const channelName)
 
 void Channel::addUser(Client &client)
 {
+	//Add something to return if we get a repeated user
 	users.push_back(&client);
 }
 

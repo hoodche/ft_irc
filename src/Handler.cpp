@@ -5,17 +5,19 @@ std::vector<Channel> Handler::channels; //Static variable must be declared outsi
 										//so the programmer have to do the job
 
 Handler::Handler(void) {
-	initCmdMap(); // Initialise the command map
+	//initCmdMap(); // Initialise the command map
 }
 
+/*
 void Handler::initCmdMap(void) {
 	cmdMap["USER"] = &handleUserCmd;
 	cmdMap["NICK"] = &handleNickCmd;
 	cmdMap["PING"] = &handlePingCmd;
 	cmdMap["JOIN"] = &handleJoinCmd;
 }
-
+*/
 void Handler::parseCommand(std::string input, std::vector<Client> &clients, int fd){
+	(void)input;
 	// Protect empty string input -> Check
 	if (input.empty())
         throw std::invalid_argument("Empty command received");
@@ -25,6 +27,12 @@ void Handler::parseCommand(std::string input, std::vector<Client> &clients, int 
         std::cerr << "Client not found for fd: " << fd << std::endl;
         return;
     }
+	std::vector<std::string> realInput;
+	realInput.push_back("JOIN");
+	realInput.push_back("#betis");
+	handleJoinCmd(realInput, *client);
+}
+/*
 
 	// Remove leading '/' if present when receiving commands -> Check
     if (!input.empty() && input[0] == '/') {
@@ -107,7 +115,7 @@ void Handler::handlePingCmd(std::string input, Client &client) {
     std::string message = "PONG " + pongResponse;
     sendResponse(message, client.getSocketFd());
 }
-
+*/
 // Utils
 void Handler::sendResponse(std::string message, int clientFd) {
 	ssize_t bytesSent = send(clientFd, message.c_str(), message.size(), 0); // Flag 0 = Default behaviour. man send to see further behaviour.
@@ -131,30 +139,34 @@ std::string Handler::toUpperCase(std::string str) {
 
 void Handler::handleJoinCmd(std::vector<std::string> input, Client &client) {
 
-	std::vector<std::string>			channelVector;
-	std::vector<std::string>			passVector;
+	std::vector<std::string>				channelVector;
+	std::vector<std::string>				passVector;
+	std::map<std::string, std::string>		channelDictionary;
 
 	if (input.size() <= 1 || input.size() > 3)
 	{
 		std::cerr << "Invalid JOIN command format" << std::endl;
 		return;
-	} //Check if we only have JOIN
+	}
 	std::vector<std::string>::iterator argvIt = input.begin();
 	try{
-		argvIt++; //Jump over JOIN
+		argvIt++;
 		channelVector = getChannelVector(*argvIt);
-		argvIt++; //Jump over JOIN
+		argvIt++;
 		if (argvIt != input.end())
 			passVector = getPassVector(*argvIt);
+		channelDictionary = createDictionary(channelVector, passVector);
+		joinCmdExec(channelDictionary, client);
 	}catch(const std::exception &e){
 		std::cout << e.what() << std::endl;
 	}
+
 }
 
-std::vector<std::string> getChannelVector(std::string channelString)
+std::vector<std::string> Handler::getChannelVector(std::string channelString)
 {
 	std::vector<std::string>	channels;
-	std::stringstream			ss(string);
+	std::stringstream			ss(channelString);
 	std::string					tempChannel;
 
 	while(std::getline(ss, tempChannel, ','))
@@ -166,32 +178,78 @@ std::vector<std::string> getChannelVector(std::string channelString)
 	return (channels);
 }
 
-std::vector<std::string> getPassVector(std::string passString)
+std::vector<std::string> Handler::getPassVector(std::string passString)
 {
 	std::vector<std::string>	passwords;
-	std::stringstream			ss(string);
+	std::stringstream			ss(passString);
 	std::string					tempPass;
 
 	while(std::getline(ss, tempPass, ','))
 	{
-		if (*tempChannel.begin() == '#')
+		if (*tempPass.begin() == '#')
 			throw std::invalid_argument("Invalidad JOIN command format");
 		passwords.push_back(tempPass);
 	}
 	return (passwords);
 }
 
-// Verify if the channel exists and call the appropriate function accordingly.
-void Handler::joinCmdExec(std::map<std::string, std::string> channelPassDictionary, Client &client)
+std::map<std::string, std::string> Handler::createDictionary(std::vector<std::string> &channelVector, std::vector<std::string> &passVector)
 {
-	if (chIt != channels.end())
-		addClientToChannel(*chIt, client); //Add if the channel exits and add client as user
-	else
-		createChannel(channelName, client); //Creates the channelxº and add client as operator
+	std::map<std::string, std::string>		channelDictionary;
+
+	std::vector<std::string>::iterator channelIt = channelVector.begin();
+	std::vector<std::string>::iterator passIt = passVector.begin();
+	while(channelIt != channelVector.end() && passIt != passVector.end())
+	{
+		channelDictionary[*channelIt] = *passIt;
+		channelIt++;
+		passIt++;
+	}
+	if (channelIt != channelVector.end()){
+		channelDictionary[*channelIt] = "";
+		channelIt++;
+	}
+	return (channelDictionary);
+}
+
+// Verify if the channel exists and call the appropriate function accordingly.
+void Handler::joinCmdExec(std::map<std::string, std::string> channelDictionary, Client &client)
+{
+	std::map<std::string, std::string>::iterator	itMap = channelDictionary.begin();
+	std::vector<Channel>::iterator					itChannels;
+
+	while (itMap != channelDictionary.end())
+	{
+		std::cout << "bucle" << std::endl;
+		itChannels = findChannel(itMap->first);
+		if (itChannels == channels.end())
+			createChannel(itMap->first, client);
+		else
+			addClientToChannel(*itChannels, client);
+		itMap++;
+	}
+	itChannels = channels.begin();
+	/*
+	while(itChannels != channels.end())
+	{
+		std::cout << "channel name:" << itChannels->getName() << std::endl;
+		itChannels++;
+	}
+	*/
+}
+
+std::vector<Channel>::iterator Handler::findChannel(const std::string &channelName)
+{
+	std::vector<Channel>::iterator itChannels = channels.begin();
+
+	while (itChannels != channels.end() && itChannels->getName() != channelName)
+		itChannels++;
+	return (itChannels);
 }
 
 void Handler::createChannel(std::string channelName, Client &client)
 {
+	std::cout << "entra en crear" << std::endl;
 	Channel channel(client);
 
 	channel.setName(channelName);
@@ -202,6 +260,7 @@ void Handler::createChannel(std::string channelName, Client &client)
 
 void Handler::addClientToChannel(Channel &channel, Client &client)
 {
+	std::cout << "entra en añadir" << std::endl;
 	channel.addUser(client);
 	client.addClientChannel(channel);
 	return;

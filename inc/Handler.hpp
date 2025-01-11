@@ -20,11 +20,15 @@ class Handler {
 		std::map<std::string, cmdHandler> cmdMap;
 		static std::vector<Channel> channels;
 
-		void			initCmdMap(void);
-		static void		handleJoinCmd(std::string input, Client &client); //static cause 
-		static void		joinCmdExec(std::string channelName, Client &client);
-		static void		createChannel(std::string channelName, Client &client);
-		static void		addClientToChannel(Channel &channel, Client &client);
+		void										initCmdMap(void);
+		static void									handleJoinCmd(std::vector<std::string>input, Client &client); //static cause 
+		static void									joinCmdExec(std::map<std::string, std::string> channelDictionary, Client &client);
+		static void									createChannel(std::string channelName, Client &client);
+		static void									addClientToChannel(Channel &channel, Client &client);
+		static std::vector<std::string>				getChannelVector(std::string channelString);
+		static std::vector<std::string>				getPassVector(std::string channelString);
+		static std::map<std::string, std::string>	createDictionary(std::vector<std::string> &channelVector, std::vector<std::string> &passVector);	
+		static std::vector<Channel>::iterator		findChannel(const std::string &channelName);
 	//it is common to all the instances
 
 	public:
