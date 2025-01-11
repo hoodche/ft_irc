@@ -6,7 +6,7 @@
 /*   By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/24 18:26:33 by igcastil          #+#    #+#             */
-/*   Updated: 2025/01/11 16:49:29 by igcastil         ###   ########.fr       */
+/*   Updated: 2025/01/11 17:16:57 by igcastil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -213,7 +213,7 @@ void	Server::processMessage(int fd, std::string message) {
 				std::cout << "Client with fd " << fd << " password correct!" << std::endl;
 			} else {
 				std::cout << "Unauthorized client attempting connection. Client disconnected" << std::endl;
-				disconnectClient(fd);//if another command following PASS was read from socket, after disconnecting client why is next call to processMessage(clientConnectedfd, message) not breakingbreak?????
+				disconnectClient(fd);
 			}
 		}
 	}
