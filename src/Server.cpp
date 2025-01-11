@@ -6,7 +6,7 @@
 /*   By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/24 18:26:33 by igcastil          #+#    #+#             */
-/*   Updated: 2025/01/07 21:15:55 by igcastil         ###   ########.fr       */
+/*   Updated: 2025/01/11 16:49:29 by igcastil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -168,12 +168,12 @@ void Server::readFromFd(int clientConnectedfd)
 	// Check if we have an active buffer for the client; create one if not
 	if (clientBuffers.find(clientConnectedfd) == clientBuffers.end())
 		clientBuffers[clientConnectedfd] = ""; // Initialise to ""
-	// Add buffer to the buffer in the map
+	// Add what was just read from socket to the client buffer in the map
 	clientBuffers[clientConnectedfd].append(buffer);
 
 	// Read until \r\n has been found
 	size_t	pos;
-	while ((pos = clientBuffers[clientConnectedfd].find("\r\n")) != std::string::npos) {
+	while (Client::findClientByFd(clientConnectedfd, clients) && (pos = clientBuffers[clientConnectedfd].find("\r\n")) != std::string::npos) {
         std::string message = clientBuffers[clientConnectedfd].substr(0, pos);
         clientBuffers[clientConnectedfd].erase(0, pos + 2);  // Remove the processed part from the buffer
         // Process our complete command
@@ -186,13 +186,14 @@ void Server::readFromFd(int clientConnectedfd)
 }
 
 /**
- * @brief	processes the received message and divides the string in a vector of strings
+ * @brief	processes the received message and divides the string in a vector 
+ * 			of strings. Message is a potential irc command, a substring read 
+ * 			from from the socket and delimited by \r\n 
  */
 
 void	Server::processMessage(int fd, std::string message) {
 	// Delete any leading or trailing whitespaces (remove \r\n at the end too)
 	std::string trimmedMsg = trimMessage(message);
-
 	// Debug print
 	std::cout << "Trimmed message from fd "<< fd << ": " << trimmedMsg << std::endl;
 
@@ -202,17 +203,17 @@ void	Server::processMessage(int fd, std::string message) {
 	// If the client is not verified, check for PASS command
 	if (client->isVerified() == false) {
 		// Skip the CAP LS command
-		if (trimmedMsg.substr(0, 7) == "CAP LS")
+		if (trimmedMsg.substr(0, 7) == "CAP LS"  || trimmedMsg.substr(0, 7) == "cap ls")
 			return ;
 		// Parse PASS. To do: Double check to protect from segfaults
-		if (trimmedMsg.substr(0, 5) == "PASS ") {
+		if (trimmedMsg.substr(0, 5) == "PASS " || trimmedMsg.substr(0, 5) == "pass ") {
 			std::string pwd = trimmedMsg.substr(5);
 			if (pwd == this->password) {
 				client->setVerified(true);
 				std::cout << "Client with fd " << fd << " password correct!" << std::endl;
 			} else {
 				std::cout << "Unauthorized client attempting connection. Client disconnected" << std::endl;
-				disconnectClient(fd);
+				disconnectClient(fd);//if another command following PASS was read from socket, after disconnecting client why is next call to processMessage(clientConnectedfd, message) not breakingbreak?????
 			}
 		}
 	}
@@ -220,13 +221,13 @@ void	Server::processMessage(int fd, std::string message) {
 	if (client->isRegistered() == false && client->isVerified()) {
 		// Order Nick, then User. To do; Implement error:  ERR_NONICKNAMEGIVEN
 		// Parse NICK. To do: Double check to protect from segfaults
-		if (trimmedMsg.substr(0, 5) == "NICK ") {
+		if (trimmedMsg.substr(0, 5) == "NICK " || trimmedMsg.substr(0, 5) == "nick ") {
 			// Debug print
 			// std::cout << "Got this nick: " << client->getNickname() << std::endl;
 			Handler::handleNickCmd(trimmedMsg.substr(5), *client);
 		}
 		// Parse USER. To do: Double check to protect from segfaults
-		if (trimmedMsg.substr(0, 5) == "USER " && !client->getNickname().empty()) {
+		if ((trimmedMsg.substr(0, 5) == "USER " || trimmedMsg.substr(0, 5) == "user ") && !client->getNickname().empty()) {
 			// Debug print
 			// std::cout << "Got this user: " << client->getUsername() << std::endl;
 			Handler::handleUserCmd(trimmedMsg.substr(5), *client);
@@ -299,7 +300,6 @@ void Server::printClients() const
 void Server::disconnectClient(int clientConnectedfd)
 {
 	close(clientConnectedfd);
-
 	// Remove client from the clients vector
 	for (size_t i = 0; i < clients.size(); i++) {
 		if (clients[i].getSocketFd() == clientConnectedfd) {
@@ -307,7 +307,6 @@ void Server::disconnectClient(int clientConnectedfd)
 			break;
 		}
 	}
-
 	// Remove client fd from the fds vector
 	for (size_t i = 0; i < this->fds.size(); i++)
 	{
@@ -317,9 +316,9 @@ void Server::disconnectClient(int clientConnectedfd)
 			break;
 		}
 	}
-
 	// Remove client buffer from the buffers map
 	clientBuffers.erase(clientConnectedfd);
+	std::cout << "Client FD: " << clientConnectedfd << " has been disconnected" << std::endl;
 }
 
 /**

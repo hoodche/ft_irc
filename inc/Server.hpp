@@ -6,7 +6,7 @@
 /*   By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/24 18:35:03 by igcastil          #+#    #+#             */
-/*   Updated: 2025/01/07 19:24:31 by igcastil         ###   ########.fr       */
+/*   Updated: 2025/01/11 11:38:49 by igcastil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,7 +43,7 @@ class Server
 									//					int fd; File descriptor to poll
 									//					short events; Types of events poller cares about.(common event flags include POLLIN: Data can be read without blocking. POLLOUT: Normal data can be written without blocking. POLLERR: An error has occurred on the file descriptor.
 									//					short revents; (output parameter, filled by the kernel with the events that actually occurred)
-		std::map<int, std::string> clientBuffers;
+		std::map<int, std::string> clientBuffers;// key is client connected socket fd and value is the buffer where every read of the socket is appended
 
 	public:
 		static bool signalReceived;
