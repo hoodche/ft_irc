@@ -1,4 +1,6 @@
 #include "../inc/Handler.hpp"
+#include "../inc/Server.hpp" // Include the header file for the Server class
+#include "../commands/nick.cpp"
 
 std::vector<Channel> Handler::channels; //Static variable must be declared outside the class so the linker can fint it. It is not vinculated to an object,
 										//so the programmer have to do the job
@@ -53,28 +55,21 @@ void Handler::handleUserCmd(std::string input, Client &client) {
 // 	  RFC: 4.1.2 -More info
 
 void Handler::handleNickCmd(std::string input, Client &client) {
-	std::string	message;
-
-	if (input.empty()) {
-		sendResponse(ERR_NONICKNAMEGIVEN, client.getSocketFd());
+	if (!input.empty() && !std::isspace(input.at(0)))//we need to discard messages that were "NICKx" since we needed to get here with all messages "NICK" followed by 0 or more whitespaces in order to send a ERR_NONICKNAMEGIVEN response
+		return;
+	std::string	nickname = Server::trimMessage(input);
+	if (nickname.empty()) {
+		sendResponse(composeResponse(ERR_NONICKNAMEGIVEN_CODE, ERR_NONICKNAMEGIVEN, "", client.getSocketFd()), client.getSocketFd());
 		return ;
 	}
-	if (input.size() < 1 || input.size() > 9) {
-		message	= input + " " + ERR_ERRONEUSNICKNAME; // To do: Check if space is needed
-		sendResponse(message, client.getSocketFd());
+	if (!isNicknameValid(nickname))
+	{
+		sendResponse(composeResponse(ERR_ERRONEUSNICKNAME_CODE, ERR_ERRONEUSNICKNAME, "", client.getSocketFd()), client.getSocketFd());
 		return ;
 	}
-	// Check alphanumeric characters
-    for (std::string::size_type i = 0; i < input.size(); ++i) {
-        if (!std::isalnum(input[i])) {
-            message = input + " " + ERR_ERRONEUSNICKNAME;
-            sendResponse(message, client.getSocketFd());
-            return;
-        }
-    }
-	client.setNickname(input);
+	client.setNickname(nickname);
 	// Debug print
-	std::cout << "Client nickname set to: " << input << std::endl;
+	std::cout << "Client nickname set to: >>" << nickname << "<<" << std::endl;
 }
 
 void Handler::handlePingCmd(std::string input, Client &client) {
@@ -83,6 +78,24 @@ void Handler::handlePingCmd(std::string input, Client &client) {
 }
 
 // Utils
+std::string Handler::prependMyserverName(int clientFd) {
+	struct sockaddr_in myServerAddr;
+	memset(&myServerAddr, 0, sizeof(myServerAddr));
+	socklen_t addrLen = sizeof(myServerAddr);
+	if (getsockname(clientFd, (struct sockaddr*)&myServerAddr, &addrLen) < 0)
+	{
+		std::cerr << "Error getting server name to send response" << std::endl;
+		return ("");
+	}
+	return (":" + std::string(inet_ntoa(myServerAddr.sin_addr)) + " ");
+}
+
+std::string Handler::composeResponse(std::string field1, std::string field2, std::string field3, int clientFd) {
+	std::string message = prependMyserverName(clientFd);
+	message += field1 + field2 + field3 +"\n";
+	return (message);
+}
+
 void Handler::sendResponse(std::string message, int clientFd) {
 	ssize_t bytesSent = send(clientFd, message.c_str(), message.size(), 0); // Flag 0 = Default behaviour. man send to see further behaviour.
 	if (bytesSent == -1) {

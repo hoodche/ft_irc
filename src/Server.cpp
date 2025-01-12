@@ -6,7 +6,7 @@
 /*   By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/24 18:26:33 by igcastil          #+#    #+#             */
-/*   Updated: 2025/01/11 17:16:57 by igcastil         ###   ########.fr       */
+/*   Updated: 2025/01/12 21:30:09 by igcastil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -188,44 +188,39 @@ void Server::readFromFd(int clientConnectedfd)
 /**
  * @brief	processes the received message and divides the string in a vector 
  * 			of strings. Message is a potential irc command, a substring read 
- * 			from from the socket and delimited by \r\n 
+ * 			from the socket and delimited by \r\n 
+ * @param	int fd socket fd where the message came from
+ * @param	std::string received message (one of the potemtial irc commands read
+ * 			in fd socket)
  */
 
 void	Server::processMessage(int fd, std::string message) {
-	// Delete any leading or trailing whitespaces (remove \r\n at the end too)
 	std::string trimmedMsg = trimMessage(message);
 	// Debug print
 	std::cout << "Trimmed message from fd "<< fd << ": " << trimmedMsg << std::endl;
-
-	// Find client by FD
 	Client	*client = Client::findClientByFd(fd, clients);
-
 	// If the client is not verified, check for PASS command
 	if (client->isVerified() == false) {
-		// Skip the CAP LS command
 		if (trimmedMsg.substr(0, 7) == "CAP LS"  || trimmedMsg.substr(0, 7) == "cap ls")
 			return ;
-		// Parse PASS. To do: Double check to protect from segfaults
-		if (trimmedMsg.substr(0, 5) == "PASS " || trimmedMsg.substr(0, 5) == "pass ") {
-			std::string pwd = trimmedMsg.substr(5);
-			if (pwd == this->password) {
+		if (trimmedMsg.substr(0, 4) == "PASS" || trimmedMsg.substr(0, 4) == "pass") {
+			std::string pwd = trimmedMsg.substr(4);
+			if (!pwd.empty() && !std::isspace(pwd.at(0)))//the char after PASS was not a space, so it is not a PASS command
+				return;
+			if (pwd.empty()) {// there was only spaces after PASS
+					Handler::sendResponse(Handler::composeResponse(ERR_NEEDMOREPARAMS_CODE, " PASS ", ERR_NEEDMOREPARAMS, fd), fd);
+					return ;
+			}
+			if (trimMessage(pwd) == this->password) {
 				client->setVerified(true);
 				std::cout << "Client with fd " << fd << " password correct!" << std::endl;
-			} else {
-				std::cout << "Unauthorized client attempting connection. Client disconnected" << std::endl;
-				disconnectClient(fd);
-			}
+			} else
+				std::cout << "Unauthorized client attempting connection" << std::endl;
 		}
 	}
-
 	if (client->isRegistered() == false && client->isVerified()) {
-		// Order Nick, then User. To do; Implement error:  ERR_NONICKNAMEGIVEN
-		// Parse NICK. To do: Double check to protect from segfaults
-		if (trimmedMsg.substr(0, 5) == "NICK " || trimmedMsg.substr(0, 5) == "nick ") {
-			// Debug print
-			// std::cout << "Got this nick: " << client->getNickname() << std::endl;
-			Handler::handleNickCmd(trimmedMsg.substr(5), *client);
-		}
+		if (trimmedMsg.substr(0, 4) == "NICK" || trimmedMsg.substr(0, 4) == "nick")
+			Handler::handleNickCmd(trimmedMsg.substr(4), *client);
 		// Parse USER. To do: Double check to protect from segfaults
 		if ((trimmedMsg.substr(0, 5) == "USER " || trimmedMsg.substr(0, 5) == "user ") && !client->getNickname().empty()) {
 			// Debug print
@@ -242,6 +237,7 @@ void	Server::processMessage(int fd, std::string message) {
 			Handler::sendResponse(pingMsg, client->getSocketFd());
 		}
 	} else if (client->isRegistered() && client->isVerified()) {
+		std::cout << "entra tras registered" << std::endl;
 		// Divide received message in a vector of strings
 		std::vector<std::string> divMsg = splitCmd(trimmedMsg);
 		// Forward command to handler
