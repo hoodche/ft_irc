@@ -54,6 +54,12 @@ void Handler::handleUserCmd(std::string input, Client &client) {
 //    both will removed by use of a server KILL (See Section 3.7.1).
 // 	  RFC: 4.1.2 -More info
 
+/**
+ * @brief	handles the irc "NICK chosennick" command
+ * @param	std::string input . "NICK " was already trimmed
+ * @param	Client &client who sent the NICK command
+ * 
+ */
 void Handler::handleNickCmd(std::string input, Client &client) {
 	if (!input.empty() && !std::isspace(input.at(0)))//we need to discard messages that were "NICKx" since we needed to get here with all messages "NICK" followed by 0 or more whitespaces in order to send a ERR_NONICKNAMEGIVEN response
 		return;
