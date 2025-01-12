@@ -52,6 +52,12 @@ void Handler::handleUserCmd(std::string input, Client &client) {
 //    both will removed by use of a server KILL (See Section 3.7.1).
 // 	  RFC: 4.1.2 -More info
 
+/**
+ * @brief	handles the irc "NICK chosennick" command
+ * @param	std::string input . "NICK " was already trimmed
+ * @param	Client &client who sent the NICK command
+ * 
+ */
 void Handler::handleNickCmd(std::string input, Client &client) {
 	std::string	message;
 
