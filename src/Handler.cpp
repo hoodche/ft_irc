@@ -9,10 +9,11 @@ Handler::Handler(void) {
 
 void Handler::initCmdMap(void) {
 	// Estos se hacen en el flujo de auth, a lo mejo es mejor quitarlos de aquí (USER, NICK, PING)
-	cmdMap["USER"] = &handleUserCmd;
-	cmdMap["NICK"] = &handleNickCmd;
+	// cmdMap["USER"] = &handleUserCmd;
+	// cmdMap["NICK"] = &handleNickCmd;
+	// - - - - - - - - - - - - - -
 	cmdMap["PING"] = &handlePingCmd;
-	cmdMap["JOIN"] = &handleJoinCmd;
+	// cmdMap["JOIN"] = &handleJoinCmd;
 }
 
 
@@ -21,9 +22,14 @@ void Handler::parseCommand(std::vector<std::string> divMsg, Client &client, std:
 	// Check if the command exists in the map. Command extracted as first member of str vector
 	// If command exists and all is good, delete command from str vector
 	// Esto solo está puesto para evitar el -Werror de momento
+	std::string	errResponse;
+	std::string	command = divMsg[0];
 	//--------
-	if (divMsg[0] == "NICK") {
-		std::cout << "Found nick";
+	std::cout << divMsg[0] << std::endl;
+	if ((divMsg[0] == "USER" || divMsg[0] == "user") && client.isRegistered()) {
+		errResponse = client.getUsername() + " :You may not reregister";
+		sendResponse(errResponse, client.getSocketFd());
+		return ;
 	}
 	std::cout << client.getSocketFd() << std::endl;
 	std::cout << clients[0].getSocketFd() << std::endl;
@@ -31,9 +37,9 @@ void Handler::parseCommand(std::vector<std::string> divMsg, Client &client, std:
 	//---------
 	// TO DO: Implementar que cada comando vaya a su respectiva función. Código anterior:
 	// if (cmdMap.find(command) != cmdMap.end()) {
-    //     cmdMap[command](input, *client);
+    //     cmdMap[command](divMsg, client);
     // } else {
-    //     std::cout << "Unknown command: " << command << std::endl;
+    //     std::cout << "" << command << std::endl;
     // }
 	// Pero ahora hay que cambiarlo al tener el vector de strings, etc. 
 }
@@ -43,6 +49,8 @@ void Handler::parseCommand(std::vector<std::string> divMsg, Client &client, std:
  * @param	std::string input . "USER " was already trimmed
  * @param	Client &client who sent the USER command
  */
+
+// TO DO: Is the username first param required to be the same name as nickname?
 
 void Handler::handleUserCmd(std::string input, Client &client) {
 	// Generally seen like this: <username> 0 * <realname> as per this documentation - https://modern.ircdocs.horse/#user-message
@@ -145,8 +153,8 @@ void Handler::handleNickCmd(std::string input, Client &client) {
 	std::cout << "Client nickname set to: " << input << std::endl;
 }
 
-void Handler::handlePingCmd(std::string input, Client &client) {
-    std::string message = "PONG :" + input;
+void Handler::handlePingCmd(std::vector<std::string> input, Client &client) {
+    std::string message = "PONG :" + input[1];
     sendResponse(message, client.getSocketFd());
 }
 
