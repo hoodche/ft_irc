@@ -9,11 +9,15 @@
 # include <algorithm>
 # include <string>
 # include <vector>
+# include <sstream>
 # include <set>
 # include <map>
 
-# define ERR_NONICKNAMEGIVEN	":No nickname given"
-# define ERR_ERRONEUSNICKNAME	":Erroneus nickname"
+# define USERLEN	12
+# define ERR_NEEDMOREPARAMS		":Not enough parameters" //  "<client> <command> :Not enough parameters"
+
+# define ERR_NONICKNAMEGIVEN	":No nickname given" 
+# define ERR_ERRONEUSNICKNAME	":Erroneus nickname" // "<client> <nick>" 
 # define ERR_NICKNAMEINUSE		":Nickname is already in use"
 // To do: See if implementing ERR_NICKCOLLISION is needed to be implemented
 
