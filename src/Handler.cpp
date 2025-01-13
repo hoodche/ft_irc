@@ -29,7 +29,8 @@ void Handler::parseCommand(std::string input, std::vector<Client> &clients, int 
     }
 	std::vector<std::string> realInput;
 	realInput.push_back("JOIN");
-	realInput.push_back("#betis");
+	realInput.push_back("#betis,#hola,#adios");
+	realInput.push_back("pass1,pass2,pass3,pass4");
 	handleJoinCmd(realInput, *client);
 }
 /*
@@ -205,7 +206,7 @@ std::map<std::string, std::string> Handler::createDictionary(std::vector<std::st
 		channelIt++;
 		passIt++;
 	}
-	if (channelIt != channelVector.end()){
+	while (channelIt != channelVector.end()){
 		channelDictionary[*channelIt] = "";
 		channelIt++;
 	}
@@ -220,7 +221,6 @@ void Handler::joinCmdExec(std::map<std::string, std::string> channelDictionary, 
 
 	while (itMap != channelDictionary.end())
 	{
-		std::cout << "bucle" << std::endl;
 		itChannels = findChannel(itMap->first);
 		if (itChannels == channels.end())
 			createChannel(itMap->first, client);
@@ -228,14 +228,6 @@ void Handler::joinCmdExec(std::map<std::string, std::string> channelDictionary, 
 			addClientToChannel(*itChannels, client);
 		itMap++;
 	}
-	itChannels = channels.begin();
-	/*
-	while(itChannels != channels.end())
-	{
-		std::cout << "channel name:" << itChannels->getName() << std::endl;
-		itChannels++;
-	}
-	*/
 }
 
 std::vector<Channel>::iterator Handler::findChannel(const std::string &channelName)
@@ -249,7 +241,6 @@ std::vector<Channel>::iterator Handler::findChannel(const std::string &channelNa
 
 void Handler::createChannel(std::string channelName, Client &client)
 {
-	std::cout << "entra en crear" << std::endl;
 	Channel channel(client);
 
 	channel.setName(channelName);
@@ -260,7 +251,6 @@ void Handler::createChannel(std::string channelName, Client &client)
 
 void Handler::addClientToChannel(Channel &channel, Client &client)
 {
-	std::cout << "entra en añadir" << std::endl;
 	channel.addUser(client);
 	client.addClientChannel(channel);
 	return;
