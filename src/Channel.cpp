@@ -13,6 +13,7 @@ void Channel::initModeMap(void){
 //Default constructor. It is defined because it is a standard, but never used
 
 Channel::Channel(void){
+	this->name = "";
 	this->topic = "";
 	this->password = "";
 	this->userLimit = 0; //On 0, there is no limit
@@ -23,6 +24,7 @@ Channel::Channel(void){
 // user is the default operator
 
 Channel::Channel(Client &firstOperator){
+	this->name = "";
 	this->topic = "";
 	this->password = "";
 	this->userLimit = 0; // On 0, there is no limit // On 0, there is no limit
@@ -31,14 +33,25 @@ Channel::Channel(Client &firstOperator){
 }
 
 Channel::~Channel(void){}
+
 std::string Channel::getName(void) const
 {
 	return this->name;
 }
 
+std::string Channel::getTopic(void) const
+{
+	return this->topic;
+}
+
 void Channel::setName(std::string const channelName)
 {
 	this->name = channelName;
+}
+
+void Channel::setTopic(std::string const channelTopic)
+{
+	this->topic = channelTopic;
 }
 
 void Channel::addUser(Client &client)

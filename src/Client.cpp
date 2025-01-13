@@ -5,12 +5,12 @@
 Client::Client(void): 
 	fd(-1), verified(false), registered(false),
 	//oper(false),
-	 nick(""), username("") {}
+	 nick(""), username(""), clientChannels(NULL) {}
 
 Client::Client(int receivedFd):
 	fd(receivedFd), verified(false) ,registered(false),
 	//oper(false),
-	 nick(""), username("") {}
+	 nick(""), username(""), clientChannels(NULL) {}
 
 Client::~Client(void) {}
 
@@ -63,11 +63,6 @@ Client* Client::findClientByFd(int fd, std::vector<Client> &clients) {
     return NULL;
 }
 
-void Client::addClientChannel(Channel &channel)
-{
-	clientChannels.push_back(&channel);
-}
-
 bool Client::isClientInChannel(std::string channelName)
 {
 	std::vector<Channel *>::iterator it = clientChannels.begin();
@@ -77,4 +72,16 @@ bool Client::isClientInChannel(std::string channelName)
 		return false;
 	else
 		return true;
+}
+
+Channel	&Client::getChannel(std::string &channelStr)
+{
+	std::vector<Channel*>::iterator itChannels = clientChannels.begin();
+	while (!clientChannels.empty() && itChannels != clientChannels.end())
+	{
+		if ((*itChannels)->getName() == channelStr)
+			return (**itChannels);
+		itChannels++;
+	}
+	throw std::out_of_range("Invalid Channel");
 }

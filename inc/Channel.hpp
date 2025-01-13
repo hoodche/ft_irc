@@ -23,8 +23,16 @@ class Channel {
 		Channel(Client &firstOperator);
 		~Channel();
 		
+		
+		//Getters
 		std::string getName(void) const;
+		std::string getTopic(void) const;
+	
+		//Setters
 		void		setName(const std::string name);
+		void		setTopic(const std::string topic);
+
+		//Adders
 		void		addUser(Client &client);
 		void		addOperator(Client &client);
 };

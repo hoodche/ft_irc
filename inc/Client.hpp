@@ -15,7 +15,7 @@ class Client {
 		bool		registered;
 		std::string	nick;
 		std::string	username;
-		std::vector<Channel *> clientChannels;
+		std::vector<Channel> *clientChannels;
 
 	public:
 		Client(void);
@@ -28,7 +28,7 @@ class Client {
 		std::string getUsername(void) const;
 		bool isVerified(void) const;
 		bool isRegistered(void) const;
-
+		Channel	&getChannel(std::string &channelStr);
 		// Setters
 		void setNickname(std::string nickname);
 		void setUsername(std::string user);
@@ -38,7 +38,6 @@ class Client {
 		// Methods
 		static Client	*findClientByFd(int fd, std::vector<Client> &clients);
 		bool			isClientInChannel(std::string channelName);
-		void			addClientChannel(Channel &channel);
 };
 
 #endif

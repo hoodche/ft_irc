@@ -14,6 +14,7 @@ void Handler::initCmdMap(void) {
 	cmdMap["NICK"] = &handleNickCmd;
 	cmdMap["PING"] = &handlePingCmd;
 	cmdMap["JOIN"] = &handleJoinCmd;
+	cmdMap["TOPIC"] = &handleTopicCmd;
 }
 */
 void Handler::parseCommand(std::string input, std::vector<Client> &clients, int fd){
@@ -30,8 +31,12 @@ void Handler::parseCommand(std::string input, std::vector<Client> &clients, int 
 	std::vector<std::string> realInput;
 	realInput.push_back("JOIN");
 	realInput.push_back("#betis,#hola,#adios");
-	realInput.push_back("pass1,pass2,pass3,pass4");
+	//realInput.push_back("pass1,pass2,pass3,pass4");
 	handleJoinCmd(realInput, *client);
+	realInput.clear();
+	realInput.push_back("TOPIC");
+	realInput.push_back("#asdf");
+	handleTopicCmd(realInput, *client);
 }
 /*
 
@@ -245,13 +250,47 @@ void Handler::createChannel(std::string channelName, Client &client)
 
 	channel.setName(channelName);
 	channels.push_back(channel);
-	client.addClientChannel(channels.back());
 	return;
 }
 
 void Handler::addClientToChannel(Channel &channel, Client &client)
 {
 	channel.addUser(client);
-	client.addClientChannel(channel);
 	return;
+}
+
+void Handler::handleTopicCmd(std::vector<std::string> input, Client &client)
+{
+	if (input.size() < 2)
+	{
+		std::cerr << "Incorrect number of arguments" << std::endl;
+		return;
+	}
+	try{
+		Channel targetChannel = client.getChannel(input[1]); //Care, it throws an exception
+		if (input.size() == 2)
+			std::cout << targetChannel.getTopic() << std::endl;
+		else
+		{
+			std::vector<std::string> vectorTopic(input.begin() + 2, input.end());
+			std::string topic = vectorToString(vectorTopic, ' ');
+			targetChannel.setTopic(topic);
+		}
+	}catch(std::exception &e){
+		std::cerr << e.what() << std::endl;
+	}
+}
+
+std::string Handler::vectorToString(std::vector<std::string> vectorTopic, char delim)
+{
+	std::ostringstream	ss;
+
+	std::vector<std::string>::iterator it = vectorTopic.begin();
+	while(it != vectorTopic.end()){
+		ss << *it;
+		if (it != vectorTopic.end() - 1)
+			ss << delim;
+		it++;
+	}
+	return (ss.str());
 }
