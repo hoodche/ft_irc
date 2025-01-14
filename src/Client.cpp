@@ -7,10 +7,10 @@ Client::Client(void):
 	//oper(false),
 	 nick(""), username("") {}
 
-Client::Client(int receivedFd):
+Client::Client(int receivedFd, const Server &connected2Serv):
 	fd(receivedFd), verified(false) ,registered(false),
 	//oper(false),
-	 nick(""), username("") {}
+	 nick(""), username(""), connectedToServer(&connected2Serv) {}
 
 Client::~Client(void) {}
 

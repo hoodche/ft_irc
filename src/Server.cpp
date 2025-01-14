@@ -6,7 +6,7 @@
 /*   By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/24 18:26:33 by igcastil          #+#    #+#             */
-/*   Updated: 2025/01/13 10:54:57 by igcastil         ###   ########.fr       */
+/*   Updated: 2025/01/14 14:52:12 by igcastil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -142,7 +142,7 @@ void Server::acceptClient()
 	this->connectedSocket.events = POLLIN;
 	this->connectedSocket.revents = 0;
 	this->fds.push_back(this->connectedSocket);
-	clients.push_back(Client(connectedSocketFd)); // Adds new accepted client to the end of the vector
+	clients.push_back(Client(connectedSocketFd, *this)); // Adds new accepted client to the end of the vector
 	std::cout << "a new client from IP "<< inet_ntoa(clientAddress.sin_addr) << " and port " << ntohs(clientAddress.sin_port) << " has been connected with socket fd " << connectedSocketFd << std::endl;
 }
 
