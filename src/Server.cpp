@@ -6,7 +6,7 @@
 /*   By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/24 18:26:33 by igcastil          #+#    #+#             */
-/*   Updated: 2025/01/12 21:30:09 by igcastil         ###   ########.fr       */
+/*   Updated: 2025/01/13 10:54:57 by igcastil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -237,7 +237,6 @@ void	Server::processMessage(int fd, std::string message) {
 			Handler::sendResponse(pingMsg, client->getSocketFd());
 		}
 	} else if (client->isRegistered() && client->isVerified()) {
-		std::cout << "entra tras registered" << std::endl;
 		// Divide received message in a vector of strings
 		std::vector<std::string> divMsg = splitCmd(trimmedMsg);
 		// Forward command to handler

@@ -1,5 +1,5 @@
 #include "../inc/Handler.hpp"
-#include "../inc/Server.hpp" // Include the header file for the Server class
+#include "../inc/Server.hpp" 
 #include "../commands/nick.cpp"
 
 std::vector<Channel> Handler::channels; //Static variable must be declared outside the class so the linker can fint it. It is not vinculated to an object,
@@ -73,6 +73,10 @@ void Handler::handleNickCmd(std::string input, Client &client) {
 		sendResponse(composeResponse(ERR_ERRONEUSNICKNAME_CODE, ERR_ERRONEUSNICKNAME, "", client.getSocketFd()), client.getSocketFd());
 		return ;
 	}
+/* 	if(isNickInUse(nickname))
+	{
+		
+	} */
 	client.setNickname(nickname);
 	// Debug print
 	std::cout << "Client nickname set to: >>" << nickname << "<<" << std::endl;
