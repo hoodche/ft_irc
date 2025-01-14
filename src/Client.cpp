@@ -2,15 +2,17 @@
 #include "../inc/Client.hpp"
 #include "../inc/Channel.hpp"
 
+/*
 Client::Client(void): 
 	fd(-1), verified(false), registered(false),
 	//oper(false),
-	 nick(""), username(""), clientChannels(NULL) {}
+	 nick(""), username("") {}
+*/
 
-Client::Client(int receivedFd):
+Client::Client(int receivedFd, const Server &newServer):
 	fd(receivedFd), verified(false) ,registered(false),
 	//oper(false),
-	 nick(""), username(""), clientChannels(NULL) {}
+	 nick(""), username(""), server(&newServer) {}
 
 Client::~Client(void) {}
 

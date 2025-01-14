@@ -7,19 +7,21 @@
 # include <vector>
 
 class Channel;
+class Server;
 
 class Client {
 	private:
+		//Client(void);
 		int 		fd;
 		bool		verified;
 		bool		registered;
 		std::string	nick;
 		std::string	username;
-		std::vector<Channel> *clientChannels;
+		std::vector<Channel *> clientChannels;
+		const Server		*server;
 
 	public:
-		Client(void);
-		Client(int receivedFd);
+		Client(int receivedFd, const Server &newServer);
 		~Client(void);
 
 		// Getters
@@ -35,6 +37,7 @@ class Client {
 		void setVerified(bool tf);
 		void setRegistered(bool tf);
 
+		void addServer(Server &newServer);
 		// Methods
 		static Client	*findClientByFd(int fd, std::vector<Client> &clients);
 		bool			isClientInChannel(std::string channelName);

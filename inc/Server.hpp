@@ -11,15 +11,15 @@
 /* ************************************************************************** */
 
 #ifndef SERVER_HPP
-#define SERVER_HPP
+# define SERVER_HPP
 
-#include "../inc/Client.hpp"
-#include "../inc/Handler.hpp"
-#include "../inc/Channel.hpp"
-#include <string>
-#include <netinet/in.h>
-#include <vector>
-#include <poll.h> // for struct pollfd
+# include "../inc/Client.hpp"
+# include "../inc/Handler.hpp"
+# include "../inc/Channel.hpp"
+# include <string>
+# include <netinet/in.h>
+# include <vector>
+# include <poll.h> // for struct pollfd
 
 class Server
 {
