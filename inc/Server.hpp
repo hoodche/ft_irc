@@ -24,7 +24,7 @@
 class Server
 {
 private:
-	std::vector<Client>	clients;
+	std::list<Client>	clients;
 	Handler				handler;
 	int port;
 	std::string password;
@@ -48,7 +48,7 @@ public:
 	static void signalHandler(int signum);
 	void acceptClient();
 	void readFromFd(int fd);
-	void printClients(void) const;
+	void printClients(void);
 	static std::string trimMessage(std::string str);
 	void disconnectClient(int clientConnectedfd);
 };

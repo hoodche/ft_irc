@@ -56,10 +56,11 @@ void Client::setRegistered(bool tf) {
 	return ;
 }
 
-Client* Client::findClientByFd(int fd, std::vector<Client> &clients) {
-    for (size_t i = 0; i < clients.size(); i++) {
-        if (clients[i].getSocketFd() == fd) {
-            return &clients[i];
+Client* Client::findClientByFd(int fd, std::list<Client> &clients) {
+	std::list<Client>::iterator it = clients.begin();
+    while(it != clients.end()) {
+        if (it->getSocketFd() == fd) {
+            return &(*it);
         }
     }
     return NULL;
@@ -86,4 +87,9 @@ Channel	&Client::getChannel(std::string &channelStr)
 		itChannels++;
 	}
 	throw std::out_of_range("Invalid Channel");
+}
+
+void Client::addChannel(Channel &newChannel)
+{
+	clientChannels.push_back(&newChannel);
 }

@@ -5,6 +5,7 @@
 # include <string>
 # include <iostream>
 # include <vector>
+# include <list>
 
 class Channel;
 class Server;
@@ -38,8 +39,9 @@ class Client {
 		void setRegistered(bool tf);
 
 		void addServer(Server &newServer);
+		void addChannel(Channel &newChannel);
 		// Methods
-		static Client	*findClientByFd(int fd, std::vector<Client> &clients);
+		static Client	*findClientByFd(int fd, std::list<Client> &clients);
 		bool			isClientInChannel(std::string channelName);
 };
 

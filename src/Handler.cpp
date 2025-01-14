@@ -1,7 +1,7 @@
 #include "../inc/Handler.hpp"
 #include <sstream>
 
-std::vector<Channel> Handler::channels; //Static variable must be declared outside the class so the linker can fint it. It is not vinculated to an object,
+std::list<Channel> Handler::channels; //Static variable must be declared outside the class so the linker can fint it. It is not vinculated to an object,
 										//so the programmer have to do the job
 
 Handler::Handler(void) {
@@ -17,7 +17,7 @@ void Handler::initCmdMap(void) {
 	cmdMap["TOPIC"] = &handleTopicCmd;
 }
 */
-void Handler::parseCommand(std::string input, std::vector<Client> &clients, int fd){
+void Handler::parseCommand(std::string input, std::list<Client> &clients, int fd){
 	(void)input;
 	// Protect empty string input -> Check
 	if (input.empty())
@@ -35,7 +35,7 @@ void Handler::parseCommand(std::string input, std::vector<Client> &clients, int 
 	handleJoinCmd(realInput, *client);
 	realInput.clear();
 	realInput.push_back("TOPIC");
-	realInput.push_back("#asdf");
+	realInput.push_back("#betis");
 	handleTopicCmd(realInput, *client);
 }
 /*
@@ -222,7 +222,7 @@ std::map<std::string, std::string> Handler::createDictionary(std::vector<std::st
 void Handler::joinCmdExec(std::map<std::string, std::string> channelDictionary, Client &client)
 {
 	std::map<std::string, std::string>::iterator	itMap = channelDictionary.begin();
-	std::vector<Channel>::iterator					itChannels;
+	std::list<Channel>::iterator					itChannels;
 
 	while (itMap != channelDictionary.end())
 	{
@@ -235,9 +235,9 @@ void Handler::joinCmdExec(std::map<std::string, std::string> channelDictionary, 
 	}
 }
 
-std::vector<Channel>::iterator Handler::findChannel(const std::string &channelName)
+std::list<Channel>::iterator Handler::findChannel(const std::string &channelName)
 {
-	std::vector<Channel>::iterator itChannels = channels.begin();
+	std::list<Channel>::iterator itChannels = channels.begin();
 
 	while (itChannels != channels.end() && itChannels->getName() != channelName)
 		itChannels++;
@@ -250,12 +250,14 @@ void Handler::createChannel(std::string channelName, Client &client)
 
 	channel.setName(channelName);
 	channels.push_back(channel);
+	client.addChannel(channels.back());
 	return;
 }
 
 void Handler::addClientToChannel(Channel &channel, Client &client)
 {
 	channel.addUser(client);
+	client.addChannel(channel);
 	return;
 }
 

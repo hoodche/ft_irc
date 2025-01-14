@@ -198,12 +198,16 @@ void Server::readFromFd(int clientConnectedfd)
 /**
  * @brief	prints every client held in server
  */
-void Server::printClients() const
+void Server::printClients()
 {
     std::cout << "Currently connected clients:" << std::endl;
-    for (size_t i = 0; i < clients.size(); i++)
+	std::list<Client>::iterator it = clients.begin();
+	size_t i = 0;
+	while(it != clients.end())
     {
-        std::cout << "Client " << i + 1 << ": Socket FD = " << clients[i].getSocketFd() << std::endl;
+        std::cout << "Client " << i + 1 << ": Socket FD = " << it->getSocketFd() << std::endl;
+		it++;
+		i++;
     }
 }
 
@@ -216,13 +220,14 @@ void Server::printClients() const
 void Server::disconnectClient(int clientConnectedfd)
 {
 	close(clientConnectedfd);
-	for (size_t i = 0; i < clients.size(); i++) {
-		if (clients[i].getSocketFd() == clientConnectedfd) {
-			clients.erase(clients.begin() + i);
+	std::list<Client>::iterator it = clients.begin();
+	while(it != clients.end())
+	{
+		if (it->getSocketFd() == clientConnectedfd) {
+			clients.erase(it);
 			break;
 		}
 	}
-	
 	for (size_t i = 0; i < this->fds.size(); i++)
 	{
 		if (this->fds[i].fd == clientConnectedfd)

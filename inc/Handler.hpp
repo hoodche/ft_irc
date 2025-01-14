@@ -12,13 +12,14 @@
 # include <vector>
 # include <set>
 # include <map>
+# include <list>
 
 typedef void (*cmdHandler)(std::vector<std::string>, Client &);
 
 class Handler {
 	private:
 		std::map<std::string, cmdHandler> cmdMap;
-		static std::vector<Channel> channels;
+		static std::list<Channel> channels;
 
 		void										initCmdMap(void);
 		static void									joinCmdExec(std::map<std::string, std::string> channelDictionary, Client &client);
@@ -27,13 +28,13 @@ class Handler {
 		static std::vector<std::string>				getChannelVector(std::string channelString);
 		static std::vector<std::string>				getPassVector(std::string channelString);
 		static std::map<std::string, std::string>	createDictionary(std::vector<std::string> &channelVector, std::vector<std::string> &passVector);	
-		static std::vector<Channel>::iterator		findChannel(const std::string &channelName);
+		static std::list<Channel>::iterator		findChannel(const std::string &channelName);
 		static std::string							vectorToString(std::vector<std::string> vectorTopic, char delim);
 	//it is common to all the instances
 
 	public:
 		Handler(void);
-		void parseCommand(std::string input, std::vector<Client> &clients, int fd);
+		void parseCommand(std::string input, std::list<Client> &clients, int fd);
 
 		// Utils
 		static void sendResponse(std::string message, int clientFd);
