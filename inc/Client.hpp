@@ -31,7 +31,7 @@ class Client {
 		std::string getUsername(void) const;
 		bool isVerified(void) const;
 		bool isRegistered(void) const;
-		Channel	&getChannel(std::string &channelStr);
+		Channel	*getChannel(std::string &channelStr);
 		// Setters
 		void setNickname(std::string nickname);
 		void setUsername(std::string user);

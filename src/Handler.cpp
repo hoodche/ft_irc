@@ -269,14 +269,14 @@ void Handler::handleTopicCmd(std::vector<std::string> input, Client &client)
 		return;
 	}
 	try{
-		Channel targetChannel = client.getChannel(input[1]); //Care, it throws an exception
+		Channel *targetChannel = client.getChannel(input[1]); //Care, it throws an exception
 		if (input.size() == 2)
-			std::cout << targetChannel.getTopic() << std::endl;
+			std::cout << targetChannel->getTopic() << std::endl;
 		else
 		{
 			std::vector<std::string> vectorTopic(input.begin() + 2, input.end());
 			std::string topic = vectorToString(vectorTopic, ' ');
-			targetChannel.setTopic(topic);
+			targetChannel->setTopic(topic);
 		}
 	}catch(std::exception &e){
 		std::cerr << e.what() << std::endl;

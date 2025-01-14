@@ -77,13 +77,13 @@ bool Client::isClientInChannel(std::string channelName)
 		return true;
 }
 
-Channel	&Client::getChannel(std::string &channelStr)
+Channel	*Client::getChannel(std::string &channelStr)
 {
 	std::vector<Channel*>::iterator itChannels = clientChannels.begin();
 	while (!clientChannels.empty() && itChannels != clientChannels.end())
 	{
 		if ((*itChannels)->getName() == channelStr)
-			return (**itChannels);
+			return (*itChannels);
 		itChannels++;
 	}
 	throw std::out_of_range("Invalid Channel");
