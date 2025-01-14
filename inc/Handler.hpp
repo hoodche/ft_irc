@@ -28,7 +28,7 @@ class Handler {
 		static std::vector<std::string>				getChannelVector(std::string channelString);
 		static std::vector<std::string>				getPassVector(std::string channelString);
 		static std::map<std::string, std::string>	createDictionary(std::vector<std::string> &channelVector, std::vector<std::string> &passVector);	
-		static std::list<Channel>::iterator		findChannel(const std::string &channelName);
+		static std::list<Channel>::iterator			findChannel(const std::string &channelName);
 		static std::string							vectorToString(std::vector<std::string> vectorTopic, char delim);
 	//it is common to all the instances
 
@@ -46,6 +46,7 @@ class Handler {
 		static void handlePingCmd(std::string input, Client &client);
 		static void	handleJoinCmd(std::vector<std::string>input, Client &client);
 		static void handleTopicCmd(std::vector<std::string> input, Client &client);
+		static void handleKickCmd(std::vector<std::string> input, Client &client);
 };
 
 #endif

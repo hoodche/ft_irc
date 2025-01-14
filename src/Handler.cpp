@@ -15,6 +15,7 @@ void Handler::initCmdMap(void) {
 	cmdMap["PING"] = &handlePingCmd;
 	cmdMap["JOIN"] = &handleJoinCmd;
 	cmdMap["TOPIC"] = &handleTopicCmd;
+	cmdMap["KICK"] = &handleKickCmd;
 }
 */
 void Handler::parseCommand(std::string input, std::list<Client> &clients, int fd){
@@ -302,4 +303,13 @@ std::string Handler::vectorToString(std::vector<std::string> vectorTopic, char d
 		it++;
 	}
 	return (ss.str());
+}
+
+/*					*/
+/*	 KICK command	*/
+/*					*/
+
+void Handler::handleKickCmd(std::vector<std::string> input, Client &client)
+{
+	return;
 }
