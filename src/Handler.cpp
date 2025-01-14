@@ -36,6 +36,7 @@ void Handler::parseCommand(std::string input, std::list<Client> &clients, int fd
 	realInput.clear();
 	realInput.push_back("TOPIC");
 	realInput.push_back("#betis");
+	realInput.push_back("hola como estamos");
 	handleTopicCmd(realInput, *client);
 }
 /*
@@ -141,7 +142,9 @@ std::string Handler::toUpperCase(std::string str) {
 	return ret;
 }
 
-//JOIN command
+/*					*/
+/*	 JOIN command	*/
+/*					*/
 
 void Handler::handleJoinCmd(std::vector<std::string> input, Client &client) {
 
@@ -261,6 +264,10 @@ void Handler::addClientToChannel(Channel &channel, Client &client)
 	return;
 }
 
+/*					*/
+/*	 TOPIC command	*/
+/*					*/
+
 void Handler::handleTopicCmd(std::vector<std::string> input, Client &client)
 {
 	if (input.size() < 2)
@@ -276,7 +283,7 @@ void Handler::handleTopicCmd(std::vector<std::string> input, Client &client)
 		{
 			std::vector<std::string> vectorTopic(input.begin() + 2, input.end());
 			std::string topic = vectorToString(vectorTopic, ' ');
-			targetChannel->setTopic(topic);
+			targetChannel->setTopic(topic, client);
 		}
 	}catch(std::exception &e){
 		std::cerr << e.what() << std::endl;

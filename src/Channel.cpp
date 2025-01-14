@@ -49,9 +49,19 @@ void Channel::setName(std::string const channelName)
 	this->name = channelName;
 }
 
-void Channel::setTopic(std::string const channelTopic)
+void Channel::setTopic(std::string const channelTopic, Client &client)
 {
-	this->topic = channelTopic;
+	std::vector<Client *>::iterator it = operators.begin();
+	while(it != operators.end())
+	{
+		if ((*it)->getNickname() == client.getNickname())
+		{
+			this->topic = channelTopic;
+			return;
+		}
+		it++;
+	}
+	std::cerr << "Client is not an operator" << std::endl;
 }
 
 void Channel::addUser(Client &client)

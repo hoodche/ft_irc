@@ -30,7 +30,7 @@ class Channel {
 	
 		//Setters
 		void		setName(const std::string name);
-		void		setTopic(const std::string topic);
+		void		setTopic(const std::string topic, Client &client);
 
 		//Adders
 		void		addUser(Client &client);
