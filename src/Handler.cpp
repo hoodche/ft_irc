@@ -11,24 +11,19 @@ Handler::Handler(void) {
 }
 
 void Handler::initCmdMap(void) {
-	cmdMap["USER"] = &handleUserCmd;
-	cmdMap["NICK"] = &handleNickCmd;
-	cmdMap["PING"] = &handlePingCmd;
-	cmdMap["JOIN"] = &handleJoinCmd;
-	cmdMap["TOPIC"] = &handleTopicCmd;
+	cmdMap["user"] = &handleUserCmd;
+	cmdMap["nick"] = &handleNickCmd;
+	cmdMap["ping"] = &handlePingCmd;
+	cmdMap["join"] = &handleJoinCmd;
+	cmdMap["topic"] = &handleTopicCmd;
 	//cmdMap["KICK"] = &handleKickCmd;
 }
 
-void Handler::parseCommand(std::vector<std::string> divMsg, Client &client, std::list<Client> &clients) {
+void Handler::parseCommand(std::vector<std::string> divMsg, Client &client) {
 	// Check if the command exists in the map. Command extracted as first member of str vector
 	// If command exists and all is good, delete command from str vector
 	// Esto solo está puesto para evitar el -Werror de momento
 	std::string	command = divMsg[0];
-	std::cout << client.getSocketFd() << std::endl;
-	std::cout << clients.front().getSocketFd() << std::endl;
-	std::cout << "GOT TO PARSE COMMAND! \n\n\n";
-	//---------
-	// TO DO: Implementar que cada comando vaya a su respectiva función. Código anterior:
 	if (cmdMap.find(command) != cmdMap.end()) {
 		cmdMap[command](divMsg, client);
     } else {
@@ -45,7 +40,9 @@ void Handler::parseCommand(std::vector<std::string> divMsg, Client &client, std:
 void Handler::handleUserCmd(std::vector<std::string> divMsg, Client &client) {
 	// Generally seen like this: <username> 0 * <realname> as per this documentation - https://modern.ircdocs.horse/#user-message
 	// Default client received command: USER nerea 0 * :realname -> input = nerea 0 * :realname
+
 	// Check that we have the 4 required parameters	
+	client.setRegistered(true);
 	if (divMsg.size() < 4) {
 		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + ERR_NEEDMOREPARAMS "\n", client.getSocketFd());
 		return ;
@@ -63,11 +60,6 @@ void Handler::handleUserCmd(std::vector<std::string> divMsg, Client &client) {
 		if (i < vecSize - 1)
 			realname += " ";
 	}
-	// Debug print
-	// std::cout << "Debug: Split message into words: " << std::endl;
-    // for (size_t i = 0; i < divMsg.size(); i++) {
-    //     std::cout << "Word " << i + 1 << ": " << divMsg[i] << std::endl;
-    // }
 	
 	// Check that username goes according to what is expected, otherwise send an error to the client
 	if (username.empty() || username.length() < 1 || username.length() > USERLEN) {
@@ -95,8 +87,6 @@ void Handler::handleUserCmd(std::vector<std::string> divMsg, Client &client) {
 	realname = realname.substr(1);
 	client.setUsername(username);
 	client.setRealname(realname);
-	// std::cout << "Debug print: " << client.getRealname() << std::endl;
-	 std::cout << "Username [" << client.getUsername() << "] and realname [" << client.getRealname() << "]" << std::endl;
 }
 /**
  * @brief	handles the irc "NICK chosennick" command
@@ -149,14 +139,6 @@ void Handler::sendResponse(std::string message, int clientFd) {
 		// Debug Print
 		std::cout << "Response sent to client: " << message << std::endl;
 	}
-}
-
-std::string Handler::toUpperCase(std::string str) {
-    std::string	ret = str;
-
-	for (size_t i = 0; i < str.size(); i++)
-		ret[i] = toupper(ret[i]);
-	return ret;
 }
 
 /*					*/

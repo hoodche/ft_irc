@@ -6,7 +6,7 @@
 /*   By: nvillalt <nvillalt@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/24 18:26:33 by igcastil          #+#    #+#             */
-/*   Updated: 2025/01/15 20:22:30 by nvillalt         ###   ########.fr       */
+/*   Updated: 2025/01/15 20:40:48 by nvillalt         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -181,7 +181,6 @@ void Server::readFromFd(int clientConnectedfd)
 	while (Client::findClientByFd(clientConnectedfd, clients) && (pos = clientBuffers[clientConnectedfd].find("\r\n")) != std::string::npos) {
 		std::string message = clientBuffers[clientConnectedfd].substr(0, pos);
 		clientBuffers[clientConnectedfd].erase(0, pos + 2);  // Remove the processed part from the buffer
-		// Process our complete command
 		// Debug print
 		// std::cout << "Message: " << message << std::endl;
 		processMessage(clientConnectedfd, message);
@@ -254,7 +253,7 @@ void	Server::processMessage(int fd, std::string message) {
 			return ;
 		}
 		// Forward command to handler
-		handler.parseCommand(divMsg, *client, clients);
+		handler.parseCommand(divMsg, *client);
 	}
 } 
 

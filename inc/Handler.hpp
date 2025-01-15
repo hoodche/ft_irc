@@ -55,7 +55,7 @@ class Handler {
 
 	public:
 		Handler(void);
-		void parseCommand(std::vector<std::string> divMsg, Client &client, std::list<Client> &clients);
+		void parseCommand(std::vector<std::string> divMsg, Client &client);
 
 		// Utils
 		static std::string prependMyserverName(int clientFd);
