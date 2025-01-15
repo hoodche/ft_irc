@@ -6,7 +6,7 @@
 /*   By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/24 18:35:03 by igcastil          #+#    #+#             */
-/*   Updated: 2025/01/11 11:38:49 by igcastil         ###   ########.fr       */
+/*   Updated: 2025/01/15 02:54:50 by igcastil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,6 +48,7 @@ class Server
 	public:
 		static bool signalReceived;
 		Server();
+		std::vector<Client> getClients(void) const;
 		void closeFds();
 		void initSocket();
 		void init(int port, std::string pass);
