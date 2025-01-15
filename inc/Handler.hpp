@@ -12,8 +12,12 @@
 # include <string>
 # include <string.h> //for memset
 # include <vector>
+# include <sstream>
 # include <set>
 # include <map>
+
+# define USERLEN	12
+# define ERR_NEEDMOREPARAMS		":Not enough parameters" //  "<client> <command> :Not enough parameters"
 
 
 # define ERR_NONICKNAMEGIVEN_CODE	"431 "
@@ -27,7 +31,7 @@
 # define ERR_NICKNAMEINUSE			":Nickname is already in use"
 // To do: See if implementing ERR_NICKCOLLISION is needed to be implemented
 
-typedef void (*cmdHandler)(std::string, Client &);
+typedef void (*cmdHandler)(std::vector<std::string>, Client &);
 
 class Handler {
 	private:
@@ -50,10 +54,11 @@ class Handler {
 		static void sendResponse(std::string message, int clientFd);
 		static std::string toUpperCase(std::string str);
 
-		// Methods for pointers to function
+		// Methods for Auth Functions
 		static void handleUserCmd(std::string input, Client &client);
 		static void handleNickCmd(std::string input, Client &client);
-		static void handlePingCmd(std::string input, Client &client);
+
+		static void handlePingCmd(std::vector<std::string> input, Client &client);
 };
 
 #endif
