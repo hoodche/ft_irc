@@ -28,6 +28,8 @@
 # define ERR_NICKNAMEINUSE			":Nickname is already in use"
 # define ERR_NEEDMOREPARAMS_CODE	"461 "
 # define ERR_NEEDMOREPARAMS			":Not enough parameters"
+# define ERR_ALREADYREGISTERED_CODE	"462 "
+# define ERR_ALREADYREGISTERED		":You may not reregister"
 # define ERR_PASSWDMISMATCH_CODE	"464 "
 # define ERR_PASSWDMISMATCH			":Password incorrect"
 # define ERR_NICKNAMEINUSE			":Nickname is already in use"

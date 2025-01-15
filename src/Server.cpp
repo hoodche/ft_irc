@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+        */
+/*   By: nvillalt <nvillalt@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/24 18:26:33 by igcastil          #+#    #+#             */
-/*   Updated: 2025/01/15 18:08:47 by igcastil         ###   ########.fr       */
+/*   Updated: 2025/01/15 19:33:36 by nvillalt         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -301,27 +301,16 @@ void	Server::processMessage(int fd, std::string message) {
  	if (client->isRegistered() == false && client->isVerified()) {
 		if (divMsg[0] == "nick")
 			Handler::handleNickCmd(divMsg, *client);
-		// Parse USER. To do: Double check to protect from segfaults
-/*		if ((trimmedMsg.substr(0, 5) == "USER " || trimmedMsg.substr(0, 5) == "user ") && !client->getNickname().empty()) {
-			// Debug print
-			// std::cout << "Got this user: " << client->getUsername() << std::endl;
-			Handler::handleUserCmd(trimmedMsg.substr(5), *client);
-		}
-		if (!client->getNickname().empty() && !client->getUsername().empty()) {
-			std::cout << "Setting registered to true" << std::endl;
-			std::string	welcomeMsg = ":" + std::string(SERVER_NAME) + " 001 " + client->getNickname() + " :Welcome to our IRC network " + client->getNickname() + "!\r\n";
-			client->setRegistered(true);
-			Handler::sendResponse(welcomeMsg, client->getSocketFd());
-			std::string pingMsg = "PING :" + std::string(SERVER_NAME) + "\r\n";
-			// Send ping
-			Handler::sendResponse(pingMsg, client->getSocketFd());
-		}*/
-	} /*else if (client->isRegistered() && client->isVerified()) {
-		// Divide received message in a vector of strings
-		std::vector<std::string> divMsg = splitCmd(trimmedMsg);
+		if (divMsg[0] == "user")
+			Handler::handleUserCmd(divMsg, *client);
+		if (!client->getUsername().empty() && !client->getNickname().empty()) {
+			Handler::sendResponse(Handler::prependMyserverName(fd) + " 001 " + client->getNickname() + ":Welcome to our IRC network, " + client->getNickname() + "\n", fd);
+			Handler::sendResponse("PING " + Handler::prependMyserverName(fd) + "\n", fd);
+		} 
+	} else if (client->isRegistered() && client->isVerified()) {
 		// Forward command to handler
 		handler.parseCommand(divMsg, *client, clients);
-	}*/
+	}
 } 
 
 /**

@@ -28,9 +28,8 @@ void Handler::parseCommand(std::vector<std::string> divMsg, Client &client, std:
 	std::string	command = divMsg[0];
 	//--------
 	std::cout << divMsg[0] << std::endl;
-	if ((divMsg[0] == "USER" || divMsg[0] == "user") && client.isRegistered()) {
-		errResponse = client.getUsername() + " :You may not reregister";
-		sendResponse(errResponse, client.getSocketFd());
+	if ((divMsg[0] == "user" || divMsg[0] == "pass") && client.isRegistered()) {
+		Handler::sendResponse(Handler::prependMyserverName(client.getSocketFd()) + ERR_ALREADYREGISTERED_CODE + ERR_ALREADYREGISTERED + "\n", client.getSocketFd());
 		return ;
 	}
 	std::cout << client.getSocketFd() << std::endl;
