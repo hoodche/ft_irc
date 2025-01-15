@@ -12,7 +12,7 @@ Client::Client(void):
 Client::Client(int receivedFd, const Server &newServer):
 	fd(receivedFd), verified(false) ,registered(false),
 	//oper(false),
-	 nick(""), username(""), server(&newServer) {}
+	 nick(""), username(""), connectedToServer(&newServer) {}
 
 Client::~Client(void) {}
 
@@ -28,6 +28,14 @@ std::string Client::getUsername(void) const {
 	return this->username;
 }
 
+const Server* Client::getServer(void) const {
+	return this->connectedToServer;
+}
+
+std::string	Client::getRealname(void) const {
+	return this->realname;
+}
+
 bool Client::isVerified(void) const {
 	return this->verified;
 }
@@ -37,22 +45,27 @@ bool Client::isRegistered(void) const {
 }
 
 void Client::setNickname(std::string nickname) {
-	nick = nickname;
+	this->nick = nickname;
 	return ;
 }
 
 void Client::setUsername(std::string user) {
-	username = user;
+	this->username = user;
+	return ;
+}
+
+void Client::setRealname(std::string realname) {
+	this->realname = realname;
 	return ;
 }
 
 void Client::setVerified(bool tf) {
-	verified = tf;
+	this->verified = tf;
 	return ;
 }
 
 void Client::setRegistered(bool tf) {
-	registered = tf;
+	this->registered = tf;
 	return ;
 }
 

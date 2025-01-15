@@ -6,7 +6,7 @@
 /*   By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/24 18:26:33 by igcastil          #+#    #+#             */
-/*   Updated: 2025/01/07 21:15:55 by igcastil         ###   ########.fr       */
+/*   Updated: 2025/01/15 04:05:26 by igcastil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,6 +41,10 @@ void Server::signalHandler(int signal)
 	Server::signalReceived = true;
 }
 
+std::list<Client> Server::getClients(void) const
+{
+	return this->clients;
+}
 /**
  * @brief		closes all socket descriptors opened so far in the server 
  * 				(in the fds vector -listening socket + connected sockets)
@@ -154,60 +158,134 @@ void Server::acceptClient()
  */
 void Server::readFromFd(int clientConnectedfd)
 {
-	char buffer[1024];
-	ssize_t bytesRead = recv(clientConnectedfd, buffer, sizeof(buffer) - 1 , 0);//Reads 3rd arg bytes into buffer from clientSocketFd. Returns the number read, -1 for errors or 0 for EOF.The call to recv() is blocking by default.(it will block the execution of the program until data is available to be read from the file descriptor or an error occurs. If there is no data available, the program will wait (block) until data becomes available.). But here is not blocking since clientConnectedfd was set to fcntl(connectedSocketFd, F_SETFL, O_NONBLOCK)
-	if (bytesRead < 0)
-		throw(std::runtime_error("server could not read incoming message "));
-	else if (bytesRead == 0)// Client has closed the connection!!
-	{
-		// Move all of this to 1 function -> handle dc
+	char	buffer[1024];
+	ssize_t	bytesRead =recv(clientConnectedfd, buffer, sizeof(buffer) - 1, 0);
+	if (bytesRead < 0) // Error handling
+		throw std::runtime_error("Server could not read incoming mesage ");
+	else if (bytesRead == 0) { // Client has closed the connection
 		std::cout << "Client has closed the connection" << std::endl;
 		disconnectClient(clientConnectedfd);
+		return ;
 	}
-	else
-	{
-		buffer[bytesRead] = '\0'; // Null-terminate the buffer
-		std::string message = trimMessage(buffer);
-		Client *client = Client::findClientByFd(clientConnectedfd, clients);
+	buffer[bytesRead] = '\0'; // Null-terminate the buffer
+
+	// Check if we have an active buffer for the client; create one if not
+	if (clientBuffers.find(clientConnectedfd) == clientBuffers.end())
+		clientBuffers[clientConnectedfd] = ""; // Initialise to ""
+	// Add what was just read from socket to the client buffer in the map
+	clientBuffers[clientConnectedfd].append(buffer);
+
+	// Read until \r\n has been found
+	size_t	pos;
+	while (Client::findClientByFd(clientConnectedfd, clients) && (pos = clientBuffers[clientConnectedfd].find("\r\n")) != std::string::npos) {
+        std::string message = clientBuffers[clientConnectedfd].substr(0, pos);
+        clientBuffers[clientConnectedfd].erase(0, pos + 2);  // Remove the processed part from the buffer
+        // Process our complete command
 		// Debug print
-		std::cout << "Received message from fd " << clientConnectedfd << ": " << buffer << std::endl;
-		if (client->isVerified() == false) {
-			if (message.substr(0, 5) == "PASS ") {
-				std::string pwd = message.substr(5);
-				// std::cout << "DEBUG RAW MESSAGE: [" << message << "] (length: " << message.length() << ")" << std::endl;
-				// std::cout << "Extracted PWD: [" << pwd << "], Expected PWD: [" << this->password << "]" << std::endl;
-				if (pwd == this-> password) {
-					client->setVerified(true);
-					// Debug print	
-					std::cout << "Client with fd " << clientConnectedfd << " password correct" << std::endl;
-				} else {
-					// Debug Print. Same as above, move to function.
-					std::cout << "Unauthorized client attempting connection. Closing fd..." << std::endl;
-					disconnectClient(clientConnectedfd);
-				}
-			} 
+		// std::cout << "Message: " << message << std::endl;
+        processMessage(clientConnectedfd, message);
+    }
+	// Debug print
+	// printClients();
+}
+
+/**
+ * @brief	processes the received message and divides the string in a vector 
+ * 			of strings. Message is a potential irc command, a substring read 
+ * 			from the socket and delimited by \r\n 
+ * @param	int fd socket fd where the message came from
+ * @param	std::string received message (one of the potemtial irc commands read
+ * 			in fd socket)
+ */
+
+void	Server::processMessage(int fd, std::string message) {
+	std::string trimmedMsg = trimMessage(message);
+	// Debug print
+	std::cout << "Trimmed message from fd "<< fd << ": " << trimmedMsg << std::endl;
+	Client	*client = Client::findClientByFd(fd, clients);
+	// If the client is not verified, check for PASS command
+	if (client->isVerified() == false) {
+		if (trimmedMsg.substr(0, 7) == "CAP LS"  || trimmedMsg.substr(0, 7) == "cap ls")
+			return ;
+		if (trimmedMsg.substr(0, 4) == "PASS" || trimmedMsg.substr(0, 4) == "pass") {
+			std::string pwd = trimmedMsg.substr(4);
+			if (!pwd.empty() && !std::isspace(pwd.at(0)))//the char after PASS was not a space, so it is not a PASS command
+				return;
+			if (pwd.empty()) {// there was only spaces after PASS
+					Handler::sendResponse(Handler::prependMyserverName(client->getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + " PASS " + ERR_NEEDMOREPARAMS + "\n", fd);
+					return ;
+			}
+			if (trimMessage(pwd) == this->password) {
+				client->setVerified(true);
+				std::cout << "Client with fd " << fd << " password correct!" << std::endl;
+			} else
+				std::cout << "Unauthorized client attempting connection" << std::endl;
 		}
-		else if (client->isVerified()) {
+	}
+	if (client->isRegistered() == false && client->isVerified()) {
+		if (trimmedMsg.substr(0, 4) == "NICK" || trimmedMsg.substr(0, 4) == "nick")
+			Handler::handleNickCmd(trimmedMsg.substr(4), *client);
+		// Parse USER. To do: Double check to protect from segfaults
+		if ((trimmedMsg.substr(0, 5) == "USER " || trimmedMsg.substr(0, 5) == "user ") && !client->getNickname().empty()) {
 			// Debug print
-			this->printClients();
-			handler.parseCommand(message, clients, clientConnectedfd);
+			// std::cout << "Got this user: " << client->getUsername() << std::endl;
+			Handler::handleUserCmd(trimmedMsg.substr(5), *client);
 		}
+		if (!client->getNickname().empty() && !client->getUsername().empty()) {
+			std::cout << "Setting registered to true" << std::endl;
+			std::string	welcomeMsg = ":" + std::string(SERVER_NAME) + " 001 " + client->getNickname() + " :Welcome to our IRC network " + client->getNickname() + "!\r\n";
+			client->setRegistered(true);
+			Handler::sendResponse(welcomeMsg, client->getSocketFd());
+			std::string pingMsg = "PING :" + std::string(SERVER_NAME) + "\r\n";
+			// Send ping
+			Handler::sendResponse(pingMsg, client->getSocketFd());
+		}
+	} else if (client->isRegistered() && client->isVerified()) {
+		// Divide received message in a vector of strings
+		std::vector<std::string> divMsg = splitCmd(trimmedMsg);
+		// Forward command to handler
+		handler.parseCommand(divMsg, *client, clients);
 	}
 }
 
 /**
- * @brief	prints every client held in server
+ * @brief	splits the received message from client into strings to process in handle
+ * @param	std::string received message trimmed without \r\n ending or any other trailing character
  */
-void Server::printClients()
+
+std::vector<std::string>	Server::splitCmd(std::string trimmedMsg) {
+	std::vector<std::string>	divMsg;
+	std::istringstream			ss(trimmedMsg);
+	std::string 				word;
+
+	// The >> operator is used to extract data from the stream (ss) and asign it to a variable,
+	// it reads characters from the stream until it encounters a whitespace character
+	while (ss >> word)
+		divMsg.push_back(word);
+
+	// Debug print
+	// std::cout << "Debug: Split message into words: " << std::endl;
+    // for (size_t i = 0; i < divMsg.size(); i++) {
+    //     std::cout << "Word " << i + 1 << ": " << divMsg[i] << std::endl;
+    // }
+
+	return divMsg;
+}
+
+/**
+ * @brief	prints every client held in server. Used for debug purposes
+ */
+
+void Server::printClients() const
 {
-    std::cout << "Currently connected clients:" << std::endl;
-	std::list<Client>::iterator it = clients.begin();
-	size_t i = 0;
-	while(it != clients.end())
-    {
-        std::cout << "Client " << i + 1 << ": Socket FD = " << it->getSocketFd() << std::endl;
-		it++;
-		i++;
+	std::cout << "Currently connected clients and saved buffer:" << std::endl;
+
+	std::map<int, std::string>::const_iterator it;
+    for (it = clientBuffers.begin(); it != clientBuffers.end(); ++it) {
+        int clientFd = it->first;  // The client socket FD
+        const std::string& buffer = it->second;  // The client's accumulated buffer
+
+        std::cout << "Client FD: " << clientFd << " - Buffer: [" << buffer << "]" << std::endl;
     }
 }
 
@@ -217,6 +295,7 @@ void Server::printClients()
  * 			client sent a wrong password or if client closed connection
  * @param	int clientConnectedfd socket fd to close
  */
+
 void Server::disconnectClient(int clientConnectedfd)
 {
 	close(clientConnectedfd);
@@ -236,7 +315,15 @@ void Server::disconnectClient(int clientConnectedfd)
 			break;
 		}
 	}
+	// Remove client buffer from the buffers map
+	clientBuffers.erase(clientConnectedfd);
+	std::cout << "Client FD: " << clientConnectedfd << " has been disconnected" << std::endl;
 }
+
+/**
+ * @brief	trims any starting or trailing whitespace \r or \n character
+ * @param	std::string received message until \r\n is found
+ */
 
 std::string Server::trimMessage(std::string str) {
     size_t first = str.find_first_not_of(" \t\r\n");
