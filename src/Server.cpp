@@ -6,7 +6,7 @@
 /*   By: nvillalt <nvillalt@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/24 18:26:33 by igcastil          #+#    #+#             */
-/*   Updated: 2025/01/15 19:48:38 by nvillalt         ###   ########.fr       */
+/*   Updated: 2025/01/15 20:22:30 by nvillalt         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -190,65 +190,6 @@ void Server::readFromFd(int clientConnectedfd)
 	// printClients();
 }
 
-/**THIS IS THE OLD PROCESSMESSAGE FUNCTION. IT IS BEING REDONE BELOW, MOVING THE SPLIT TO TOP AND PASSING THE VECTOR TO EVERY HANDLE____CMD FUNCTION
- * @brief	processes the received message and divides the string in a vector 
- * 			of strings. Message is a potential irc command, a substring read 
- * 			from the socket and delimited by \r\n 
- * @param	int fd socket fd where the message came from
- * @param	std::string received message (one of the potemtial irc commands read
- * 			in fd socket)
-
-
-void	Server::processMessage(int fd, std::string message) {
-	std::string trimmedMsg = trimMessage(message);
-	// Debug print
-	std::cout << "Trimmed message from fd "<< fd << ": " << trimmedMsg << std::endl;
-	Client	*client = Client::findClientByFd(fd, clients);
-	// If the client is not verified, check for PASS command
-	if (client->isVerified() == false) {
-		if (trimmedMsg.substr(0, 7) == "CAP LS"  || trimmedMsg.substr(0, 7) == "cap ls")
-			return ;
-		if (trimmedMsg.substr(0, 4) == "PASS" || trimmedMsg.substr(0, 4) == "pass") {
-			std::string pwd = trimmedMsg.substr(4);
-			if (!pwd.empty() && !std::isspace(pwd.at(0)))//the char after PASS was not a space, so it is not a PASS command
-				return;
-			if (pwd.empty()) {// there was only spaces after PASS
-					Handler::sendResponse(Handler::prependMyserverName(client->getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + " PASS " + ERR_NEEDMOREPARAMS + "\n", fd);
-					return ;
-			}
-			if (trimMessage(pwd) == this->password) {
-				client->setVerified(true);
-				std::cout << "Client with fd " << fd << " password correct!" << std::endl;
-			} else
-				std::cout << "Unauthorized client attempting connection" << std::endl;
-		}
-	}
-	if (client->isRegistered() == false && client->isVerified()) {
-		if (trimmedMsg.substr(0, 4) == "NICK" || trimmedMsg.substr(0, 4) == "nick")
-			Handler::handleNickCmd(trimmedMsg.substr(4), *client);
-		// Parse USER. To do: Double check to protect from segfaults
-		if ((trimmedMsg.substr(0, 5) == "USER " || trimmedMsg.substr(0, 5) == "user ") && !client->getNickname().empty()) {
-			// Debug print
-			// std::cout << "Got this user: " << client->getUsername() << std::endl;
-			Handler::handleUserCmd(trimmedMsg.substr(5), *client);
-		}
-		if (!client->getNickname().empty() && !client->getUsername().empty()) {
-			std::cout << "Setting registered to true" << std::endl;
-			std::string	welcomeMsg = ":" + std::string(SERVER_NAME) + " 001 " + client->getNickname() + " :Welcome to our IRC network " + client->getNickname() + "!\r\n";
-			client->setRegistered(true);
-			Handler::sendResponse(welcomeMsg, client->getSocketFd());
-			std::string pingMsg = "PING :" + std::string(SERVER_NAME) + "\r\n";
-			// Send ping
-			Handler::sendResponse(pingMsg, client->getSocketFd());
-		}
-	} else if (client->isRegistered() && client->isVerified()) {
-		// Divide received message in a vector of strings
-		std::vector<std::string> divMsg = splitCmd(trimmedMsg);
-		// Forward command to handler
-		handler.parseCommand(divMsg, *client, clients);
-	}
-} */
-
 void toLowerCase(std::string& str) {
 	for (size_t i = 0; i < str.size(); ++i) {
 		str[i] = std::tolower(str[i]);  // Convert each character to lowercase
@@ -304,7 +245,7 @@ void	Server::processMessage(int fd, std::string message) {
 		if (divMsg[0] == "user")
 			Handler::handleUserCmd(divMsg, *client);
 		if (!client->getUsername().empty() && !client->getNickname().empty()) {
-			Handler::sendResponse(Handler::prependMyserverName(fd) + " 001 " + client->getNickname() + ":Welcome to our IRC network, " + client->getNickname() + "\n", fd);
+			Handler::sendResponse(Handler::prependMyserverName(fd) + " 001 " + client->getNickname() + " " + ":Welcome to our IRC network, " + client->getNickname() + "\n", fd);
 			Handler::sendResponse("PING " + Handler::prependMyserverName(fd) + "\n", fd);
 		} 
 	} else if (client->isRegistered() && client->isVerified()) {
