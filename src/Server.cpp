@@ -6,7 +6,7 @@
 /*   By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/24 18:26:33 by igcastil          #+#    #+#             */
-/*   Updated: 2025/01/15 04:05:26 by igcastil         ###   ########.fr       */
+/*   Updated: 2025/01/15 18:08:47 by igcastil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,7 @@
 #include <unistd.h> // for read
 #include <csignal> //for SIGINT and SIGQUIT
 #include <string.h> //for memset
+#include <cctype>  // for std::tolower
 
 Server::Server() : listenSocketFd(-1)
 {
@@ -178,25 +179,25 @@ void Server::readFromFd(int clientConnectedfd)
 	// Read until \r\n has been found
 	size_t	pos;
 	while (Client::findClientByFd(clientConnectedfd, clients) && (pos = clientBuffers[clientConnectedfd].find("\r\n")) != std::string::npos) {
-        std::string message = clientBuffers[clientConnectedfd].substr(0, pos);
-        clientBuffers[clientConnectedfd].erase(0, pos + 2);  // Remove the processed part from the buffer
-        // Process our complete command
+		std::string message = clientBuffers[clientConnectedfd].substr(0, pos);
+		clientBuffers[clientConnectedfd].erase(0, pos + 2);  // Remove the processed part from the buffer
+		// Process our complete command
 		// Debug print
 		// std::cout << "Message: " << message << std::endl;
-        processMessage(clientConnectedfd, message);
-    }
+		processMessage(clientConnectedfd, message);
+	}
 	// Debug print
 	// printClients();
 }
 
-/**
+/**THIS IS THE OLD PROCESSMESSAGE FUNCTION. IT IS BEING REDONE BELOW, MOVING THE SPLIT TO TOP AND PASSING THE VECTOR TO EVERY HANDLE____CMD FUNCTION
  * @brief	processes the received message and divides the string in a vector 
  * 			of strings. Message is a potential irc command, a substring read 
  * 			from the socket and delimited by \r\n 
  * @param	int fd socket fd where the message came from
  * @param	std::string received message (one of the potemtial irc commands read
  * 			in fd socket)
- */
+
 
 void	Server::processMessage(int fd, std::string message) {
 	std::string trimmedMsg = trimMessage(message);
@@ -246,7 +247,82 @@ void	Server::processMessage(int fd, std::string message) {
 		// Forward command to handler
 		handler.parseCommand(divMsg, *client, clients);
 	}
+} */
+
+void toLowerCase(std::string& str) {
+	for (size_t i = 0; i < str.size(); ++i) {
+		str[i] = std::tolower(str[i]);  // Convert each character to lowercase
+	}
 }
+
+/**THIS IS THE NEW PROCESSMESSAGE FUNCTION. 
+ * @brief	processes the received message and divides the string in a vector 
+ * 			of strings. Message is a potential irc command, a substring read 
+ * 			from the socket and delimited by \r\n 
+ * @param	int fd socket fd where the message came from
+ * @param	std::string received message (one of the potemtial irc commands read
+ * 			in fd socket)
+*/
+
+void	Server::processMessage(int fd, std::string message) {
+
+	//std::string trimmedMsg = trimMessage(message);
+	// Debug print
+	std::cout << "potential irc command from fd "<< fd << ": " << message << std::endl;
+	std::vector<std::string> divMsg = splitCmd(message);
+	if (divMsg.empty())
+		return;
+	Client	*client = Client::findClientByFd(fd, clients);
+	toLowerCase(divMsg[0]);
+	// If the client is not verified, check for PASS command
+	if (client->isVerified() == false) {
+		if (divMsg[0] == "cap") {//skip cap ls command
+			if(divMsg.size() > 1) {
+				toLowerCase(divMsg[1]); 
+				if (divMsg[1] == "ls") {
+					return ;
+				}
+			}
+		}
+		if (divMsg[0] == "pass") {
+			if (divMsg.size() != 2) {// there was not a single password supplied (irc protocol does not allow whitespaces in a password)
+				Handler::sendResponse(Handler::prependMyserverName(client->getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + " PASS " + ERR_NEEDMOREPARAMS + "\n", fd);
+				return ;
+			}
+			if (divMsg[1] == this->password) {
+				client->setVerified(true);
+				std::cout << "Client with fd " << fd << " password correct!" << std::endl;
+			} else {
+				Handler::sendResponse(Handler::prependMyserverName(client->getSocketFd()) + ERR_PASSWDMISMATCH_CODE + ERR_PASSWDMISMATCH + "\n", fd);
+				return ;
+			}
+		}
+	}
+ 	if (client->isRegistered() == false && client->isVerified()) {
+		if (divMsg[0] == "nick")
+			Handler::handleNickCmd(divMsg, *client);
+		// Parse USER. To do: Double check to protect from segfaults
+/*		if ((trimmedMsg.substr(0, 5) == "USER " || trimmedMsg.substr(0, 5) == "user ") && !client->getNickname().empty()) {
+			// Debug print
+			// std::cout << "Got this user: " << client->getUsername() << std::endl;
+			Handler::handleUserCmd(trimmedMsg.substr(5), *client);
+		}
+		if (!client->getNickname().empty() && !client->getUsername().empty()) {
+			std::cout << "Setting registered to true" << std::endl;
+			std::string	welcomeMsg = ":" + std::string(SERVER_NAME) + " 001 " + client->getNickname() + " :Welcome to our IRC network " + client->getNickname() + "!\r\n";
+			client->setRegistered(true);
+			Handler::sendResponse(welcomeMsg, client->getSocketFd());
+			std::string pingMsg = "PING :" + std::string(SERVER_NAME) + "\r\n";
+			// Send ping
+			Handler::sendResponse(pingMsg, client->getSocketFd());
+		}*/
+	} /*else if (client->isRegistered() && client->isVerified()) {
+		// Divide received message in a vector of strings
+		std::vector<std::string> divMsg = splitCmd(trimmedMsg);
+		// Forward command to handler
+		handler.parseCommand(divMsg, *client, clients);
+	}*/
+} 
 
 /**
  * @brief	splits the received message from client into strings to process in handle
@@ -265,9 +341,9 @@ std::vector<std::string>	Server::splitCmd(std::string trimmedMsg) {
 
 	// Debug print
 	// std::cout << "Debug: Split message into words: " << std::endl;
-    // for (size_t i = 0; i < divMsg.size(); i++) {
-    //     std::cout << "Word " << i + 1 << ": " << divMsg[i] << std::endl;
-    // }
+	// for (size_t i = 0; i < divMsg.size(); i++) {
+	//     std::cout << "Word " << i + 1 << ": " << divMsg[i] << std::endl;
+	// }
 
 	return divMsg;
 }
@@ -281,12 +357,12 @@ void Server::printClients() const
 	std::cout << "Currently connected clients and saved buffer:" << std::endl;
 
 	std::map<int, std::string>::const_iterator it;
-    for (it = clientBuffers.begin(); it != clientBuffers.end(); ++it) {
-        int clientFd = it->first;  // The client socket FD
-        const std::string& buffer = it->second;  // The client's accumulated buffer
+	for (it = clientBuffers.begin(); it != clientBuffers.end(); ++it) {
+		int clientFd = it->first;  // The client socket FD
+		const std::string& buffer = it->second;  // The client's accumulated buffer
 
-        std::cout << "Client FD: " << clientFd << " - Buffer: [" << buffer << "]" << std::endl;
-    }
+		std::cout << "Client FD: " << clientFd << " - Buffer: [" << buffer << "]" << std::endl;
+	}
 }
 
 /**
@@ -326,13 +402,13 @@ void Server::disconnectClient(int clientConnectedfd)
  */
 
 std::string Server::trimMessage(std::string str) {
-    size_t first = str.find_first_not_of(" \t\r\n");
-    size_t last = str.find_last_not_of(" \t\r\n");
+	size_t first = str.find_first_not_of(" \t\r\n");
+	size_t last = str.find_last_not_of(" \t\r\n");
 
-    // Check if the string contains only whitespace
-    if (first == std::string::npos || last == std::string::npos) {
-        return "";
-    } else {
-        return str.substr(first, last - first + 1);  // Return trimmed string, without starting or ending whitespaces
-    }
+	// Check if the string contains only whitespace
+	if (first == std::string::npos || last == std::string::npos) {
+		return "";
+	} else {
+		return str.substr(first, last - first + 1);  // Return trimmed string, without starting or ending whitespaces
+	}
 }

@@ -117,31 +117,28 @@ void Handler::handleUserCmd(std::string input, Client &client) {
 
 /**
  * @brief	handles the irc "NICK chosennick" command
- * @param	std::string input . "NICK " was already trimmed
+ * @param	std::vector<std::string> divMsg whole command (NICK inluded as first element)
  * @param	Client &client who sent the NICK command
  * 
  */
-void Handler::handleNickCmd(std::string input, Client &client) {
-	if (!input.empty() && !std::isspace(input.at(0)))//we need to discard messages that were "NICKx" since we needed to get here with all messages "NICK" followed by 0 or more whitespaces in order to send a ERR_NONICKNAMEGIVEN response
-		return;
-	std::string	nickname = Server::trimMessage(input);
-	if (nickname.empty()) {
+void Handler::handleNickCmd(std::vector<std::string> divMsg , Client &client) {
+	if (divMsg.size() == 1) {
 		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NONICKNAMEGIVEN_CODE + ERR_NONICKNAMEGIVEN + "\n", client.getSocketFd());
 		return ;
 	}
-	if (!isNicknameValid(nickname))
+	if (!isNicknameValid(divMsg[1]))
 	{
 		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_ERRONEUSNICKNAME_CODE + ERR_ERRONEUSNICKNAME + "\n", client.getSocketFd());
 		return ;
 	}
- 	if (isNicknameInUse(nickname, &client))
+ 	if (isNicknameInUse(divMsg[1], &client))
 	{
 		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NICKNAMEINUSE_CODE + ERR_NICKNAMEINUSE + "\n", client.getSocketFd());
 		return ;
 	}
-	client.setNickname(nickname);
+	client.setNickname(divMsg[1]);
 	// Debug print
-	std::cout << "Client nickname set to: " << nickname <<  std::endl;
+	std::cout << "Client nickname set to: " << divMsg[1] <<  std::endl;
 }
 
 void Handler::handlePingCmd(std::vector<std::string> input, Client &client) {
