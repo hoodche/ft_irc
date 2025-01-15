@@ -25,12 +25,15 @@
 # define ERR_NONICKNAMEGIVEN		":No nickname given"
 # define ERR_ERRONEUSNICKNAME_CODE	"432 "
 # define ERR_ERRONEUSNICKNAME		":Erroneous nickname"
-# define ERR_NICKNAMEINUSE_CODE	"433 "
-# define ERR_NICKNAMEINUSE		":Nickname is already in use"
-# define ERR_NEEDMOREPARAMS_CODE	"461"
-# define ERR_NEEDMOREPARAMS			":Not enough parameters"
+# define ERR_NICKNAMEINUSE_CODE		"433 "
 # define ERR_NICKNAMEINUSE			":Nickname is already in use"
-// To do: See if implementing ERR_NICKCOLLISION is needed to be implemented
+# define ERR_NEEDMOREPARAMS_CODE	"461 "
+# define ERR_NEEDMOREPARAMS			":Not enough parameters"
+# define ERR_ALREADYREGISTERED_CODE	"462 "
+# define ERR_ALREADYREGISTERED		":You may not reregister"
+# define ERR_PASSWDMISMATCH_CODE	"464 "
+# define ERR_PASSWDMISMATCH			":Password incorrect"
+# define ERR_NICKNAMEINUSE			":Nickname is already in use"
 
 typedef void (*cmdHandler)(std::vector<std::string>, Client &);
 
@@ -57,12 +60,10 @@ class Handler {
 		// Utils
 		static std::string prependMyserverName(int clientFd);
 		static void sendResponse(std::string message, int clientFd);
-		static std::string toUpperCase(std::string str);
 
 		// Methods for Auth Functions
-		static void handleUserCmd(std::string input, Client &client);
-		static void handleNickCmd(std::string input, Client &client);
-		static void handlePingCmd(std::string input, Client &client);
+		static void handleUserCmd(std::vector<std::string> divMsg, Client &client);
+		static void handleNickCmd(std::vector<std::string> divMsg, Client &client);
 		static void	handleJoinCmd(std::vector<std::string>input, Client &client);
 		static void handleTopicCmd(std::vector<std::string> input, Client &client);
 		static void handleKickCmd(std::vector<std::string> input, Client &client);
