@@ -33,7 +33,6 @@
 # define ERR_PASSWDMISMATCH_CODE	"464 "
 # define ERR_PASSWDMISMATCH			":Password incorrect"
 # define ERR_NICKNAMEINUSE			":Nickname is already in use"
-// To do: See if implementing ERR_NICKCOLLISION is needed to be implemented
 
 typedef void (*cmdHandler)(std::vector<std::string>, Client &);
 
@@ -56,11 +55,10 @@ class Handler {
 		// Utils
 		static std::string prependMyserverName(int clientFd);
 		static void sendResponse(std::string message, int clientFd);
-		static std::string toUpperCase(std::string str);
 
 		// Methods for Auth Functions
-		static void handleUserCmd(std::string input, Client &client);
-		static void handleNickCmd(std::vector<std::string> divMsg , Client &client);
+		static void handleUserCmd(std::vector<std::string> divMsg, Client &client);
+		static void handleNickCmd(std::vector<std::string> divMsg, Client &client);
 
 		static void handlePingCmd(std::vector<std::string> input, Client &client);
 };

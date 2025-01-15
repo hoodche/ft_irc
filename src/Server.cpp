@@ -6,7 +6,7 @@
 /*   By: nvillalt <nvillalt@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/24 18:26:33 by igcastil          #+#    #+#             */
-/*   Updated: 2025/01/15 19:33:36 by nvillalt         ###   ########.fr       */
+/*   Updated: 2025/01/15 19:48:38 by nvillalt         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -308,6 +308,10 @@ void	Server::processMessage(int fd, std::string message) {
 			Handler::sendResponse("PING " + Handler::prependMyserverName(fd) + "\n", fd);
 		} 
 	} else if (client->isRegistered() && client->isVerified()) {
+		if ((divMsg[0] == "user" || divMsg[0] == "pass") && client->isRegistered()) {
+			Handler::sendResponse(Handler::prependMyserverName(fd) + ERR_ALREADYREGISTERED_CODE + ERR_ALREADYREGISTERED + "\n", fd);
+			return ;
+		}
 		// Forward command to handler
 		handler.parseCommand(divMsg, *client, clients);
 	}
@@ -327,12 +331,6 @@ std::vector<std::string>	Server::splitCmd(std::string trimmedMsg) {
 	// it reads characters from the stream until it encounters a whitespace character
 	while (ss >> word)
 		divMsg.push_back(word);
-
-	// Debug print
-	// std::cout << "Debug: Split message into words: " << std::endl;
-	// for (size_t i = 0; i < divMsg.size(); i++) {
-	//     std::cout << "Word " << i + 1 << ": " << divMsg[i] << std::endl;
-	// }
 
 	return divMsg;
 }

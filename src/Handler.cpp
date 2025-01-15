@@ -10,10 +10,8 @@ Handler::Handler(void) {
 }
 
 void Handler::initCmdMap(void) {
-	// Estos se hacen en el flujo de auth, a lo mejo es mejor quitarlos de aquí (USER, NICK, PING)
-	// cmdMap["USER"] = &handleUserCmd;
-	// cmdMap["NICK"] = &handleNickCmd;
-	// - - - - - - - - - - - - - -
+	cmdMap["USER"] = &handleUserCmd;
+	cmdMap["NICK"] = &handleNickCmd;
 	cmdMap["PING"] = &handlePingCmd;
 	// cmdMap["JOIN"] = &handleJoinCmd;
 }
@@ -24,19 +22,11 @@ void Handler::parseCommand(std::vector<std::string> divMsg, Client &client, std:
 	// Check if the command exists in the map. Command extracted as first member of str vector
 	// If command exists and all is good, delete command from str vector
 	// Esto solo está puesto para evitar el -Werror de momento
-	std::string	errResponse;
 	std::string	command = divMsg[0];
-	//--------
-	std::cout << divMsg[0] << std::endl;
-	if ((divMsg[0] == "user" || divMsg[0] == "pass") && client.isRegistered()) {
-		Handler::sendResponse(Handler::prependMyserverName(client.getSocketFd()) + ERR_ALREADYREGISTERED_CODE + ERR_ALREADYREGISTERED + "\n", client.getSocketFd());
-		return ;
-	}
 	std::cout << client.getSocketFd() << std::endl;
 	std::cout << clients[0].getSocketFd() << std::endl;
 	std::cout << "GOT TO PARSE COMMAND! \n\n\n";
 	//---------
-	// TO DO: Implementar que cada comando vaya a su respectiva función. Código anterior:
 	// if (cmdMap.find(command) != cmdMap.end()) {
     //     cmdMap[command](divMsg, client);
     // } else {
@@ -51,67 +41,61 @@ void Handler::parseCommand(std::vector<std::string> divMsg, Client &client, std:
  * @param	Client &client who sent the USER command
  */
 
-// TO DO: Is the username first param required to be the same name as nickname?
-
-void Handler::handleUserCmd(std::string input, Client &client) {
+void Handler::handleUserCmd(std::vector<std::string> divMsg, Client &client) {
 	// Generally seen like this: <username> 0 * <realname> as per this documentation - https://modern.ircdocs.horse/#user-message
 	// Default client received command: USER nerea 0 * :realname -> input = nerea 0 * :realname
-	std::string errResponse = "USER ";
-	errResponse += ERR_NEEDMOREPARAMS;
-	std::vector<std::string> params;
-	std::istringstream	ss(input);
-	std::string	token;
-
-	// Store my tokens in a vector
-	while (ss >> token)
-		params.push_back(token);
-
-	// Check that we have the 4 required parameters
-	if (params.size() < 4) {
-		sendResponse(errResponse, client.getSocketFd());
+	// Check that we have the 4 required parameters	
+	if (divMsg.size() < 4) {
+		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + ERR_NEEDMOREPARAMS "\n", client.getSocketFd());
 		return ;
 	}
 
 	// Assign received strings
-	std::string	username = params[0];
-	std::string hostname = params[1];
-	std::string servername = params[2];
-	std::string realname = params[3];
+	std::string	username = divMsg[1];
+	std::string hostname = divMsg[2];
+	std::string servername = divMsg[3];
+	std::string realname = "";
 
+	int	vecSize	= divMsg.size();
+	for (int i = 4; i < vecSize; i++) {
+		realname += divMsg[i];
+		if (i < vecSize - 1)
+			realname += " ";
+	}
 	// Debug print
 	// std::cout << "Debug: Split message into words: " << std::endl;
-    // for (size_t i = 0; i < params.size(); i++) {
-    //     std::cout << "Word " << i + 1 << ": " << params[i] << std::endl;
+    // for (size_t i = 0; i < divMsg.size(); i++) {
+    //     std::cout << "Word " << i + 1 << ": " << divMsg[i] << std::endl;
     // }
 	
 	// Check that username goes according to what is expected, otherwise send an error to the client
 	if (username.empty() || username.length() < 1 || username.length() > USERLEN) {
-		sendResponse(errResponse, client.getSocketFd());
+		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + ERR_NEEDMOREPARAMS "\n", client.getSocketFd());
 		return ;
 	}
 
 	// Check that the hostname is as expected
 	if (hostname != "0") {
-		sendResponse(errResponse, client.getSocketFd());
+		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + ERR_NEEDMOREPARAMS "\n", client.getSocketFd());
 		return ;
 	}
 
 	// Check that the servername is as expected
 	if (servername != "*") {
-		sendResponse(errResponse, client.getSocketFd());
+		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + ERR_NEEDMOREPARAMS "\n", client.getSocketFd());
 		return ;
 	}
 
-	// Check that realname starts with a :
+	// Check that realname starts with a : -> Not sure if this is needed
 	if (realname[0] != ':') {
-		sendResponse(errResponse, client.getSocketFd());
+		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + ERR_NEEDMOREPARAMS "\n", client.getSocketFd());
 		return ;
 	}
 	realname = realname.substr(1);
 	client.setUsername(username);
 	client.setRealname(realname);
 	// std::cout << "Debug print: " << client.getRealname() << std::endl;
-	// std::cout << "Username [" << client.getUsername() << "] and realname [" << client.getRealname() << "]" << std::endl;
+	 std::cout << "Username [" << client.getUsername() << "] and realname [" << client.getRealname() << "]" << std::endl;
 }
 
 /**
