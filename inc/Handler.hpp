@@ -47,7 +47,6 @@ class Handler {
 
 		// Utils
 		static std::string prependMyserverName(int clientFd);
-		static std::string composeResponse(std::string field1, std::string field2, std::string field3, int clientFd) ;
 		static void sendResponse(std::string message, int clientFd);
 		static std::string toUpperCase(std::string str);
 

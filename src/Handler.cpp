@@ -56,17 +56,17 @@ void Handler::handleNickCmd(std::string input, Client &client) {
 		return;
 	std::string	nickname = Server::trimMessage(input);
 	if (nickname.empty()) {
-		sendResponse(composeResponse(ERR_NONICKNAMEGIVEN_CODE, ERR_NONICKNAMEGIVEN, "", client.getSocketFd()), client.getSocketFd());
+		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NONICKNAMEGIVEN_CODE + ERR_NONICKNAMEGIVEN + "\n", client.getSocketFd());
 		return ;
 	}
 	if (!isNicknameValid(nickname))
 	{
-		sendResponse(composeResponse(ERR_ERRONEUSNICKNAME_CODE, ERR_ERRONEUSNICKNAME, "", client.getSocketFd()), client.getSocketFd());
+		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_ERRONEUSNICKNAME_CODE + ERR_ERRONEUSNICKNAME + "\n", client.getSocketFd());
 		return ;
 	}
  	if (isNicknameInUse(nickname, &client))
 	{
-		sendResponse(composeResponse(ERR_NICKNAMEINUSE_CODE, ERR_NICKNAMEINUSE, "", client.getSocketFd()), client.getSocketFd());
+		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NICKNAMEINUSE_CODE + ERR_NICKNAMEINUSE + "\n", client.getSocketFd());
 		return ;
 	}
 	client.setNickname(nickname);
@@ -90,12 +90,6 @@ std::string Handler::prependMyserverName(int clientFd) {
 		return ("");
 	}
 	return (":" + std::string(inet_ntoa(myServerAddr.sin_addr)) + " ");
-}
-
-std::string Handler::composeResponse(std::string field1, std::string field2, std::string field3, int clientFd) {
-	std::string message = prependMyserverName(clientFd);
-	message += field1 + field2 + field3 +"\n";
-	return (message);
 }
 
 void Handler::sendResponse(std::string message, int clientFd) {

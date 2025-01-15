@@ -6,7 +6,7 @@
 /*   By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/24 18:26:33 by igcastil          #+#    #+#             */
-/*   Updated: 2025/01/15 03:15:59 by igcastil         ###   ########.fr       */
+/*   Updated: 2025/01/15 04:05:26 by igcastil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -212,7 +212,7 @@ void	Server::processMessage(int fd, std::string message) {
 			if (!pwd.empty() && !std::isspace(pwd.at(0)))//the char after PASS was not a space, so it is not a PASS command
 				return;
 			if (pwd.empty()) {// there was only spaces after PASS
-					Handler::sendResponse(Handler::composeResponse(ERR_NEEDMOREPARAMS_CODE, " PASS ", ERR_NEEDMOREPARAMS, fd), fd);
+					Handler::sendResponse(Handler::prependMyserverName(client->getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + " PASS " + ERR_NEEDMOREPARAMS + "\n", fd);
 					return ;
 			}
 			if (trimMessage(pwd) == this->password) {
