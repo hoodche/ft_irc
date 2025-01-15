@@ -4,7 +4,7 @@
 
 # include "../inc/Client.hpp"
 # include "../inc/Channel.hpp"
-#include <netinet/in.h>
+# include <netinet/in.h>
 # include <sys/socket.h>
 # include <arpa/inet.h> 
 # include <iostream>
@@ -15,6 +15,7 @@
 # include <sstream>
 # include <set>
 # include <map>
+# include <list>
 
 # define USERLEN	12
 # define ERR_NEEDMOREPARAMS		":Not enough parameters" //  "<client> <command> :Not enough parameters"
@@ -24,40 +25,48 @@
 # define ERR_NONICKNAMEGIVEN		":No nickname given"
 # define ERR_ERRONEUSNICKNAME_CODE	"432 "
 # define ERR_ERRONEUSNICKNAME		":Erroneous nickname"
-# define ERR_NICKNAMEINUSE_CODE	"433 "
-# define ERR_NICKNAMEINUSE		":Nickname is already in use"
-# define ERR_NEEDMOREPARAMS_CODE	"461"
-# define ERR_NEEDMOREPARAMS			":Not enough parameters"
+# define ERR_NICKNAMEINUSE_CODE		"433 "
 # define ERR_NICKNAMEINUSE			":Nickname is already in use"
-// To do: See if implementing ERR_NICKCOLLISION is needed to be implemented
+# define ERR_NEEDMOREPARAMS_CODE	"461 "
+# define ERR_NEEDMOREPARAMS			":Not enough parameters"
+# define ERR_ALREADYREGISTERED_CODE	"462 "
+# define ERR_ALREADYREGISTERED		":You may not reregister"
+# define ERR_PASSWDMISMATCH_CODE	"464 "
+# define ERR_PASSWDMISMATCH			":Password incorrect"
+# define ERR_NICKNAMEINUSE			":Nickname is already in use"
 
 typedef void (*cmdHandler)(std::vector<std::string>, Client &);
 
 class Handler {
 	private:
-		std::map<std::string, cmdHandler> cmdMap;
-		static std::vector<Channel> channels;
+		std::map<std::string, cmdHandler>	cmdMap;
+		static std::list<Channel>			channels;
 
-		void			initCmdMap(void);
-		static void		handleJoinCmd(std::string input, Client &client); //static cause 
-		static void		joinCmdExec(std::string channelName, Client &client);
-		static void		createChannel(std::string channelName, Client &client);
-		static void		addClientToChannel(Channel &channel, Client &client);
+		void										initCmdMap(void);
+		static void									joinCmdExec(std::map<std::string, std::string> channelDictionary, Client &client);
+		static void									createChannel(std::string channelName, Client &client);
+		static void									addClientToChannel(Channel &channel, Client &client);
+		static std::vector<std::string>				getChannelVector(std::string channelString);
+		static std::vector<std::string>				getPassVector(std::string channelString);
+		static std::map<std::string, std::string>	createDictionary(std::vector<std::string> &channelVector, std::vector<std::string> &passVector);	
+		static std::list<Channel>::iterator			findChannel(const std::string &channelName);
+		static std::string							vectorToString(std::vector<std::string> vectorTopic, char delim);
 	//it is common to all the instances
 
 	public:
 		Handler(void);
-		void parseCommand(std::vector<std::string> divMsg, Client &client, std::vector<Client> &clients);
+		void parseCommand(std::vector<std::string> divMsg, Client &client);
 
 		// Utils
 		static std::string prependMyserverName(int clientFd);
 		static void sendResponse(std::string message, int clientFd);
-		static std::string toUpperCase(std::string str);
 
 		// Methods for Auth Functions
-		static void handleUserCmd(std::string input, Client &client);
-		static void handleNickCmd(std::string input, Client &client);
-
+		static void handleUserCmd(std::vector<std::string> divMsg, Client &client);
+		static void handleNickCmd(std::vector<std::string> divMsg, Client &client);
+		static void	handleJoinCmd(std::vector<std::string>input, Client &client);
+		static void handleTopicCmd(std::vector<std::string> input, Client &client);
+		static void handleKickCmd(std::vector<std::string> input, Client &client);
 		static void handlePingCmd(std::vector<std::string> input, Client &client);
 };
 

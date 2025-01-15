@@ -23,8 +23,8 @@ bool isNicknameValid(std::string nickname)
 bool isNicknameInUse(std::string nickname, Client *client)
 {
 	const Server* server = client->getServer();
-	const std::vector<Client>& clients = server->getClients();
-	for (std::vector<Client>::const_iterator it = clients.begin(); it != clients.end(); ++it) {
+	const std::list<Client>& clients = server->getClients();
+	for (std::list<Client>::const_iterator it = clients.begin(); it != clients.end(); ++it) {
 		if (it->getNickname() == nickname) {
 			return true;
 		}
