@@ -45,15 +45,6 @@ void Handler::handleUserCmd(std::string input, Client &client) {
 	std::cout << "Received username: " << input << std::endl;
 }
 
-//  TO DO: We will have to keep track of all nicknames, nicknames Cannot repeat
-//    The idea of the nickname on IRC is very convenient for users to use
-//    when talking to each other outside of a channel, but there is only a
-//    finite nickname space and being what they are, it's not uncommon for
-//    several people to want to use the same nick.  If a nickname is chosen
-//    by two people using this protocol, either one will not succeed or
-//    both will removed by use of a server KILL (See Section 3.7.1).
-// 	  RFC: 4.1.2 -More info
-
 /**
  * @brief	handles the irc "NICK chosennick" command
  * @param	std::string input . "NICK " was already trimmed
