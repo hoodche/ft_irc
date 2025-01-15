@@ -4,10 +4,13 @@
 
 # include "../inc/Client.hpp"
 # include "../inc/Channel.hpp"
+#include <netinet/in.h>
 # include <sys/socket.h>
+# include <arpa/inet.h> 
 # include <iostream>
 # include <algorithm>
 # include <string>
+# include <string.h> //for memset
 # include <vector>
 # include <sstream>
 # include <set>
@@ -16,9 +19,14 @@
 # define USERLEN	12
 # define ERR_NEEDMOREPARAMS		":Not enough parameters" //  "<client> <command> :Not enough parameters"
 
-# define ERR_NONICKNAMEGIVEN	":No nickname given" 
-# define ERR_ERRONEUSNICKNAME	":Erroneus nickname" // "<client> <nick>" 
-# define ERR_NICKNAMEINUSE		":Nickname is already in use"
+
+# define ERR_NONICKNAMEGIVEN_CODE	"431 "
+# define ERR_NONICKNAMEGIVEN		":No nickname given"
+# define ERR_ERRONEUSNICKNAME_CODE	"432 "
+# define ERR_ERRONEUSNICKNAME		":Erroneous nickname"
+# define ERR_NEEDMOREPARAMS_CODE	"461"
+# define ERR_NEEDMOREPARAMS			":Not enough parameters"
+# define ERR_NICKNAMEINUSE			":Nickname is already in use"
 // To do: See if implementing ERR_NICKCOLLISION is needed to be implemented
 
 typedef void (*cmdHandler)(std::vector<std::string>, Client &);
@@ -40,6 +48,8 @@ class Handler {
 		void parseCommand(std::vector<std::string> divMsg, Client &client, std::vector<Client> &clients);
 
 		// Utils
+		static std::string prependMyserverName(int clientFd);
+		static std::string composeResponse(std::string field1, std::string field2, std::string field3, int clientFd) ;
 		static void sendResponse(std::string message, int clientFd);
 		static std::string toUpperCase(std::string str);
 
