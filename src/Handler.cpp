@@ -115,15 +115,6 @@ void Handler::handleUserCmd(std::string input, Client &client) {
 	// std::cout << "Username [" << client.getUsername() << "] and realname [" << client.getRealname() << "]" << std::endl;
 }
 
-//  TO DO: We will have to keep track of all nicknames, nicknames Cannot repeat
-//    The idea of the nickname on IRC is very convenient for users to use
-//    when talking to each other outside of a channel, but there is only a
-//    finite nickname space and being what they are, it's not uncommon for
-//    several people to want to use the same nick.  If a nickname is chosen
-//    by two people using this protocol, either one will not succeed or
-//    both will removed by use of a server KILL (See Section 3.7.1).
-// 	  RFC: 4.1.2 -More info
-
 /**
  * @brief	handles the irc "NICK chosennick" command
  * @param	std::string input . "NICK " was already trimmed
@@ -135,21 +126,22 @@ void Handler::handleNickCmd(std::string input, Client &client) {
 		return;
 	std::string	nickname = Server::trimMessage(input);
 	if (nickname.empty()) {
-		sendResponse(composeResponse(ERR_NONICKNAMEGIVEN_CODE, ERR_NONICKNAMEGIVEN, "", client.getSocketFd()), client.getSocketFd());
+		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NONICKNAMEGIVEN_CODE + ERR_NONICKNAMEGIVEN + "\n", client.getSocketFd());
 		return ;
 	}
 	if (!isNicknameValid(nickname))
 	{
-		sendResponse(composeResponse(ERR_ERRONEUSNICKNAME_CODE, ERR_ERRONEUSNICKNAME, "", client.getSocketFd()), client.getSocketFd());
+		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_ERRONEUSNICKNAME_CODE + ERR_ERRONEUSNICKNAME + "\n", client.getSocketFd());
 		return ;
 	}
-/* 	if(isNickInUse(nickname))
+ 	if (isNicknameInUse(nickname, &client))
 	{
-		
-	} */
+		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NICKNAMEINUSE_CODE + ERR_NICKNAMEINUSE + "\n", client.getSocketFd());
+		return ;
+	}
 	client.setNickname(nickname);
 	// Debug print
-	std::cout << "Client nickname set to: >>" << nickname << "<<" << std::endl;
+	std::cout << "Client nickname set to: " << nickname <<  std::endl;
 }
 
 void Handler::handlePingCmd(std::vector<std::string> input, Client &client) {
@@ -168,12 +160,6 @@ std::string Handler::prependMyserverName(int clientFd) {
 		return ("");
 	}
 	return (":" + std::string(inet_ntoa(myServerAddr.sin_addr)) + " ");
-}
-
-std::string Handler::composeResponse(std::string field1, std::string field2, std::string field3, int clientFd) {
-	std::string message = prependMyserverName(clientFd);
-	message += field1 + field2 + field3 +"\n";
-	return (message);
 }
 
 void Handler::sendResponse(std::string message, int clientFd) {

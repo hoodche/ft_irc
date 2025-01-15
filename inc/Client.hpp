@@ -7,26 +7,29 @@
 # include <vector>
 
 class Channel;
+class Server;
 
 class Client {
 	private:
-		int 		fd;
-		bool		verified;
-		bool		registered;
-		std::string	nick;
-		std::string	username;
+		int 					fd;
+		bool					verified;
+		bool					registered;
+		std::string				nick;
+		std::string				username;
 		std::string	realname;
-		std::vector<Channel *> clientChannels;
+		std::vector<Channel *>	clientChannels;
+		const Server			*connectedToServer;
 
 	public:
 		Client(void);
-		Client(int receivedFd);
+		Client(int receivedFd, const Server &connected2Serv);
 		~Client(void);
 
 		// Getters
 		int	getSocketFd(void) const;
 		std::string	getNickname(void) const;
 		std::string getUsername(void) const;
+		const Server* getServer(void) const;
 		std::string getRealname(void) const;
 		bool isVerified(void) const;
 		bool isRegistered(void) const;

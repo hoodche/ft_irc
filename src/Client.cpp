@@ -7,10 +7,10 @@ Client::Client(void):
 	//oper(false),
 	 nick(""), username("") {}
 
-Client::Client(int receivedFd):
+Client::Client(int receivedFd, const Server &connected2Serv):
 	fd(receivedFd), verified(false) ,registered(false),
 	//oper(false),
-	 nick(""), username("") {}
+	 nick(""), username(""), connectedToServer(&connected2Serv) {}
 
 Client::~Client(void) {}
 
@@ -24,6 +24,10 @@ std::string Client::getNickname(void) const {
 
 std::string Client::getUsername(void) const {
 	return this->username;
+}
+
+const Server* Client::getServer(void) const {
+	return this->connectedToServer;
 }
 
 std::string	Client::getRealname(void) const {
