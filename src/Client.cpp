@@ -26,6 +26,10 @@ std::string Client::getUsername(void) const {
 	return this->username;
 }
 
+const Server* Client::getServer(void) const {
+	return this->connectedToServer;
+}
+
 bool Client::isVerified(void) const {
 	return this->verified;
 }

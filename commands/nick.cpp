@@ -1,3 +1,6 @@
+
+#include "../inc/Client.hpp"
+#include "../inc/Server.hpp"
 #include <string>
 
 bool isNicknameValid(std::string nickname)
@@ -15,4 +18,16 @@ bool isNicknameValid(std::string nickname)
 			return false;
 	}
 	return true;
+}
+
+bool isNicknameInUse(std::string nickname, Client *client)
+{
+	const Server* server = client->getServer();
+	const std::vector<Client>& clients = server->getClients();
+	for (std::vector<Client>::const_iterator it = clients.begin(); it != clients.end(); ++it) {
+		if (it->getNickname() == nickname) {
+			return true;
+		}
+	}
+	return false;
 }

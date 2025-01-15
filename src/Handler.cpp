@@ -73,13 +73,14 @@ void Handler::handleNickCmd(std::string input, Client &client) {
 		sendResponse(composeResponse(ERR_ERRONEUSNICKNAME_CODE, ERR_ERRONEUSNICKNAME, "", client.getSocketFd()), client.getSocketFd());
 		return ;
 	}
-/* 	if(isNickInUse(nickname))
+ 	if (isNicknameInUse(nickname, &client))
 	{
-		
-	} */
+		sendResponse(composeResponse(ERR_NICKNAMEINUSE_CODE, ERR_NICKNAMEINUSE, "", client.getSocketFd()), client.getSocketFd());
+		return ;
+	}
 	client.setNickname(nickname);
 	// Debug print
-	std::cout << "Client nickname set to: >>" << nickname << "<<" << std::endl;
+	std::cout << "Client nickname set to: " << nickname <<  std::endl;
 }
 
 void Handler::handlePingCmd(std::string input, Client &client) {

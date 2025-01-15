@@ -6,7 +6,7 @@
 /*   By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/24 18:26:33 by igcastil          #+#    #+#             */
-/*   Updated: 2025/01/14 14:52:12 by igcastil         ###   ########.fr       */
+/*   Updated: 2025/01/15 03:15:59 by igcastil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,6 +41,10 @@ void Server::signalHandler(int signal)
 	Server::signalReceived = true;
 }
 
+std::vector<Client> Server::getClients(void) const
+{
+	return this->clients;
+}
 /**
  * @brief		closes all socket descriptors opened so far in the server 
  * 				(in the fds vector -listening socket + connected sockets)

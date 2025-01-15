@@ -28,6 +28,7 @@ class Client {
 		int	getSocketFd(void) const;
 		std::string	getNickname(void) const;
 		std::string getUsername(void) const;
+		const Server* getServer(void) const;
 		bool isVerified(void) const;
 		bool isRegistered(void) const;
 

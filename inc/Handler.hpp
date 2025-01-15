@@ -20,6 +20,8 @@
 # define ERR_NONICKNAMEGIVEN		":No nickname given"
 # define ERR_ERRONEUSNICKNAME_CODE	"432 "
 # define ERR_ERRONEUSNICKNAME		":Erroneous nickname"
+# define ERR_NICKNAMEINUSE_CODE	"433 "
+# define ERR_NICKNAMEINUSE		":Nickname is already in use"
 # define ERR_NEEDMOREPARAMS_CODE	"461"
 # define ERR_NEEDMOREPARAMS			":Not enough parameters"
 # define ERR_NICKNAMEINUSE			":Nickname is already in use"
