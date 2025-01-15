@@ -11,7 +11,7 @@
 /* ************************************************************************** */
 
 #ifndef SERVER_HPP
-#define SERVER_HPP
+# define SERVER_HPP
 
 #include "../inc/Client.hpp"
 #include "../inc/Handler.hpp"
@@ -26,7 +26,7 @@
 class Server
 {
 	private:
-		std::vector<Client>	clients;
+		std::list<Client>	clients;
 		Handler				handler;
 		int port;
 		std::string password;
@@ -46,7 +46,7 @@ class Server
 	public:
 		static bool signalReceived;
 		Server();
-		std::vector<Client> getClients(void) const;
+		std::list<Client> getClients(void) const;
 		void closeFds();
 		void initSocket();
 		void init(int port, std::string pass);

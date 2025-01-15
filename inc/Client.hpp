@@ -5,6 +5,7 @@
 # include <string>
 # include <iostream>
 # include <vector>
+# include <list>
 
 class Channel;
 class Server;
@@ -21,8 +22,7 @@ class Client {
 		const Server			*connectedToServer;
 
 	public:
-		Client(void);
-		Client(int receivedFd, const Server &connected2Serv);
+		Client(int receivedFd, const Server &newServer);
 		~Client(void);
 
 		// Getters
@@ -33,7 +33,7 @@ class Client {
 		std::string getRealname(void) const;
 		bool isVerified(void) const;
 		bool isRegistered(void) const;
-
+		Channel	*getChannel(std::string &channelStr);
 		// Setters
 		void setNickname(std::string nickname);
 		void setUsername(std::string user);
@@ -41,10 +41,11 @@ class Client {
 		void setVerified(bool tf);
 		void setRegistered(bool tf);
 
+		void addServer(Server &newServer);
+		void addChannel(Channel &newChannel);
 		// Methods
-		static Client	*findClientByFd(int fd, std::vector<Client> &clients);
+		static Client	*findClientByFd(int fd, std::list<Client> &clients);
 		bool			isClientInChannel(std::string channelName);
-		void			addClientChannel(Channel &channel);
 };
 
 #endif

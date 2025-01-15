@@ -42,7 +42,7 @@ void Server::signalHandler(int signal)
 	Server::signalReceived = true;
 }
 
-std::vector<Client> Server::getClients(void) const
+std::list<Client> Server::getClients(void) const
 {
 	return this->clients;
 }
@@ -303,14 +303,14 @@ void Server::printClients() const
 void Server::disconnectClient(int clientConnectedfd)
 {
 	close(clientConnectedfd);
-	// Remove client from the clients vector
-	for (size_t i = 0; i < clients.size(); i++) {
-		if (clients[i].getSocketFd() == clientConnectedfd) {
-			clients.erase(clients.begin() + i);
+	std::list<Client>::iterator it = clients.begin();
+	while(it != clients.end())
+	{
+		if (it->getSocketFd() == clientConnectedfd) {
+			clients.erase(it);
 			break;
 		}
 	}
-	// Remove client fd from the fds vector
 	for (size_t i = 0; i < this->fds.size(); i++)
 	{
 		if (this->fds[i].fd == clientConnectedfd)
@@ -330,13 +330,13 @@ void Server::disconnectClient(int clientConnectedfd)
  */
 
 std::string Server::trimMessage(std::string str) {
-	size_t first = str.find_first_not_of(" \t\r\n");
-	size_t last = str.find_last_not_of(" \t\r\n");
-
-	// Check if the string contains only whitespace
-	if (first == std::string::npos || last == std::string::npos) {
-		return "";
-	} else {
-		return str.substr(first, last - first + 1);  // Return trimmed string, without starting or ending whitespaces
-	}
+	  size_t first = str.find_first_not_of(" \t\r\n");
+	  size_t last = str.find_last_not_of(" \t\r\n");
+    // Check if the string contains only whitespace
+    if (first == std::string::npos || last == std::string::npos) {
+        return "";
+    } else {
+        return str.substr(first, last - first + 1);  // Return trimmed string, without starting or ending whitespaces
+    }
 }
+
