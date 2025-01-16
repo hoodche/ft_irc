@@ -18,7 +18,7 @@
 # include <list>
 
 # define USERLEN	12
-# define ERR_NEEDMOREPARAMS		":Not enough parameters" //  "<client> <command> :Not enough parameters"
+# define RPL_WELCOME_CODE			"001 "
 
 
 # define ERR_NONICKNAMEGIVEN_CODE	"431 "
@@ -68,6 +68,7 @@ class Handler {
 		static void handleTopicCmd(std::vector<std::string> input, Client &client);
 		static void handleKickCmd(std::vector<std::string> input, Client &client);
 		static void handlePingCmd(std::vector<std::string> input, Client &client);
+		//static void handlePongCmd(std::vector<std::string> input, Client &client);
 };
 
 #endif
