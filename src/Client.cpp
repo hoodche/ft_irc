@@ -79,7 +79,7 @@ Client* Client::findClientByFd(int fd, std::list<Client> &clients) {
     return NULL;
 }
 
-bool Client::isClientInChannel(std::string channelName)
+bool Client::isClientInChannel(std::string &channelName)
 {
 	std::vector<Channel *>::iterator it = clientChannels.begin();
 	while(!clientChannels.empty() && (*it)->getName() != channelName && it != clientChannels.end())
@@ -90,19 +90,41 @@ bool Client::isClientInChannel(std::string channelName)
 		return true;
 }
 
+void Client::addChannel(Channel &newChannel)
+{
+	clientChannels.push_back(&newChannel);
+}
+
 Channel	*Client::getChannel(std::string &channelStr)
 {
 	std::vector<Channel*>::iterator itChannels = clientChannels.begin();
-	while (!clientChannels.empty() && itChannels != clientChannels.end())
+
+	if (!clientChannels.empty())
 	{
-		if ((*itChannels)->getName() == channelStr)
-			return (*itChannels);
-		itChannels++;
+		while (itChannels != clientChannels.end())
+		{
+			if ((*itChannels)->getName() == channelStr)
+				return (*itChannels);
+			itChannels++;
+		}
 	}
 	throw std::out_of_range("Invalid Channel");
 }
 
-void Client::addChannel(Channel &newChannel)
+void	Client::removeChannel(std::string &channelStr)
 {
-	clientChannels.push_back(&newChannel);
+	std::vector<Channel*>::iterator itChannels = clientChannels.begin();
+
+	if (clientChannels.empty())
+		return;
+	while (itChannels != clientChannels.end())
+	{
+		if ((*itChannels)->getName() == channelStr)
+		{
+			clientChannels.erase(itChannels);
+			return;
+		}
+		itChannels++;
+	}
+	throw std::out_of_range("Invalid Channel");
 }
