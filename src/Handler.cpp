@@ -14,6 +14,7 @@ void Handler::initCmdMap(void) {
 	cmdMap["user"] = &handleUserCmd;
 	cmdMap["nick"] = &handleNickCmd;
 	cmdMap["ping"] = &handlePingCmd;
+	//cmdMap["pong"] = &handlePingCmd;
 	cmdMap["join"] = &handleJoinCmd;
 	cmdMap["topic"] = &handleTopicCmd;
 	//cmdMap["KICK"] = &handleKickCmd;
@@ -26,9 +27,9 @@ void Handler::parseCommand(std::vector<std::string> divMsg, Client &client) {
 	std::string	command = divMsg[0];
 	if (cmdMap.find(command) != cmdMap.end()) {
 		cmdMap[command](divMsg, client);
-    } else {
-        std::cout << "" << command << std::endl;
-    }
+	} else {
+		std::cout << "could not find " << command << " in our internal server commands map" << std::endl;
+	}
 }
 
 /**
@@ -109,15 +110,20 @@ void Handler::handleNickCmd(std::vector<std::string> divMsg , Client &client) {
 		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NICKNAMEINUSE_CODE + ERR_NICKNAMEINUSE + "\n", client.getSocketFd());
 		return ;
 	}
+	sendResponse(":" + client.getNickname() + " NICK " + divMsg[1] + "\n", client.getSocketFd());
 	client.setNickname(divMsg[1]);
-	// Debug print
-	std::cout << "Client nickname set to: " << divMsg[1] <<  std::endl;
 }
 
 void Handler::handlePingCmd(std::vector<std::string> input, Client &client) {
-    std::string message = "PONG :" + input[1];
-    sendResponse(message, client.getSocketFd());
+	std::string message = "PONG " + input[1];
+	sendResponse(message, client.getSocketFd());
 }
+
+/* void Handler::handlePongCmd(std::vector<std::string> input, Client &client) {//weird behavior, why server is sending a PONG command  after receiving clients PONG command (generated as acknowledge to server´s PING)?
+	//server does nothing when receives a PONG command from a client
+	(void)input;//needed to avoid compilation warning
+	(void)client;
+} */
 // Utils
 std::string Handler::prependMyserverName(int clientFd) {
 	struct sockaddr_in myServerAddr;
