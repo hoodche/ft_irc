@@ -27,6 +27,7 @@ class Channel {
 		//Getters
 		std::string getName(void) const;
 		std::string getTopic(void) const;
+		Client*		getClient(std::string &clientStr);
 	
 		//Setters
 		void		setName(const std::string name);
@@ -35,6 +36,9 @@ class Channel {
 		//Adders
 		void		addUser(Client &client);
 		void		addOperator(Client &client);
+
+		void		removeClient(std::string &clientStr);
+		bool		isClientOperator(Client &client);
 };
 
 #endif

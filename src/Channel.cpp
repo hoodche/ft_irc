@@ -74,3 +74,76 @@ void Channel::addOperator(Client &client)
 {
 	operators.push_back(&client);
 }
+
+Client	*Channel::getClient(std::string &clientStr)
+{
+	std::vector<Client*>::iterator itClients = operators.begin();
+
+	if (!operators.empty())
+	{
+		while (itClients != operators.end())
+		{
+			if ((*itClients)->getNickname() == clientStr)
+				return (*itClients);
+			itClients++;
+		}
+	}
+
+	itClients = users.begin();
+
+	if (!users.empty())
+	{
+		while (!users.empty() && itClients != users.end())
+		{
+			if ((*itClients)->getNickname() == clientStr)
+				return (*itClients);
+			itClients++;
+		}
+	}
+	throw std::out_of_range("Invalid Client");
+}
+
+void	Channel::removeClient(std::string &clientStr)
+{
+	if (operators.empty())
+		return;
+
+	std::vector<Client*>::iterator itClients = operators.begin();
+	while (itClients != operators.end())
+	{
+		if ((*itClients)->getNickname() == clientStr)
+		{
+			operators.erase(itClients);
+			return;
+		}
+		itClients++;
+	}
+
+	if (users.empty())
+		return;
+
+	itClients = users.begin();
+	while (itClients != users.end())
+	{
+		if ((*itClients)->getNickname() == clientStr)
+		{
+			operators.erase(itClients);
+			return;
+		}
+		itClients++;
+	}
+	throw std::out_of_range("Invalid Client");
+}
+
+bool Channel::isClientOperator(Client &client)
+{
+	std::vector<Client *>::iterator itOp = operators.begin();
+	while (itOp != operators.end())
+	{
+		if (client.getNickname() == (*itOp)->getNickname())
+			return true;
+		itOp++;
+	}
+	return false;
+}
+

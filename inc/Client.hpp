@@ -26,26 +26,28 @@ class Client {
 		~Client(void);
 
 		// Getters
-		int	getSocketFd(void) const;
-		std::string	getNickname(void) const;
-		std::string getUsername(void) const;
-		const Server* getServer(void) const;
-		std::string getRealname(void) const;
-		bool isVerified(void) const;
-		bool isRegistered(void) const;
-		Channel	*getChannel(std::string &channelStr);
+		int				getSocketFd(void) const;
+		std::string		getNickname(void) const;
+		std::string		getUsername(void) const;
+		const Server*	getServer(void) const;
+		std::string		getRealname(void) const;
+		bool			isVerified(void) const;
+		bool			isRegistered(void) const;
+		Channel	*		getChannel(std::string &channelStr);
 		// Setters
-		void setNickname(std::string nickname);
-		void setUsername(std::string user);
-		void setRealname(std::string realname);
-		void setVerified(bool tf);
-		void setRegistered(bool tf);
+		void			setNickname(std::string nickname);
+		void			setUsername(std::string user);
+		void			setRealname(std::string realname);
+		void			setVerified(bool tf);
+		void			setRegistered(bool tf);
 
-		void addServer(Server &newServer);
-		void addChannel(Channel &newChannel);
+		void			addServer(Server &newServer);
+		void			addChannel(Channel &newChannel);
 		// Methods
 		static Client	*findClientByFd(int fd, std::list<Client> &clients);
-		bool			isClientInChannel(std::string channelName);
+		bool			isClientInChannel(std::string &channelName);
+		
+		void			removeChannel(std::string &channelStr);
 };
 
 #endif

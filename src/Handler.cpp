@@ -17,7 +17,7 @@ void Handler::initCmdMap(void) {
 	//cmdMap["pong"] = &handlePingCmd;
 	cmdMap["join"] = &handleJoinCmd;
 	cmdMap["topic"] = &handleTopicCmd;
-	//cmdMap["KICK"] = &handleKickCmd;
+	cmdMap["kick"] = &handleKickCmd;
 }
 
 void Handler::parseCommand(std::vector<std::string> divMsg, Client &client) {
@@ -313,9 +313,44 @@ std::string Handler::vectorToString(std::vector<std::string> vectorTopic, char d
 /*	 KICK command	*/
 /*					*/
 
-/*
 void Handler::handleKickCmd(std::vector<std::string> input, Client &client)
 {
+	if (input.size() < 3)
+	{
+		std::cerr << "KICK ERROR: Incorrect format" << std::endl;
+		return;
+	}
+	try{
+		std::list<Channel>::iterator itChannel = findChannel(input[1]);
+		if (itChannel == channels.end())
+			throw std::out_of_range("KICK ERROR: Channel does not exists");
+		if (itChannel->isClientOperator(client))
+		{
+			Client *clientPtr = itChannel->getClient(input[2]);
+			clientPtr->removeChannel(input[1]);
+			itChannel->removeClient(input[2]);
+			std::cout << createKickMessage(input) << std::endl; //Created msg we should send to client
+		}
+	}catch(std::exception &e){
+		std::cerr << e.what() << std::endl;
+	}
 	return;
 }
-*/
+
+std::string Handler::createKickMessage(std::vector<std::string> &input)
+{
+	std::string message = "";
+
+	if (input.size() >= 4)
+	{
+		std::vector<std::string> subVector(input.begin() + 3, input.end());
+		message = vectorToString(subVector, ' ');
+		if (message.front() != ':')
+		{
+			std::cerr << "KICK ERROR: Incorrect format" << std::endl;
+			return ("");
+		}
+	}
+	return message;
+}
+

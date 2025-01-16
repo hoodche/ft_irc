@@ -51,6 +51,7 @@ class Handler {
 		static std::map<std::string, std::string>	createDictionary(std::vector<std::string> &channelVector, std::vector<std::string> &passVector);	
 		static std::list<Channel>::iterator			findChannel(const std::string &channelName);
 		static std::string							vectorToString(std::vector<std::string> vectorTopic, char delim);
+		static std::string							createKickMessage(std::vector<std::string> &input);
 	//it is common to all the instances
 
 	public:
