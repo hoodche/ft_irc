@@ -6,7 +6,7 @@
 /*   By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/24 18:26:33 by igcastil          #+#    #+#             */
-/*   Updated: 2025/01/16 11:42:23 by igcastil         ###   ########.fr       */
+/*   Updated: 2025/01/18 16:41:24 by igcastil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -178,14 +178,18 @@ void Server::readFromFd(int clientConnectedfd)
 
 	// Read until \r\n has been found
 	size_t	pos;
+	// Debug print for incomplete messages (with ctrl + D)
+/* 	if((clientBuffers[clientConnectedfd].find("\r\n")) == std::string::npos)
+	{
+		std::cout << "incomplete message. Buffer: [" << clientBuffers[clientConnectedfd] << "]" << std::endl;
+		return;
+	} */
 	while (Client::findClientByFd(clientConnectedfd, clients) && (pos = clientBuffers[clientConnectedfd].find("\r\n")) != std::string::npos) {
 		std::string message = clientBuffers[clientConnectedfd].substr(0, pos);
 		clientBuffers[clientConnectedfd].erase(0, pos + 2);  // Remove the processed part from the buffer
-		// Debug print
-		// std::cout << "Message: " << message << std::endl;
 		processMessage(clientConnectedfd, message);
 	}
-	// Debug print
+
 	// printClients();
 }
 
