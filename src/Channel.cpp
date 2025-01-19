@@ -44,6 +44,10 @@ std::string Channel::getTopic(void) const
 	return this->topic;
 }
 
+bool	Channel::getMode(std::string type) const {
+	return modes.at(type);
+}
+
 void Channel::setName(std::string const channelName)
 {
 	this->name = channelName;
