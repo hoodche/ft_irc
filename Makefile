@@ -12,7 +12,7 @@
 
 NAME	= ircserv
 CC		= c++
-FLAGS	= -fsanitize=address -g3 -pedantic -Wall -Wextra #-Werror -std=c++98
+FLAGS	= -fsanitize=address -g3 -pedantic -Wall -Wextra -Werror -std=c++98
 
 all: $(NAME)
 

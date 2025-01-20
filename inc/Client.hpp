@@ -45,6 +45,7 @@ class Client {
 		void			addChannel(Channel &newChannel);
 		// Methods
 		static Client	*findClientByFd(int fd, std::list<Client> &clients);
+		static Client	*findClientByName(std::string name, std::list<Client> &clients);
 		bool			isClientInChannel(std::string &channelName);
 		
 		void			removeChannel(std::string &channelStr);
