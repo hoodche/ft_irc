@@ -8,6 +8,7 @@ std::list<Channel> Handler::channels; //Static variable must be declared outside
 
 Handler::Handler(void) {
 	initCmdMap(); // Initialise the command map
+	initModeCmdMap();
 }
 
 void Handler::initCmdMap(void) {
@@ -383,6 +384,7 @@ void Handler::handleModeCmd(std::vector<std::string> input, Client &client)
 		parseModeString(flagVector, argvVector, status, *it);
 		it++;
 	}
+	/*
 	std::cout << "flagVector: ";
 	it = flagVector.begin();
 	while (it != flagVector.end())
@@ -399,6 +401,18 @@ void Handler::handleModeCmd(std::vector<std::string> input, Client &client)
 		it++;
 	}
 	std::cout << std::endl;
+	*/
+	std::vector<std::string>::iterator flagIt = flagVector.begin();
+	std::vector<std::string>::iterator argvIt = argvVector.begin();
+	while (flagIt != flagVector.end())
+	{
+		if (!cmdModeMapNoArgv[*flagIt](**itChannel))
+		{
+			cmdModeMapNoArgv[*flagIt](**itChannel, *argvIt);
+			argvIt++; //CUIDADO SEGFAULT
+		}
+		flagIt++;
+	}
 	return;
 }
 
@@ -464,4 +478,19 @@ void Handler::addModeFlag(std::vector<std::string> &flagVector, int &status, cha
 		std::string flagWithMinus = std::string("-")  + c;
 		flagVector.push_back(flagWithMinus);
 	}
+}
+
+void Handler::initModeCmdMaps(void)
+{
+	cmdModeMap["+k"] = &setPasswordMode;
+	cmdModeMap["-k"] = &unsetPasswordMode;
+	cmdModeMap["+o"] = &setOperatorMode;
+	cmdModeMap["-o"] = &unsetOperatorMode;
+	cmdModeMap["+l"] = &unsetLimitMode;
+
+	cmdModeMapNoArgv["+i"] = &setInviteMode;
+	cmdModeMapNoArgv["-i"] = &unsetInviteMode;
+	cmdModeMapNoArgv["+t"] = &setTopicPrivMode;
+	cmdModeMapNoArgv["-t"] = &unsetTopicPrivMode;
+	cmdModeMapNoArgv["-l"] = &unsetLimitMode;
 }

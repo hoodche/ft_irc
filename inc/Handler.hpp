@@ -40,13 +40,18 @@
 # define ARGV_STATUS					3
 
 typedef void (*cmdHandler)(std::vector<std::string>, Client &);
+typedef void (*modeHandler)(Channel &, std::string);
+typedef void (*modeHandlerNoArgv)(Channel &);
 
 class Handler {
 	private:
-		std::map<std::string, cmdHandler>	cmdMap;
-		static std::list<Channel>			channels;
+		static std::map<std::string, modeHandlerArgv>	cmdModeMap;
+		static std::map<std::string, modeHandlerNoArgv>	cmdModeMapNoArgv;
+		static std::map<std::string, cmdHandler>		cmdMap;
+		static std::list<Channel>						channels;
 
 		void										initCmdMap(void);
+		void										initModeCmdMaps(void);
 		static void									joinCmdExec(std::map<std::string, std::string> channelDictionary, Client &client);
 		static void									createChannel(std::string channelName, Client &client);
 		static void									addClientToChannel(Channel &channel, Client &client);
@@ -61,7 +66,6 @@ class Handler {
 		static bool									isCharInStr(std::string const &ref, const char &c);
 		static void									addModeFlag(std::vector<std::string> &flagVector, int &status, char c);
 	//it is common to all the instances
-
 	public:
 		Handler(void);
 		void parseCommand(std::vector<std::string> divMsg, Client &client);
