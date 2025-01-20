@@ -75,6 +75,7 @@ Client* Client::findClientByFd(int fd, std::list<Client> &clients) {
         if (it->getSocketFd() == fd) {
             return &(*it);
         }
+		it++;
     }
     return NULL;
 }
