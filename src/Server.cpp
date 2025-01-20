@@ -312,6 +312,7 @@ void Server::disconnectClient(int clientConnectedfd)
 			clients.erase(it);
 			break;
 		}
+		it++;
 	}
 	for (size_t i = 0; i < this->fds.size(); i++)
 	{
