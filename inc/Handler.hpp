@@ -35,6 +35,10 @@
 # define ERR_PASSWDMISMATCH			":Password incorrect"
 # define ERR_NICKNAMEINUSE			":Nickname is already in use"
 
+# define PLUS_STATUS					1
+# define MINUS_STATUS					2
+# define ARGV_STATUS					3
+
 typedef void (*cmdHandler)(std::vector<std::string>, Client &);
 
 class Handler {
@@ -52,6 +56,10 @@ class Handler {
 		static std::list<Channel>::iterator			findChannel(const std::string &channelName);
 		static std::string							vectorToString(std::vector<std::string> vectorTopic, char delim);
 		static std::string							createKickMessage(std::vector<std::string> &input);
+		static void									getStatus(const char &symbol, int &status);
+		static void									parseModeString(std::vector<std::string> &flagVector, std::vector<std::string> &argvVector, int &status, std::string const &modeStr);
+		static bool									isCharInStr(std::string const &ref, const char &c);
+		static void									addModeFlag(std::vector<std::string> &flagVector, int &status, char c);
 	//it is common to all the instances
 
 	public:
@@ -69,6 +77,7 @@ class Handler {
 		static void handleTopicCmd(std::vector<std::string> input, Client &client);
 		static void handleKickCmd(std::vector<std::string> input, Client &client);
 		static void handlePingCmd(std::vector<std::string> input, Client &client);
+		static void handleModeCmd(std::vector<std::string> input, Client &client);
 		//static void handlePongCmd(std::vector<std::string> input, Client &client);
 };
 

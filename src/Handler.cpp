@@ -18,6 +18,7 @@ void Handler::initCmdMap(void) {
 	cmdMap["join"] = &handleJoinCmd;
 	cmdMap["topic"] = &handleTopicCmd;
 	cmdMap["kick"] = &handleKickCmd;
+	cmdMap["mode"] = &handleModeCmd;
 }
 
 void Handler::parseCommand(std::vector<std::string> divMsg, Client &client) {
@@ -345,7 +346,7 @@ std::string Handler::createKickMessage(std::vector<std::string> &input)
 	{
 		std::vector<std::string> subVector(input.begin() + 3, input.end());
 		message = vectorToString(subVector, ' ');
-		if (message.front() != ':')
+		if (message.at(0) != ':')
 		{
 			std::cerr << "KICK ERROR: Incorrect format" << std::endl;
 			return ("");
@@ -354,3 +355,113 @@ std::string Handler::createKickMessage(std::vector<std::string> &input)
 	return message;
 }
 
+/*					*/
+/*	 MODE command	*/
+/*					*/
+
+void Handler::handleModeCmd(std::vector<std::string> input, Client &client)
+{
+	(void)client;
+
+	std::vector<std::string>	flagVector;
+	std::vector<std::string>	argvVector;
+	int							status;	
+
+	status = 0;
+	if (input.size() < 3){
+		std::cerr << "not enough argv" << std::endl;
+		return;
+	}
+
+	std::list<Channel>::iterator itChannel = findChannel(input[1]);
+	if (itChannel == channels.end())
+		throw std::out_of_range("KICK ERROR: Channel does not exists");
+
+	std::vector<std::string>::iterator it = input.begin() + 2;
+	while(it != input.end())
+	{
+		parseModeString(flagVector, argvVector, status, *it);
+		it++;
+	}
+	std::cout << "flagVector: ";
+	it = flagVector.begin();
+	while (it != flagVector.end())
+	{
+		std::cout << *it << " ";
+		it++;
+	}
+	std::cout << std::endl;
+	std::cout << "argvVector: ";
+	it = argvVector.begin();
+	while (it != argvVector.end())
+	{
+		std::cout << *it << " ";
+		it++;
+	}
+	std::cout << std::endl;
+	return;
+}
+
+void Handler::parseModeString(std::vector<std::string> &flagVector, std::vector<std::string> &argvVector, int &status, std::string const &modeStr)
+{
+	std::string::const_iterator itStr = modeStr.begin();
+	std::string ref= "itkol";
+	bool		isFlag = false;
+
+	getStatus(*itStr, status);
+	while(itStr != modeStr.end())
+	{
+		if (status == ARGV_STATUS)
+		{
+			argvVector.push_back(modeStr);
+			return;
+		}
+		if (isCharInStr(ref, *itStr))
+		{
+			addModeFlag(flagVector, status, *itStr);
+			isFlag = true;
+		}
+		else
+			getStatus(*itStr, status);
+		itStr++;
+	}
+	if (isFlag == false)
+		argvVector.push_back(modeStr);
+	return;
+}
+
+void Handler::getStatus(const char &symbol, int &status)
+{
+	if (symbol == '+' && status != ARGV_STATUS)
+		status = PLUS_STATUS;
+	else if (symbol == '-' && status != ARGV_STATUS)
+		status = MINUS_STATUS;
+	else
+		status = ARGV_STATUS;
+	return;
+}
+
+bool Handler::isCharInStr(std::string const &ref, const char &c)
+{
+	std::string::const_iterator itStr = ref.begin();
+	while(itStr != ref.end()){
+		if (*itStr == c)
+			return (true);
+		itStr++;
+	}
+	return (false);
+}
+
+void Handler::addModeFlag(std::vector<std::string> &flagVector, int &status, char c)
+{
+	if (status == PLUS_STATUS)
+	{
+		std::string flagWithPlus = std::string("+")  + c;
+		flagVector.push_back(flagWithPlus);
+	}
+	else
+	{
+		std::string flagWithMinus = std::string("-")  + c;
+		flagVector.push_back(flagWithMinus);
+	}
+}
