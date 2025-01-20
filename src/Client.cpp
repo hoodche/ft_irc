@@ -86,6 +86,7 @@ Client* Client::findClientByName(std::string name, std::list<Client> &clients) {
         if (it->getNickname() == name) {
             return &(*it);
         }
+		it++;
     }
     return NULL;
 }

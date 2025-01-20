@@ -35,7 +35,7 @@ void Handler::parseCommand(std::vector<std::string> divMsg, Client &client) {
 
 /**
  * @brief	handles the irc "USER <username> <hostname> <servername> :<realname>" command
- * @param	std::string input . "USER " was already trimmed
+ * @param	std::vector<std::string> divMsg. Params passed divided in a vector of strings
  * @param	Client &client who sent the USER command
  */
 
@@ -346,7 +346,7 @@ std::string Handler::createKickMessage(std::vector<std::string> &input)
 	{
 		std::vector<std::string> subVector(input.begin() + 3, input.end());
 		message = vectorToString(subVector, ' ');
-		if (message.front() != ':')
+		if (message.at(0) != ':')
 		{
 			std::cerr << "KICK ERROR: Incorrect format" << std::endl;
 			return ("");
@@ -361,16 +361,15 @@ std::string Handler::createKickMessage(std::vector<std::string> &input)
 /*					*/
 
 /**
- *
+ * @brief	handles the irc "INVITE <username> <#channel>" command. Only operators can invite to channels in invite mode
+ * @param	std::vector<std::string> input. Params passed divided in a vector of strings
+ * @param	Client &client who sent the INVITE command
  */
 
 // As usual, depending on RFC definition, some points might differ. Following Modern IRC definition here:
 // https://modern.ircdocs.horse/#invite-message
 
 void	Handler::handleInviteCmd(std::vector<std::string> input, Client &client) {
-	// Cmd: INVITE
-	// Params: <nickname> <channel>
-	std::cout << "Gets here" << std::endl;
 	if (input.size() < 3) {
 		std::cout << "INVITE cmd needs three arguments INVITE <nickname> <channel>" << std::endl,
 		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + " INVITE " + ERR_NEEDMOREPARAMS "\n", client.getSocketFd());
