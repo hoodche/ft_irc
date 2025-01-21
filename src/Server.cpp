@@ -6,7 +6,7 @@
 /*   By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/24 18:26:33 by igcastil          #+#    #+#             */
-/*   Updated: 2025/01/18 16:41:24 by igcastil         ###   ########.fr       */
+/*   Updated: 2025/01/21 15:39:07 by igcastil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -312,7 +312,6 @@ void Server::disconnectClient(int clientConnectedfd)
 			clients.erase(it);
 			break;
 		}
-		it++;
 	}
 	for (size_t i = 0; i < this->fds.size(); i++)
 	{

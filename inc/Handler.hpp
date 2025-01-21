@@ -21,9 +21,15 @@
 # define RPL_WELCOME_CODE			"001 "
 
 # define ERR_NOSUCHNICK_CODE		"401 "
-# define ERR_NOSUCHNICK				":No such nick"
+# define ERR_NOSUCHNICK				"No such nick/channel"
 # define ERR_NOSUCHCHANNEL_CODE		"403 "
 # define ERR_NOSUCHCHANNEL			":No such channel"
+# define ERR_TOOMANYTARGETS_CODE	"407 "
+# define ERR_TOOMANYTARGETS			":No message delivered"
+# define ERR_NORECIPIENT_CODE		"411 "
+# define ERR_NORECIPIENT			":No recipient given"
+# define ERR_NOTEXTTOSEND_CODE		"412 "
+# define ERR_NOTEXTTOSEND			":No text to send"
 # define ERR_NONICKNAMEGIVEN_CODE	"431 "
 # define ERR_NONICKNAMEGIVEN		":No nickname given"
 # define ERR_ERRONEUSNICKNAME_CODE	"432 "
@@ -77,6 +83,7 @@ class Handler {
 		static void handleKickCmd(std::vector<std::string> input, Client &client);
 		static void handlePingCmd(std::vector<std::string> input, Client &client);
 		static void	handleInviteCmd(std::vector<std::string> input, Client &client);
+		static void	handlePrivmsgCmd(std::vector<std::string> input, Client &client);
 		//static void handlePongCmd(std::vector<std::string> input, Client &client);
 };
 

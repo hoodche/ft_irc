@@ -27,6 +27,8 @@ class Channel {
 		//Getters
 		std::string getName(void) const;
 		std::string getTopic(void) const;
+		std::vector<Client *> getOperators(void) const;
+		std::vector<Client *> getUsers(void) const;
 		bool		getMode(std::string type) const;
 		Client*		getClient(std::string &clientStr);
 	
