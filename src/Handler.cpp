@@ -1,14 +1,18 @@
 #include "../inc/Handler.hpp"
-#include <sstream>
 #include "../inc/Server.hpp" 
 #include "../commands/nick.cpp" 
 
+#include <sstream>
+#include <cctype>
+
 std::list<Channel> Handler::channels; //Static variable must be declared outside the class so the linker can fint it. It is not vinculated to an object,
 										//so the programmer have to do the job
+std::map<std::string, modeHandler>		Handler::cmdModeMap;
+std::map<std::string, modeHandlerNoArgv>	Handler::cmdModeMapNoArgv;
 
 Handler::Handler(void) {
 	initCmdMap(); // Initialise the command map
-	initModeCmdMap();
+	initModeCmdMaps();
 }
 
 void Handler::initCmdMap(void) {
@@ -20,6 +24,21 @@ void Handler::initCmdMap(void) {
 	cmdMap["topic"] = &handleTopicCmd;
 	cmdMap["kick"] = &handleKickCmd;
 	cmdMap["mode"] = &handleModeCmd;
+}
+
+void Handler::initModeCmdMaps(void)
+{
+	cmdModeMap["+k"] = &activatePasswordMode;
+	cmdModeMap["-k"] = &deactivatePasswordMode;
+	cmdModeMap["+o"] = &activateOperatorMode;
+	cmdModeMap["-o"] = &deactivateOperatorMode;
+	cmdModeMap["+l"] = &activateUserLimitMode;
+
+	cmdModeMapNoArgv["-l"] = &deactivateUserLimitMode;
+	cmdModeMapNoArgv["+i"] = &activateInviteMode;
+	cmdModeMapNoArgv["-i"] = &deactivateInviteMode;
+	cmdModeMapNoArgv["+t"] = &activateTopicPrivMode;
+	cmdModeMapNoArgv["-t"] = &deactivateTopicPrivMode;
 }
 
 void Handler::parseCommand(std::vector<std::string> divMsg, Client &client) {
@@ -376,7 +395,10 @@ void Handler::handleModeCmd(std::vector<std::string> input, Client &client)
 
 	std::list<Channel>::iterator itChannel = findChannel(input[1]);
 	if (itChannel == channels.end())
-		throw std::out_of_range("KICK ERROR: Channel does not exists");
+	{
+		std::cerr << "Error: Channel does not exists" << std::endl;
+		return;
+	}
 
 	std::vector<std::string>::iterator it = input.begin() + 2;
 	while(it != input.end())
@@ -406,10 +428,15 @@ void Handler::handleModeCmd(std::vector<std::string> input, Client &client)
 	std::vector<std::string>::iterator argvIt = argvVector.begin();
 	while (flagIt != flagVector.end())
 	{
-		if (!cmdModeMapNoArgv[*flagIt](**itChannel))
+		if (cmdModeMapNoArgv.find(*flagIt) != cmdModeMapNoArgv.end())
+			cmdModeMapNoArgv[*flagIt](*itChannel);
+		else
 		{
-			cmdModeMapNoArgv[*flagIt](**itChannel, *argvIt);
-			argvIt++; //CUIDADO SEGFAULT
+			if (argvIt != argvVector.end())
+			{
+				cmdModeMap[*flagIt](*itChannel, *argvIt);
+				argvIt++;
+			}
 		}
 		flagIt++;
 	}
@@ -480,17 +507,113 @@ void Handler::addModeFlag(std::vector<std::string> &flagVector, int &status, cha
 	}
 }
 
-void Handler::initModeCmdMaps(void)
-{
-	cmdModeMap["+k"] = &setPasswordMode;
-	cmdModeMap["-k"] = &unsetPasswordMode;
-	cmdModeMap["+o"] = &setOperatorMode;
-	cmdModeMap["-o"] = &unsetOperatorMode;
-	cmdModeMap["+l"] = &unsetLimitMode;
 
-	cmdModeMapNoArgv["+i"] = &setInviteMode;
-	cmdModeMapNoArgv["-i"] = &unsetInviteMode;
-	cmdModeMapNoArgv["+t"] = &setTopicPrivMode;
-	cmdModeMapNoArgv["-t"] = &unsetTopicPrivMode;
-	cmdModeMapNoArgv["-l"] = &unsetLimitMode;
+//Mode Function Pointers
+void Handler::activateInviteMode(Channel &channel)
+{
+	if (channel.getInviteMode() == false)
+	{
+		channel.setInviteMode(true);
+		std::cout << "Invite mode restrictions activated" << std::endl;
+	}
+	return;
+}
+
+void Handler::deactivateInviteMode(Channel &channel)
+{
+	if (channel.getInviteMode() == true)
+	{
+		channel.setInviteMode(false);
+		std::cout << "Invite mode restrictions deactivated" << std::endl;
+	}
+	return;
+}
+
+void Handler::activateTopicPrivMode(Channel &channel)
+{
+	if (channel.getTopicMode() == false)
+	{
+		channel.setTopicMode(true);
+		std::cout << "Topic mode restrictions activated" << std::endl;
+	}
+	return;
+}
+
+void Handler::deactivateTopicPrivMode(Channel &channel)
+{
+	if (channel.getTopicMode() == true)
+	{
+		channel.setTopicMode(false);
+		std::cout << "Topic mode restrictions deactivated" << std::endl;
+	}
+	return;
+}
+
+void Handler::deactivateUserLimitMode(Channel &channel)
+{
+	if (channel.getUserLimit() != 0)
+	{
+		channel.setUserLimit(0);
+		std::cout << "Limit mode restrictions deactivated" << std::endl;
+	}
+}
+
+void Handler::activateUserLimitMode(Channel &channel, std::string newLimit)
+{
+	unsigned int number;
+	std::stringstream ss(newLimit);
+	std::string::iterator it = newLimit.begin();
+
+	while(it != newLimit.end())
+	{
+		if (isdigit(*it) == false)
+			return;
+		it++;
+	}
+
+	ss >> number;
+
+	if (channel.getUserLimit() == 0)
+	{
+		channel.setUserLimit(number);
+		std::cout << "Limit mode restrictions activated: " << number << std::endl;
+	}
+}
+
+void Handler::activatePasswordMode(Channel &channel, std::string newPassword)
+{
+	if (channel.getPassword() == "")
+	{
+		channel.setPassword(newPassword);
+		std::cout << "Password mode restrictions activated" << std::endl;
+	}
+}
+
+void Handler::deactivatePasswordMode(Channel &channel, std::string newPassword)
+{
+	if (channel.getPassword() == newPassword && channel.getPassword() != "")
+	{
+		channel.setPassword("");
+		std::cout << "Password mode restrictions deactivated" << std::endl;
+	}
+}
+
+void Handler::activateOperatorMode(Channel &channel, std::string targetClient)
+{
+	try{
+		Client* clientPtr = channel.getUserClient(targetClient);
+		channel.removeClient(targetClient);
+		channel.addOperator(*clientPtr);
+		std::cout << "Operator privileges granted to: " << targetClient << std::endl;
+	}catch(std::exception &e){}
+}
+
+void Handler::deactivateOperatorMode(Channel &channel, std::string targetClient)
+{
+	try{
+		Client* clientPtr = channel.getOperatorClient(targetClient);
+		channel.removeClient(targetClient);
+		channel.addUser(*clientPtr);
+		std::cout << "Operator privileges removed to: " << targetClient << std::endl;
+	}catch(std::exception &e){}
 }

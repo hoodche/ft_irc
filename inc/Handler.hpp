@@ -45,9 +45,10 @@ typedef void (*modeHandlerNoArgv)(Channel &);
 
 class Handler {
 	private:
-		static std::map<std::string, modeHandlerArgv>	cmdModeMap;
+		std::map<std::string, cmdHandler>				cmdMap;
+
+		static std::map<std::string, modeHandler>		cmdModeMap;
 		static std::map<std::string, modeHandlerNoArgv>	cmdModeMapNoArgv;
-		static std::map<std::string, cmdHandler>		cmdMap;
 		static std::list<Channel>						channels;
 
 		void										initCmdMap(void);
@@ -66,6 +67,20 @@ class Handler {
 		static bool									isCharInStr(std::string const &ref, const char &c);
 		static void									addModeFlag(std::vector<std::string> &flagVector, int &status, char c);
 	//it is common to all the instances
+
+	//Mode Function Pointers
+		static void									activateInviteMode(Channel &channel);
+		static void									deactivateInviteMode(Channel &channel);
+		static void									activateTopicPrivMode(Channel &channel);
+		static void									deactivateTopicPrivMode(Channel &channel);
+		static void									deactivateUserLimitMode(Channel &channel);
+
+		static void									activateUserLimitMode(Channel &channel, std::string newLimit);
+		static void									activatePasswordMode(Channel &channel, std::string newPassword);
+		static void									deactivatePasswordMode(Channel &channel, std::string newPassword);
+		static void									activateOperatorMode(Channel &channel, std::string targetClient);
+		static void									deactivateOperatorMode(Channel &channel, std::string targetClient);
+
 	public:
 		Handler(void);
 		void parseCommand(std::vector<std::string> divMsg, Client &client);
