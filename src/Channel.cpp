@@ -76,11 +76,13 @@ void Channel::addUser(Client &client)
 {
 	//Add something to return if we get a repeated user
 	users.push_back(&client);
+	return ;
 }
 
 void Channel::addOperator(Client &client)
 {
 	operators.push_back(&client);
+	return ;
 }
 
 Client	*Channel::getClient(std::string &clientStr)

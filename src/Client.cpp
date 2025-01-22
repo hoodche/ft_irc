@@ -120,6 +120,22 @@ void Client::addChannel(Channel &newChannel)
 	return ;
 }
 
+void	Client::removeInvitedChannels(std::string &channelName) {
+	if (invitedChannels.empty())
+		return;
+
+	std::vector<Channel *>::iterator it = invitedChannels.begin();
+	while (it != invitedChannels.end())
+	{
+		if ((*it)->getName() == channelName)
+		{
+			invitedChannels.erase(it);
+			return ;
+		}
+		it++;
+	}
+}
+
 Channel	*Client::getChannel(std::string &channelStr)
 {
 	std::vector<Channel*>::iterator itChannels = clientChannels.begin();
