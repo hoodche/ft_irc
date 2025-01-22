@@ -49,7 +49,7 @@ void Handler::handleUserCmd(std::vector<std::string> divMsg, Client &client) {
 	// Default client received command: USER nerea 0 * :realname -> input = nerea 0 * :realname
 
 	// Check that we have the 4 required parameters	
-	client.setRegistered(true);
+	
 	if (divMsg.size() < 4) {
 		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + " USER " + ERR_NEEDMOREPARAMS "\n", client.getSocketFd());
 		return ;
@@ -94,6 +94,7 @@ void Handler::handleUserCmd(std::vector<std::string> divMsg, Client &client) {
 	realname = realname.substr(1);
 	client.setUsername(username);
 	client.setRealname(realname);
+	client.setRegistered(true);
 }
 /**
  * @brief	handles the irc "NICK chosennick" command
