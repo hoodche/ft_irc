@@ -399,6 +399,13 @@ void Handler::handleModeCmd(std::vector<std::string> input, Client &client)
 		std::cerr << "Error: Channel does not exists" << std::endl;
 		return;
 	}
+	try{
+		std::string temp = client.getNickname();
+		itChannel->getOperatorClient(temp);
+	}catch(std::exception &e){
+		std::cout << "Error: client does not have operator privileges" << std::endl;
+		return;
+	}
 
 	std::vector<std::string>::iterator it = input.begin() + 2;
 	while(it != input.end())
