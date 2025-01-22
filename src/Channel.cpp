@@ -117,9 +117,9 @@ Client	*Channel::getClient(std::string &clientStr)
 	throw std::out_of_range("Invalid Client");
 }
 
-void	Channel::removeClient(std::string &clientStr)
+void	Channel::removeClient(const std::string &clientStr)
 {
-	if (operators.empty())
+	if (operators.empty() && users.empty())
 		return;
 
 	std::vector<Client*>::iterator itClients = operators.begin();
@@ -133,15 +133,12 @@ void	Channel::removeClient(std::string &clientStr)
 		itClients++;
 	}
 
-	if (users.empty())
-		return;
-
 	itClients = users.begin();
 	while (itClients != users.end())
 	{
 		if ((*itClients)->getNickname() == clientStr)
 		{
-			operators.erase(itClients);
+			users.erase(itClients);
 			return;
 		}
 		itClients++;

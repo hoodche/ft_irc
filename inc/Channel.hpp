@@ -40,7 +40,7 @@ class Channel {
 		void		addUser(Client &client);
 		void		addOperator(Client &client);
 
-		void		removeClient(std::string &clientStr);
+		void		removeClient(const std::string &clientStr);
 		bool		isClientOperator(Client &client);
 };
 

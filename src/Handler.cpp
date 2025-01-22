@@ -175,15 +175,21 @@ void Handler::handlePrivmsgCmd(std::vector<std::string> divMsg , Client &client)
 		std::vector<std::string> subVector(divMsg.begin() + 2, divMsg.end());
 		while (itClients != operators.end())
 		{
-			std::string outboundMessage = ":" + client.getNickname() + " PRIVMSG " + divMsg[1] + " " + vectorToString(subVector, ' ') + "\n";
-			sendResponse(outboundMessage, (*itClients)->getSocketFd());
+			if((*itClients)->getNickname() != client.getNickname())
+			{
+				std::string outboundMessage = ":" + client.getNickname() + " PRIVMSG " + divMsg[1] + " " + vectorToString(subVector, ' ') + "\n";
+				sendResponse(outboundMessage, (*itClients)->getSocketFd());
+			}
 			itClients++;
 		}
 		itClients = users.begin();
 		while (itClients != users.end())
 		{
-			std::string outboundMessage = ":" + client.getNickname() + " PRIVMSG " + divMsg[1] + " " + vectorToString(subVector, ' ') + "\n";
-			sendResponse(outboundMessage, (*itClients)->getSocketFd());
+			if((*itClients)->getNickname() != client.getNickname())
+			{
+				std::string outboundMessage = ":" + client.getNickname() + " PRIVMSG " + divMsg[1] + " " + vectorToString(subVector, ' ') + "\n";
+				sendResponse(outboundMessage, (*itClients)->getSocketFd());
+			}
 			itClients++;
 		}
 		return;
@@ -200,33 +206,41 @@ void Handler::handlePrivmsgCmd(std::vector<std::string> divMsg , Client &client)
 void Handler::handleQuitCmd(std::vector<std::string> divMsg , Client &client) {
 	//respond to leaving client
 	if (divMsg.size() >= 2 || divMsg[1][0] == ':')//quit  + optional quitting message
-		sendResponse("ERROR " + client.getNickname() + " (Quit " + divMsg[1] + ")\n", client.getSocketFd());
+	{
+		std::vector<std::string> subVector(divMsg.begin() + 1, divMsg.end());
+		sendResponse("ERROR " + client.getNickname() + " (Quit " + vectorToString(subVector, ' ') + ")\n", client.getSocketFd());
+	}
 	else//quit was not followed by the optional quitting message
 		sendResponse("ERROR " + client.getNickname() + " (Quit)\n", client.getSocketFd());
-	//notify other clients in same channels that client is leaving
+	//notify other clients in same channels that client is leaving (and erase leaving client from the channel)	
 	std::vector<Channel *> channels = client.getClientChannels();
 	std::vector<Channel *>::iterator itChannels = channels.begin();
+	//debug print
+	std::cout << "comienza la iteracion por todos los canales del usuario saliente" << std::endl;
 	while (itChannels != channels.end())
 	{
+		std::cout << "canal: " << (*itChannels)->getName() << std::endl;
+		(*itChannels)->removeClient(client.getNickname());
+		std::cout << "eliminado usuario saliente" << std::endl;
 		std::vector<Client *> operators = (*itChannels)->getOperators() ;
 		std::vector<Client *> users = (*itChannels)->getUsers() ;
 		std::vector<Client *>::iterator itClients = operators.begin();
 		while (itClients != operators.end())
 		{
-			if((*itClients)->getNickname() != client.getNickname())
-				sendResponse(":" + client.getNickname() + " QUIT :Client has left the server\n", (*itClients)->getSocketFd());
+			sendResponse(":" + client.getNickname() + " QUIT :Client has left the server\n", (*itClients)->getSocketFd());
 			itClients++;
 		}
 		itClients = users.begin();
 		while (itClients != users.end())
 		{
-			if((*itClients)->getNickname() != client.getNickname())
-				sendResponse(":" + client.getNickname() + " QUIT :Client has left the server\n", (*itClients)->getSocketFd());
+			sendResponse(":" + client.getNickname() + " QUIT :Client has left the server\n", (*itClients)->getSocketFd());
 			itClients++;
 		}
 		itChannels++;
 	}
 	//disconnect client
+	Server* server = const_cast<Server*>(client.getServer()); // Remove const qualifier (chapuza!!!)
+	server->disconnectClient(client.getSocketFd());
 }
 
 void Handler::handlePingCmd(std::vector<std::string> input, Client &client) {

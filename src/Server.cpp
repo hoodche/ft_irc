@@ -6,7 +6,7 @@
 /*   By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/24 18:26:33 by igcastil          #+#    #+#             */
-/*   Updated: 2025/01/22 18:00:20 by igcastil         ###   ########.fr       */
+/*   Updated: 2025/01/22 18:18:26 by igcastil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -324,7 +324,6 @@ void Server::disconnectClient(int clientConnectedfd)
 	}
 	// Remove client buffer from the buffers map
 	clientBuffers.erase(clientConnectedfd);
-	
 	std::cout << "Client FD: " << clientConnectedfd << " has been disconnected" << std::endl;
 }
 
