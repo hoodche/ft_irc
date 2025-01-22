@@ -528,8 +528,19 @@ void Handler::parseModeString(std::vector<std::string> &flagVector, std::vector<
 {
 	std::string::const_iterator itStr = modeStr.begin();
 	std::string ref= "itkol";
+	std::string refWithSymbols = "itkol+-";
 	bool		isFlag = false;
 
+	while(itStr != modeStr.end())
+	{
+		if (!isCharInStr(refWithSymbols ,*itStr))
+		{
+			status = ARGV_STATUS;
+			break;
+		}
+		itStr++;
+	}
+	itStr = modeStr.begin();
 	getStatus(*itStr, status);
 	while(itStr != modeStr.end())
 	{
@@ -587,7 +598,6 @@ void Handler::addModeFlag(std::vector<std::string> &flagVector, int &status, cha
 		flagVector.push_back(flagWithMinus);
 	}
 }
-
 
 //Mode Function Pointers
 void Handler::activateInviteMode(Channel &channel)

@@ -17,7 +17,7 @@ class Client {
 		bool					registered;
 		std::string				nick;
 		std::string				username;
-		std::string	realname;
+		std::string				realname;
 		std::vector<Channel *>	clientChannels;
 		const Server			*connectedToServer;
 
@@ -34,6 +34,7 @@ class Client {
 		bool			isVerified(void) const;
 		bool			isRegistered(void) const;
 		Channel	*		getChannel(std::string &channelStr);
+
 		// Setters
 		void			setNickname(std::string nickname);
 		void			setUsername(std::string user);
