@@ -84,6 +84,7 @@ class Handler {
 		static void handlePingCmd(std::vector<std::string> input, Client &client);
 		static void	handleInviteCmd(std::vector<std::string> input, Client &client);
 		static void	handlePrivmsgCmd(std::vector<std::string> input, Client &client);
+		static void	handleQuitCmd(std::vector<std::string> input, Client &client);
 		//static void handlePongCmd(std::vector<std::string> input, Client &client);
 };
 

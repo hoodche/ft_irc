@@ -36,6 +36,10 @@ std::string	Client::getRealname(void) const {
 	return this->realname;
 }
 
+std::vector<Channel *> Client::getClientChannels(void) const {
+	return this->clientChannels;
+}
+
 bool Client::isVerified(void) const {
 	return this->verified;
 }
