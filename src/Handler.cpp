@@ -1,13 +1,18 @@
 #include "../inc/Handler.hpp"
-#include <sstream>
 #include "../inc/Server.hpp" 
 #include "../commands/nick.cpp" 
 
+#include <sstream>
+#include <cctype>
+
 std::list<Channel> Handler::channels; //Static variable must be declared outside the class so the linker can fint it. It is not vinculated to an object,
 										//so the programmer have to do the job
+std::map<std::string, modeHandler>		Handler::cmdModeMap;
+std::map<std::string, modeHandlerNoArgv>	Handler::cmdModeMapNoArgv;
 
 Handler::Handler(void) {
 	initCmdMap(); // Initialise the command map
+	initModeCmdMaps();
 }
 
 void Handler::initCmdMap(void) {
@@ -18,8 +23,25 @@ void Handler::initCmdMap(void) {
 	cmdMap["join"] = &handleJoinCmd;
 	cmdMap["topic"] = &handleTopicCmd;
 	cmdMap["kick"] = &handleKickCmd;
+	cmdMap["mode"] = &handleModeCmd;
 	cmdMap["invite"] = &handleInviteCmd;
 	cmdMap["privmsg"] = &handlePrivmsgCmd;
+	cmdMap["quit"] = &handleQuitCmd;
+}
+
+void Handler::initModeCmdMaps(void)
+{
+	cmdModeMap["+k"] = &activatePasswordMode;
+	cmdModeMap["-k"] = &deactivatePasswordMode;
+	cmdModeMap["+o"] = &activateOperatorMode;
+	cmdModeMap["-o"] = &deactivateOperatorMode;
+	cmdModeMap["+l"] = &activateUserLimitMode;
+
+	cmdModeMapNoArgv["-l"] = &deactivateUserLimitMode;
+	cmdModeMapNoArgv["+i"] = &activateInviteMode;
+	cmdModeMapNoArgv["-i"] = &deactivateInviteMode;
+	cmdModeMapNoArgv["+t"] = &activateTopicPrivMode;
+	cmdModeMapNoArgv["-t"] = &deactivateTopicPrivMode;
 }
 
 void Handler::parseCommand(std::vector<std::string> divMsg, Client &client) {
@@ -49,7 +71,7 @@ void Handler::handleUserCmd(std::vector<std::string> divMsg, Client &client) {
 	// Default client received command: USER nerea 0 * :realname -> input = nerea 0 * :realname
 
 	// Check that we have the 4 required parameters	
-	client.setRegistered(true);
+	
 	if (divMsg.size() < 4) {
 		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + " USER " + ERR_NEEDMOREPARAMS "\n", client.getSocketFd());
 		return ;
@@ -94,6 +116,7 @@ void Handler::handleUserCmd(std::vector<std::string> divMsg, Client &client) {
 	realname = realname.substr(1);
 	client.setUsername(username);
 	client.setRealname(realname);
+	client.setRegistered(true);
 }
 /**
  * @brief	handles the irc "NICK chosennick" command
@@ -173,19 +196,72 @@ void Handler::handlePrivmsgCmd(std::vector<std::string> divMsg , Client &client)
 		std::vector<std::string> subVector(divMsg.begin() + 2, divMsg.end());
 		while (itClients != operators.end())
 		{
-			std::string outboundMessage = ":" + client.getNickname() + " PRIVMSG " + divMsg[1] + " " + vectorToString(subVector, ' ') + "\n";
-			sendResponse(outboundMessage, (*itClients)->getSocketFd());
+			if((*itClients)->getNickname() != client.getNickname())
+			{
+				std::string outboundMessage = ":" + client.getNickname() + " PRIVMSG " + divMsg[1] + " " + vectorToString(subVector, ' ') + "\n";
+				sendResponse(outboundMessage, (*itClients)->getSocketFd());
+			}
 			itClients++;
 		}
 		itClients = users.begin();
 		while (itClients != users.end())
 		{
-			std::string outboundMessage = ":" + client.getNickname() + " PRIVMSG " + divMsg[1] + " " + vectorToString(subVector, ' ') + "\n";
-			sendResponse(outboundMessage, (*itClients)->getSocketFd());
+			if((*itClients)->getNickname() != client.getNickname())
+			{
+				std::string outboundMessage = ":" + client.getNickname() + " PRIVMSG " + divMsg[1] + " " + vectorToString(subVector, ' ') + "\n";
+				sendResponse(outboundMessage, (*itClients)->getSocketFd());
+			}
 			itClients++;
 		}
 		return;
 	}
+}
+
+
+/**
+ * @brief	handles the irc QUIT command 
+ * @param	std::vector<std::string> divMsg whole command 
+ * @param	Client &client who sent the QUIT command
+ * 
+ */
+void Handler::handleQuitCmd(std::vector<std::string> divMsg , Client &client) {
+	//respond to leaving client
+	if (divMsg.size() >= 2 && divMsg[1][0] == ':')//quit  + optional quitting message
+	{
+		std::vector<std::string> subVector(divMsg.begin() + 1, divMsg.end());
+		sendResponse("ERROR " + client.getNickname() + " (Quit " + vectorToString(subVector, ' ') + ")\n", client.getSocketFd());
+	}
+	else//quit was not followed by the optional quitting message
+		sendResponse("ERROR " + client.getNickname() + " (Quit)\n", client.getSocketFd());
+	//notify other clients in same channels that client is leaving (and erase leaving client from the channel)	
+	std::vector<Channel *> channels = client.getClientChannels();
+	std::vector<Channel *>::iterator itChannels = channels.begin();
+	//debug print
+	std::cout << "comienza la iteracion por todos los canales del usuario saliente" << std::endl;
+	while (itChannels != channels.end())
+	{
+		std::cout << "canal: " << (*itChannels)->getName() << std::endl;
+		(*itChannels)->removeClient(client.getNickname());
+		std::cout << "eliminado usuario saliente" << std::endl;
+		std::vector<Client *> operators = (*itChannels)->getOperators() ;
+		std::vector<Client *> users = (*itChannels)->getUsers() ;
+		std::vector<Client *>::iterator itClients = operators.begin();
+		while (itClients != operators.end())
+		{
+			sendResponse(":" + client.getNickname() + " QUIT :Client has left the server\n", (*itClients)->getSocketFd());
+			itClients++;
+		}
+		itClients = users.begin();
+		while (itClients != users.end())
+		{
+			sendResponse(":" + client.getNickname() + " QUIT :Client has left the server\n", (*itClients)->getSocketFd());
+			itClients++;
+		}
+		itChannels++;
+	}
+	//disconnect client
+	Server* server = const_cast<Server*>(client.getServer()); // Remove const qualifier (chapuza!!!)
+	server->disconnectClient(client.getSocketFd());
 }
 
 void Handler::handlePingCmd(std::vector<std::string> input, Client &client) {
@@ -428,6 +504,265 @@ std::string Handler::createKickMessage(std::vector<std::string> &input)
 	return message;
 }
 
+/*					*/
+/*	 MODE command	*/
+/*					*/
+
+void Handler::handleModeCmd(std::vector<std::string> input, Client &client)
+{
+	(void)client;
+
+	std::vector<std::string>	flagVector;
+	std::vector<std::string>	argvVector;
+	int							status;	
+
+	status = 0;
+	if (input.size() < 3){
+		std::cerr << "not enough argv" << std::endl;
+		return;
+	}
+
+	std::list<Channel>::iterator itChannel = findChannel(input[1]);
+	if (itChannel == channels.end())
+	{
+		std::cerr << "Error: Channel does not exists" << std::endl;
+		return;
+	}
+	try{
+		std::string temp = client.getNickname();
+		itChannel->getOperatorClient(temp);
+	}catch(std::exception &e){
+		std::cout << "Error: client does not have operator privileges" << std::endl;
+		return;
+	}
+
+	std::vector<std::string>::iterator it = input.begin() + 2;
+	while(it != input.end())
+	{
+		parseModeString(flagVector, argvVector, status, *it);
+		it++;
+	}
+	/*
+	std::cout << "flagVector: ";
+	it = flagVector.begin();
+	while (it != flagVector.end())
+	{
+		std::cout << *it << " ";
+		it++;
+	}
+	std::cout << std::endl;
+	std::cout << "argvVector: ";
+	it = argvVector.begin();
+	while (it != argvVector.end())
+	{
+		std::cout << *it << " ";
+		it++;
+	}
+	std::cout << std::endl;
+	*/
+	std::vector<std::string>::iterator flagIt = flagVector.begin();
+	std::vector<std::string>::iterator argvIt = argvVector.begin();
+	while (flagIt != flagVector.end())
+	{
+		if (cmdModeMapNoArgv.find(*flagIt) != cmdModeMapNoArgv.end())
+			cmdModeMapNoArgv[*flagIt](*itChannel);
+		else
+		{
+			if (argvIt != argvVector.end())
+			{
+				cmdModeMap[*flagIt](*itChannel, *argvIt);
+				argvIt++;
+			}
+		}
+		flagIt++;
+	}
+	return;
+}
+
+void Handler::parseModeString(std::vector<std::string> &flagVector, std::vector<std::string> &argvVector, int &status, std::string const &modeStr)
+{
+	std::string::const_iterator itStr = modeStr.begin();
+	std::string ref= "itkol";
+	std::string refWithSymbols = "itkol+-";
+	bool		isFlag = false;
+
+	while(itStr != modeStr.end())
+	{
+		if (!isCharInStr(refWithSymbols ,*itStr))
+		{
+			status = ARGV_STATUS;
+			break;
+		}
+		itStr++;
+	}
+	itStr = modeStr.begin();
+	getStatus(*itStr, status);
+	while(itStr != modeStr.end())
+	{
+		if (status == ARGV_STATUS)
+		{
+			argvVector.push_back(modeStr);
+			return;
+		}
+		if (isCharInStr(ref, *itStr))
+		{
+			addModeFlag(flagVector, status, *itStr);
+			isFlag = true;
+		}
+		else
+			getStatus(*itStr, status);
+		itStr++;
+	}
+	if (isFlag == false)
+		argvVector.push_back(modeStr);
+	return;
+}
+
+void Handler::getStatus(const char &symbol, int &status)
+{
+	if (symbol == '+' && status != ARGV_STATUS)
+		status = PLUS_STATUS;
+	else if (symbol == '-' && status != ARGV_STATUS)
+		status = MINUS_STATUS;
+	else
+		status = ARGV_STATUS;
+	return;
+}
+
+bool Handler::isCharInStr(std::string const &ref, const char &c)
+{
+	std::string::const_iterator itStr = ref.begin();
+	while(itStr != ref.end()){
+		if (*itStr == c)
+			return (true);
+		itStr++;
+	}
+	return (false);
+}
+
+void Handler::addModeFlag(std::vector<std::string> &flagVector, int &status, char c)
+{
+	if (status == PLUS_STATUS)
+	{
+		std::string flagWithPlus = std::string("+")  + c;
+		flagVector.push_back(flagWithPlus);
+	}
+	else
+	{
+		std::string flagWithMinus = std::string("-")  + c;
+		flagVector.push_back(flagWithMinus);
+	}
+}
+
+//Mode Function Pointers
+void Handler::activateInviteMode(Channel &channel)
+{
+	if (channel.getInviteMode() == false)
+	{
+		channel.setInviteMode(true);
+		std::cout << "Invite mode restrictions activated" << std::endl;
+	}
+	return;
+}
+
+void Handler::deactivateInviteMode(Channel &channel)
+{
+	if (channel.getInviteMode() == true)
+	{
+		channel.setInviteMode(false);
+		std::cout << "Invite mode restrictions deactivated" << std::endl;
+	}
+	return;
+}
+
+void Handler::activateTopicPrivMode(Channel &channel)
+{
+	if (channel.getTopicMode() == false)
+	{
+		channel.setTopicMode(true);
+		std::cout << "Topic mode restrictions activated" << std::endl;
+	}
+	return;
+}
+
+void Handler::deactivateTopicPrivMode(Channel &channel)
+{
+	if (channel.getTopicMode() == true)
+	{
+		channel.setTopicMode(false);
+		std::cout << "Topic mode restrictions deactivated" << std::endl;
+	}
+	return;
+}
+
+void Handler::deactivateUserLimitMode(Channel &channel)
+{
+	if (channel.getUserLimit() != 0)
+	{
+		channel.setUserLimit(0);
+		std::cout << "Limit mode restrictions deactivated" << std::endl;
+	}
+}
+
+void Handler::activateUserLimitMode(Channel &channel, std::string newLimit)
+{
+	unsigned int number;
+	std::stringstream ss(newLimit);
+	std::string::iterator it = newLimit.begin();
+
+	while(it != newLimit.end())
+	{
+		if (isdigit(*it) == false)
+			return;
+		it++;
+	}
+
+	ss >> number;
+
+	if (channel.getUserLimit() == 0)
+	{
+		channel.setUserLimit(number);
+		std::cout << "Limit mode restrictions activated: " << number << std::endl;
+	}
+}
+
+void Handler::activatePasswordMode(Channel &channel, std::string newPassword)
+{
+	if (channel.getPassword() == "")
+	{
+		channel.setPassword(newPassword);
+		std::cout << "Password mode restrictions activated" << std::endl;
+	}
+}
+
+void Handler::deactivatePasswordMode(Channel &channel, std::string newPassword)
+{
+	if (channel.getPassword() == newPassword && channel.getPassword() != "")
+	{
+		channel.setPassword("");
+		std::cout << "Password mode restrictions deactivated" << std::endl;
+	}
+}
+
+void Handler::activateOperatorMode(Channel &channel, std::string targetClient)
+{
+	try{
+		Client* clientPtr = channel.getUserClient(targetClient);
+		channel.removeClient(targetClient);
+		channel.addOperator(*clientPtr);
+		std::cout << "Operator privileges granted to: " << targetClient << std::endl;
+	}catch(std::exception &e){}
+}
+
+void Handler::deactivateOperatorMode(Channel &channel, std::string targetClient)
+{
+	try{
+		Client* clientPtr = channel.getOperatorClient(targetClient);
+		channel.removeClient(targetClient);
+		channel.addUser(*clientPtr);
+		std::cout << "Operator privileges removed to: " << targetClient << std::endl;
+	}catch(std::exception &e){}
+}
 
 /*					*/
 /*	 INVITE command	*/

@@ -48,14 +48,24 @@
 # define ERR_CHANOPRIVSNEEDED_CODE	"482 "
 # define ERR_CHANOPRIVSNEEDED		":You're not channel operator"
 
+# define PLUS_STATUS					1
+# define MINUS_STATUS					2
+# define ARGV_STATUS					3
+
 typedef void (*cmdHandler)(std::vector<std::string>, Client &);
+typedef void (*modeHandler)(Channel &, std::string);
+typedef void (*modeHandlerNoArgv)(Channel &);
 
 class Handler {
 	private:
-		std::map<std::string, cmdHandler>	cmdMap;
-		static std::list<Channel>			channels;
+		std::map<std::string, cmdHandler>				cmdMap;
+
+		static std::map<std::string, modeHandler>		cmdModeMap;
+		static std::map<std::string, modeHandlerNoArgv>	cmdModeMapNoArgv;
+		static std::list<Channel>						channels;
 
 		void										initCmdMap(void);
+		void										initModeCmdMaps(void);
 		static void									joinCmdExec(std::map<std::string, std::string> channelDictionary, Client &client);
 		static void									createChannel(std::string channelName, Client &client);
 		static void									addClientToChannel(Channel &channel, Client &client);
@@ -65,7 +75,24 @@ class Handler {
 		static std::list<Channel>::iterator			findChannel(const std::string &channelName);
 		static std::string							vectorToString(std::vector<std::string> vectorTopic, char delim);
 		static std::string							createKickMessage(std::vector<std::string> &input);
+		static void									getStatus(const char &symbol, int &status);
+		static void									parseModeString(std::vector<std::string> &flagVector, std::vector<std::string> &argvVector, int &status, std::string const &modeStr);
+		static bool									isCharInStr(std::string const &ref, const char &c);
+		static void									addModeFlag(std::vector<std::string> &flagVector, int &status, char c);
 	//it is common to all the instances
+
+	//Mode Function Pointers
+		static void									activateInviteMode(Channel &channel);
+		static void									deactivateInviteMode(Channel &channel);
+		static void									activateTopicPrivMode(Channel &channel);
+		static void									deactivateTopicPrivMode(Channel &channel);
+		static void									deactivateUserLimitMode(Channel &channel);
+
+		static void									activateUserLimitMode(Channel &channel, std::string newLimit);
+		static void									activatePasswordMode(Channel &channel, std::string newPassword);
+		static void									deactivatePasswordMode(Channel &channel, std::string newPassword);
+		static void									activateOperatorMode(Channel &channel, std::string targetClient);
+		static void									deactivateOperatorMode(Channel &channel, std::string targetClient);
 
 	public:
 		Handler(void);
@@ -82,8 +109,10 @@ class Handler {
 		static void handleTopicCmd(std::vector<std::string> input, Client &client);
 		static void handleKickCmd(std::vector<std::string> input, Client &client);
 		static void handlePingCmd(std::vector<std::string> input, Client &client);
+		static void handleModeCmd(std::vector<std::string> input, Client &client);
 		static void	handleInviteCmd(std::vector<std::string> input, Client &client);
 		static void	handlePrivmsgCmd(std::vector<std::string> input, Client &client);
+		static void	handleQuitCmd(std::vector<std::string> input, Client &client);
 		//static void handlePongCmd(std::vector<std::string> input, Client &client);
 };
 
