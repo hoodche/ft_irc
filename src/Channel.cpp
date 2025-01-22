@@ -38,6 +38,20 @@ std::string Channel::getTopic(void) const
 	return this->topic;
 }
 
+std::vector<Client *> Channel::getOperators(void) const
+{
+	return this->operators;
+}
+
+std::vector<Client *> Channel::getUsers(void) const
+{
+	return this->users;
+}
+
+bool	Channel::getMode(std::string type) const {
+	return modes.at(type);
+}
+
 void Channel::setName(std::string const channelName)
 {
 	this->name = channelName;

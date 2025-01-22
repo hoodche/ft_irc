@@ -75,6 +75,18 @@ Client* Client::findClientByFd(int fd, std::list<Client> &clients) {
         if (it->getSocketFd() == fd) {
             return &(*it);
         }
+		it++;
+    }
+    return NULL;
+}
+
+Client* Client::findClientByName(std::string name, std::list<Client> &clients) {
+	std::list<Client>::iterator it = clients.begin();
+    while(it != clients.end()) {
+        if (it->getNickname() == name) {
+            return &(*it);
+        }
+		it++;
     }
     return NULL;
 }
@@ -108,7 +120,8 @@ Channel	*Client::getChannel(std::string &channelStr)
 			itChannels++;
 		}
 	}
-	throw std::out_of_range("Invalid Channel");
+	// throw std::out_of_range("Invalid Channel");
+	return NULL;
 }
 
 void	Client::removeChannel(std::string &channelStr)

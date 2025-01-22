@@ -35,6 +35,9 @@ class Channel {
 		bool			getInviteMode(void) const;
 		unsigned int	getUserLimit(void) const;
 		std::string		getPassword(void) const;
+		std::vector<Client *> getOperators(void) const;
+		std::vector<Client *> getUsers(void) const;
+		bool		getMode(std::string type) const;
 	
 		//Setters
 		void	setName(const std::string name);
