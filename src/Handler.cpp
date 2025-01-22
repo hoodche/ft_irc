@@ -226,7 +226,7 @@ void Handler::handlePrivmsgCmd(std::vector<std::string> divMsg , Client &client)
  */
 void Handler::handleQuitCmd(std::vector<std::string> divMsg , Client &client) {
 	//respond to leaving client
-	if (divMsg.size() >= 2 || divMsg[1][0] == ':')//quit  + optional quitting message
+	if (divMsg.size() >= 2 && divMsg[1][0] == ':')//quit  + optional quitting message
 	{
 		std::vector<std::string> subVector(divMsg.begin() + 1, divMsg.end());
 		sendResponse("ERROR " + client.getNickname() + " (Quit " + vectorToString(subVector, ' ') + ")\n", client.getSocketFd());
