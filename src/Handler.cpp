@@ -237,7 +237,7 @@ void Handler::handleQuitCmd(std::vector<std::string> divMsg , Client &client) {
 	std::vector<Channel *> channels = client.getClientChannels();
 	std::vector<Channel *>::iterator itChannels = channels.begin();
 	//debug print
-	std::cout << "comienza la iteracion por todos los canales del usuario saliente" << std::endl;
+	std::cout << "comienza la iteracion por todos los canal del usuario saliente" << std::endl;
 	while (itChannels != channels.end())
 	{
 		std::cout << "canal: " << (*itChannels)->getName() << std::endl;
@@ -387,8 +387,9 @@ void Handler::joinCmdExec(std::map<std::string, std::string> channelDictionary, 
 		itChannels = findChannel(itMap->first);
 		if (itChannels == channels.end())
 			createChannel(itMap->first, client);
-		else
-			addClientToChannel(*itChannels, client);
+		else{
+			authClientToChannel(*itChannels, itMap->second, client);
+		}
 		itMap++;
 	}
 }
@@ -400,6 +401,31 @@ std::list<Channel>::iterator Handler::findChannel(const std::string &channelName
 	while (itChannels != channels.end() && itChannels->getName() != channelName)
 		itChannels++;
 	return (itChannels);
+}
+
+void Handler::authClientToChannel(Channel &channel, std::string &password, Client &client)
+{
+	bool passBool = true;
+	bool limitBool = true;
+
+	if (channel.getPassword() != "")
+	{
+		if (channel.getPassword() != password)
+		{
+			passBool = false;
+			std::cout << "Join Channel: wrong pass" << std::endl;
+		}
+	}
+	if (channel.getUserLimit() != 0)
+	{
+		if ((channel.getOperators().size() + channel.getUsers().size())  >= channel.getUserLimit())
+		{
+			limitBool = false;
+			std::cout << "Join Channel: user limit reached" << std::endl;
+		}
+	}
+	if (passBool == true && limitBool == true)
+		addClientToChannel(channel, client);
 }
 
 void Handler::createChannel(std::string channelName, Client &client)
@@ -438,7 +464,14 @@ void Handler::handleTopicCmd(std::vector<std::string> input, Client &client)
 		{
 			std::vector<std::string> vectorTopic(input.begin() + 2, input.end());
 			std::string topic = vectorToString(vectorTopic, ' ');
-			targetChannel->setTopic(topic, client);
+			if (targetChannel->getTopicMode() == true)
+			{
+				std::string userNick = client.getNickname();
+				targetChannel->getOperatorClient(userNick);
+				targetChannel->setTopic(topic, client); //Tengo que encontrar la forma de enviar correctamente el mensaje en caso de error
+			}
+			else
+				targetChannel->setTopic(topic, client);
 		}
 	}catch(std::exception &e){
 		std::cerr << e.what() << std::endl;
@@ -710,6 +743,8 @@ void Handler::activateUserLimitMode(Channel &channel, std::string newLimit)
 	std::stringstream ss(newLimit);
 	std::string::iterator it = newLimit.begin();
 
+	if (*it == '+')
+		it++;
 	while(it != newLimit.end())
 	{
 		if (isdigit(*it) == false)
@@ -719,7 +754,7 @@ void Handler::activateUserLimitMode(Channel &channel, std::string newLimit)
 
 	ss >> number;
 
-	if (channel.getUserLimit() == 0)
+	if (channel.getUserLimit() != number && number != 0)
 	{
 		channel.setUserLimit(number);
 		std::cout << "Limit mode restrictions activated: " << number << std::endl;
