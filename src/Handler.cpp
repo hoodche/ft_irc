@@ -387,8 +387,9 @@ void Handler::joinCmdExec(std::map<std::string, std::string> channelDictionary, 
 		itChannels = findChannel(itMap->first);
 		if (itChannels == channels.end())
 			createChannel(itMap->first, client);
-		else
-			addClientToChannel(*itChannels, client);
+		else{
+			authClientToChannel(*itChannels, itMap->second, client);
+		}
 		itMap++;
 	}
 }
@@ -400,6 +401,19 @@ std::list<Channel>::iterator Handler::findChannel(const std::string &channelName
 	while (itChannels != channels.end() && itChannels->getName() != channelName)
 		itChannels++;
 	return (itChannels);
+}
+
+void Handler::authClientToChannel(Channel &channel, std::string &password, Client &client)
+{
+	if (channel.getPassword() != "")
+	{
+		if (channel.getPassword() == password)
+			addClientToChannel(channel, client);
+		else 
+			std::cout << "Send message to client: wrong pass to connect to channel" << std::endl;
+	}
+	else
+		addClientToChannel(channel, client);
 }
 
 void Handler::createChannel(std::string channelName, Client &client)
