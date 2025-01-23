@@ -405,14 +405,26 @@ std::list<Channel>::iterator Handler::findChannel(const std::string &channelName
 
 void Handler::authClientToChannel(Channel &channel, std::string &password, Client &client)
 {
+	bool passBool = true;
+	bool limitBool = true;
+
 	if (channel.getPassword() != "")
 	{
-		if (channel.getPassword() == password)
-			addClientToChannel(channel, client);
-		else 
-			std::cout << "Send message to client: wrong pass to connect to channel" << std::endl;
+		if (channel.getPassword() != password)
+		{
+			passBool = false;
+			std::cout << "Join Channel: wrong pass" << std::endl;
+		}
 	}
-	else
+	if (channel.getUserLimit() != 0)
+	{
+		if ((channel.getOperators().size() + channel.getUsers().size())  >= channel.getUserLimit())
+		{
+			limitBool = false;
+			std::cout << "Join Channel: user limit reached" << std::endl;
+		}
+	}
+	if (passBool == true && limitBool == true)
 		addClientToChannel(channel, client);
 }
 
