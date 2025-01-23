@@ -839,28 +839,26 @@ void	Handler::handleInviteCmd(std::vector<std::string> input, Client &client) {
 		return ;
 	}
 
-	// Check that channel is in invite mode
-	if (!invitedChannel->getMode("i")) {
-		std::cout << "Channel " << invChannelName << " does not allow invites" << std::endl;
-		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_CHANOPRIVSNEEDED_CODE + " " + client.getNickname() + " " + invChannelName + " " + ERR_CHANOPRIVSNEEDED + "\n", client.getSocketFd());
-		return ;
-	}
-
-	// Check if the client is Already in the channel
 	Client	*invitedClient = Client::findClientByName(invitedNickname, clients);
+	// Check that channel is in invite mode. If it is, add invited client to array.
+	if (invitedChannel->getInviteMode()) {
+		client.addInvitedChannel(*invitedChannel);
+	}
+	// Check if the client is Already in the channel
 	if (!invitedClient) {
 		std::cout << "Invited client does not exist" << std::endl;
-		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOSUCHNICK_CODE + " " + client.getNickname() + " " + invitedNickname + " " + ERR_NOSUCHNICK, client.getSocketFd());
+		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOSUCHNICK_CODE + " " + client.getNickname() + " " + invitedNickname + " " + ERR_NOSUCHNICK + "\n", client.getSocketFd());
 		return ;
 	}
 	std::string	channelsName = invitedChannel->getName();
 	if (invitedClient->isClientInChannel(channelsName)) {
 		std::cout << "Invited client is already in the invited channel" << std::endl;
-		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_USERONCHANNEL_CODE + " " + client.getNickname() + " " + invitedNickname + " " + invChannelName + " " + ERR_USERONCHANNEL, client.getSocketFd());
+		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_USERONCHANNEL_CODE + " " + client.getNickname() + " " + invitedNickname + " " + invChannelName + " " + ERR_USERONCHANNEL + "\n", client.getSocketFd());
 		return ;
 	}
 	// Inform the invited client that they have been invited
-	sendResponse(prependMyserverName(client.getSocketFd()) + " INVITE " + invitedNickname + " " + invChannelName + "\n", invitedClient->getSocketFd());
+	// We can probably rewrite this to: client.getNickname() " has invited you to channel " + invChannelName + "\n"
+	sendResponse(prependMyserverName(client.getSocketFd()) + ":" + client.getNickname() + " INVITE " + invitedNickname + " " + invChannelName + "\n", invitedClient->getSocketFd());
 	// Inform user that invite was successfully issued
 	sendResponse(prependMyserverName(client.getSocketFd()) + invitedNickname + " has been invited to " + invChannelName + "\n", client.getSocketFd());
 	return ;

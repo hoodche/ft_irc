@@ -95,20 +95,45 @@ Client* Client::findClientByName(std::string name, std::list<Client> &clients) {
     return NULL;
 }
 
+void	Client::addInvitedChannel(Channel &invitedChannel) {
+	invitedChannels.push_back(&invitedChannel);
+	return ;
+}
+
 bool Client::isClientInChannel(std::string &channelName)
 {
-	std::vector<Channel *>::iterator it = clientChannels.begin();
-	while(!clientChannels.empty() && (*it)->getName() != channelName && it != clientChannels.end())
-		it++;
-	if (it == clientChannels.end())
-		return false;
-	else
-		return true;
+	std::vector<Channel*>::iterator it = clientChannels.begin();
+	if (!clientChannels.empty()) {
+		while (it != clientChannels.end()) {
+			if ((*it)->getName() == channelName) {
+				return true;
+			}
+			it++;
+		}
+	}
+	return false;
 }
 
 void Client::addChannel(Channel &newChannel)
 {
 	clientChannels.push_back(&newChannel);
+	return ;
+}
+
+void	Client::removeInvitedChannels(std::string &channelName) {
+	if (invitedChannels.empty())
+		return;
+
+	std::vector<Channel *>::iterator it = invitedChannels.begin();
+	while (it != invitedChannels.end())
+	{
+		if ((*it)->getName() == channelName)
+		{
+			invitedChannels.erase(it);
+			return ;
+		}
+		it++;
+	}
 }
 
 Channel	*Client::getChannel(std::string &channelStr)

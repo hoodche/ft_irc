@@ -14,7 +14,7 @@ class Channel {
 		std::string					topic;	
 		std::vector<Client *>		operators;
 		std::vector<Client *>		users;
-		std::map<std::string, bool>	modes;
+		std::vector<Client *>		invites;
 		std::string					password;
 		unsigned int				userLimit;
 
@@ -37,7 +37,6 @@ class Channel {
 		std::string		getPassword(void) const;
 		std::vector<Client *> getOperators(void) const;
 		std::vector<Client *> getUsers(void) const;
-		bool		getMode(std::string type) const;
 	
 		//Setters
 		void	setName(const std::string name);
@@ -50,6 +49,7 @@ class Channel {
 		//Adders
 		void		addUser(Client &client);
 		void		addOperator(Client &client);
+		void		addInvite(Client &client);
 
 		void		removeClient(const std::string &clientStr);
 		bool		isClientOperator(Client &client);

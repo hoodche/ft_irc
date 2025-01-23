@@ -48,10 +48,6 @@ std::vector<Client *> Channel::getUsers(void) const
 	return this->users;
 }
 
-bool	Channel::getMode(std::string type) const {
-	return modes.at(type);
-}
-
 void Channel::setName(std::string const channelName)
 {
 	this->name = channelName;
@@ -76,11 +72,13 @@ void Channel::addUser(Client &client)
 {
 	//Add something to return if we get a repeated user
 	users.push_back(&client);
+	return ;
 }
 
 void Channel::addOperator(Client &client)
 {
 	operators.push_back(&client);
+	return ;
 }
 
 Client	*Channel::getClient(std::string &clientStr)
