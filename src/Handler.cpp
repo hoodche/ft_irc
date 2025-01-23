@@ -464,7 +464,14 @@ void Handler::handleTopicCmd(std::vector<std::string> input, Client &client)
 		{
 			std::vector<std::string> vectorTopic(input.begin() + 2, input.end());
 			std::string topic = vectorToString(vectorTopic, ' ');
-			targetChannel->setTopic(topic, client);
+			if (targetChannel->getTopicMode() == true)
+			{
+				std::string userNick = client.getNickname();
+				targetChannel->getOperatorClient(userNick);
+				targetChannel->setTopic(topic, client); //Tengo que encontrar la forma de enviar correctamente el mensaje en caso de error
+			}
+			else
+				targetChannel->setTopic(topic, client);
 		}
 	}catch(std::exception &e){
 		std::cerr << e.what() << std::endl;
