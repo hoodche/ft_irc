@@ -237,7 +237,7 @@ void Handler::handleQuitCmd(std::vector<std::string> divMsg , Client &client) {
 	std::vector<Channel *> channels = client.getClientChannels();
 	std::vector<Channel *>::iterator itChannels = channels.begin();
 	//debug print
-	std::cout << "comienza la iteracion por todos los canales del usuario saliente" << std::endl;
+	std::cout << "comienza la iteracion por todos los canal del usuario saliente" << std::endl;
 	while (itChannels != channels.end())
 	{
 		std::cout << "canal: " << (*itChannels)->getName() << std::endl;
@@ -736,6 +736,8 @@ void Handler::activateUserLimitMode(Channel &channel, std::string newLimit)
 	std::stringstream ss(newLimit);
 	std::string::iterator it = newLimit.begin();
 
+	if (*it == '+')
+		it++;
 	while(it != newLimit.end())
 	{
 		if (isdigit(*it) == false)
@@ -745,7 +747,7 @@ void Handler::activateUserLimitMode(Channel &channel, std::string newLimit)
 
 	ss >> number;
 
-	if (channel.getUserLimit() == 0)
+	if (channel.getUserLimit() != number && number != 0)
 	{
 		channel.setUserLimit(number);
 		std::cout << "Limit mode restrictions activated: " << number << std::endl;
