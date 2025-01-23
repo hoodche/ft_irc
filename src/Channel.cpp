@@ -48,10 +48,6 @@ std::vector<Client *> Channel::getUsers(void) const
 	return this->users;
 }
 
-bool	Channel::getMode(std::string type) const {
-	return modes.at(type);
-}
-
 void Channel::setName(std::string const channelName)
 {
 	this->name = channelName;

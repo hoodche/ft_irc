@@ -806,8 +806,7 @@ void	Handler::handleInviteCmd(std::vector<std::string> input, Client &client) {
 
 	Client	*invitedClient = Client::findClientByName(invitedNickname, clients);
 	// Check that channel is in invite mode. If it is, add invited client to array.
-	std::cout << "Bool received: " << invitedChannel->getMode("i") << std::endl;
-	if (invitedChannel->getMode("i")) {
+	if (invitedChannel->getInviteMode()) {
 		client.addInvitedChannel(*invitedChannel);
 	}
 	// Check if the client is Already in the channel
