@@ -35,6 +35,7 @@ class Client {
 		std::vector<Channel *> 		getClientChannels(void) const;
 		bool						isVerified(void) const;
 		bool						isRegistered(void) const;
+		bool						isInvited(Channel &channel) const;
 		Channel	*					getChannel(std::string &channelStr);
 		// Setters
 		void						setNickname(std::string nickname);
@@ -46,6 +47,7 @@ class Client {
 		void			addServer(Server &newServer);
 		void			addChannel(Channel &newChannel);
 		void			addInvitedChannel(Channel &invitedChannel);
+		void			removeInvitation(Channel &channel);
 		// Methods
 		static Client				*findClientByFd(int fd, std::list<Client> &clients);
 		static Client				*findClientByName(std::string name, std::list<Client> &clients);

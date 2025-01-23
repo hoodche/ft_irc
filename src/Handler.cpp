@@ -407,6 +407,7 @@ void Handler::authClientToChannel(Channel &channel, std::string &password, Clien
 {
 	bool passBool = true;
 	bool limitBool = true;
+	bool inviteBool = true;
 
 	if (channel.getPassword() != "")
 	{
@@ -424,7 +425,17 @@ void Handler::authClientToChannel(Channel &channel, std::string &password, Clien
 			std::cout << "Join Channel: user limit reached" << std::endl;
 		}
 	}
-	if (passBool == true && limitBool == true)
+	if (channel.getInviteMode() == true)
+	{
+		if (client.isInvited(channel))
+			client.removeInvitation(channel);
+		else
+		{
+			inviteBool = false;
+			std::cout << "Client needs an invitation" << std::endl;
+		}
+	}
+	if (passBool == true && limitBool == true && inviteBool == true)
 		addClientToChannel(channel, client);
 }
 
