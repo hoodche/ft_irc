@@ -6,21 +6,21 @@
 #    By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/06/28 14:26:37 by igcastil          #+#    #+#              #
-#    Updated: 2025/01/07 15:55:24 by igcastil         ###   ########.fr        #
+#    Updated: 2025/01/24 14:01:29 by igcastil         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME	= ircserv
 CC		= c++
 FLAGS	= -fsanitize=address -g3 -pedantic -Wall -Wextra -Werror -std=c++98
+SRCS	= main.cpp src/Server.cpp src/Client.cpp src/Handler.cpp src/Channel.cpp
+INCLUDES= inc/Server.hpp inc/Client.hpp inc/Handler.hpp inc/Channel.hpp
 
 all: $(NAME)
 
-$(NAME):
-	$(CC) $(FLAGS) main.cpp src/Server.cpp src/Client.cpp src/Handler.cpp src/Channel.cpp -o $(NAME)
+$(NAME): $(SRCS) $(INCLUDES)
+	$(CC) $(FLAGS) $(SRCS) -o $(NAME)
 
-client:
-	$(CC) $(FLAGS) test_client.cpp -o client
 clean:
 	rm -rf $(NAME)
 
