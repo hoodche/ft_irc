@@ -65,7 +65,7 @@ void Channel::setTopic(std::string const channelTopic, Client &client)
 		}
 		it++;
 	}
-	std::cerr << "Client is not an operator" << std::endl;
+	return;
 }
 
 void Channel::addUser(Client &client)
@@ -106,7 +106,7 @@ Client	*Channel::getClient(std::string &clientStr)
 			itClients++;
 		}
 	}
-	throw std::out_of_range("Invalid Client");
+	return (NULL);
 }
 
 Client	*Channel::getOperatorClient(std::string &clientStr)
@@ -122,7 +122,7 @@ Client	*Channel::getOperatorClient(std::string &clientStr)
 			itClients++;
 		}
 	}
-	throw std::out_of_range("Invalid Operator Client");
+	return (NULL);
 }
 
 Client	*Channel::getUserClient(std::string &clientStr)
@@ -138,7 +138,7 @@ Client	*Channel::getUserClient(std::string &clientStr)
 			itClients++;
 		}
 	}
-	throw std::out_of_range("Invalid User Client");
+	return (NULL);
 }
 
 void	Channel::removeClient(const std::string &clientStr)
@@ -167,7 +167,6 @@ void	Channel::removeClient(const std::string &clientStr)
 		}
 		itClients++;
 	}
-	throw std::out_of_range("Invalid Client");
 }
 
 bool Channel::isClientOperator(Client &client)

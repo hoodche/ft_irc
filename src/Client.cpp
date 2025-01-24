@@ -1,4 +1,3 @@
-
 #include "../inc/Client.hpp"
 #include "../inc/Channel.hpp"
 
@@ -173,7 +172,6 @@ Channel	*Client::getChannel(std::string &channelStr)
 			itChannels++;
 		}
 	}
-	// throw std::out_of_range("Invalid Channel");
 	return NULL;
 }
 
@@ -192,5 +190,4 @@ void	Client::removeChannel(std::string &channelStr)
 		}
 		itChannels++;
 	}
-	throw std::out_of_range("Invalid Channel");
 }
