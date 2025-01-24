@@ -467,25 +467,28 @@ void Handler::handleTopicCmd(std::vector<std::string> input, Client &client)
 		std::cerr << "Incorrect number of arguments" << std::endl;
 		return;
 	}
-	try{
-		Channel *targetChannel = client.getChannel(input[1]); //Care, it throws an exception
-		if (input.size() == 2)
-			std::cout << targetChannel->getTopic() << std::endl;
-		else
+	Channel *targetChannel = client.getChannel(input[1]);
+	if (!targetChannel){
+		std::cerr << "TOPIC: Client is not on channel" << std::endl;
+		return;
+	}
+	if (input.size() == 2)
+		std::cout << targetChannel->getTopic() << std::endl;
+	else
+	{
+		std::vector<std::string> vectorTopic(input.begin() + 2, input.end());
+		std::string topic = vectorToString(vectorTopic, ' ');
+		if (targetChannel->getTopicMode() == true)
 		{
-			std::vector<std::string> vectorTopic(input.begin() + 2, input.end());
-			std::string topic = vectorToString(vectorTopic, ' ');
-			if (targetChannel->getTopicMode() == true)
-			{
-				std::string userNick = client.getNickname();
-				targetChannel->getOperatorClient(userNick);
-				targetChannel->setTopic(topic, client); //Tengo que encontrar la forma de enviar correctamente el mensaje en caso de error
+			std::string userNick = client.getNickname();
+			if (!targetChannel->getOperatorClient(userNick)){
+				std::cerr << "TOPIC ERROR: User is not an operator" << std::endl;
+				return;
 			}
-			else
-				targetChannel->setTopic(topic, client);
+			targetChannel->setTopic(topic, client); //Tengo que encontrar la forma de enviar correctamente el mensaje en caso de error
 		}
-	}catch(std::exception &e){
-		std::cerr << e.what() << std::endl;
+		else
+			targetChannel->setTopic(topic, client);
 	}
 }
 
@@ -514,19 +517,21 @@ void Handler::handleKickCmd(std::vector<std::string> input, Client &client)
 		std::cerr << "KICK ERROR: Incorrect format" << std::endl;
 		return;
 	}
-	try{
-		std::list<Channel>::iterator itChannel = findChannel(input[1]);
-		if (itChannel == channels.end())
-			throw std::out_of_range("KICK ERROR: Channel does not exists");
-		if (itChannel->isClientOperator(client))
-		{
-			Client *clientPtr = itChannel->getClient(input[2]);
-			clientPtr->removeChannel(input[1]);
-			itChannel->removeClient(input[2]);
-			std::cout << createKickMessage(input) << std::endl; //Created msg we should send to client
+	std::list<Channel>::iterator itChannel = findChannel(input[1]);
+	if (itChannel == channels.end()){
+		std::cerr << "KICK ERROR: Channel does not exist" << std::endl;
+		return;
+	}
+	if (itChannel->isClientOperator(client) == true)
+	{
+		Client *clientPtr = itChannel->getClient(input[2]);
+		if (!clientPtr){
+			std::cerr << "KICK ERROR: Target client is not in channel" << std::endl;
+			return;
 		}
-	}catch(std::exception &e){
-		std::cerr << e.what() << std::endl;
+		clientPtr->removeChannel(input[1]);
+		itChannel->removeClient(input[2]);
+		std::cout << createKickMessage(input) << std::endl; //Created msg we should send to client
 	}
 	return;
 }
@@ -572,11 +577,9 @@ void Handler::handleModeCmd(std::vector<std::string> input, Client &client)
 		std::cerr << "Error: Channel does not exists" << std::endl;
 		return;
 	}
-	try{
-		std::string temp = client.getNickname();
-		itChannel->getOperatorClient(temp);
-	}catch(std::exception &e){
-		std::cout << "Error: client does not have operator privileges" << std::endl;
+	std::string temp = client.getNickname();
+	if (!itChannel->getOperatorClient(temp)){
+		std::cerr << "MODE ERROR: Client does not have operator privileges" << std::endl;
 		return;
 	}
 
@@ -792,22 +795,26 @@ void Handler::deactivatePasswordMode(Channel &channel, std::string newPassword)
 
 void Handler::activateOperatorMode(Channel &channel, std::string targetClient)
 {
-	try{
-		Client* clientPtr = channel.getUserClient(targetClient);
-		channel.removeClient(targetClient);
-		channel.addOperator(*clientPtr);
-		std::cout << "Operator privileges granted to: " << targetClient << std::endl;
-	}catch(std::exception &e){}
+	Client* clientPtr = channel.getUserClient(targetClient);
+	if (!clientPtr){
+		std::cerr << "ACTIVATE OPERATOR MODE: Target Client is not an user" << std::endl;
+		return;
+	}
+	channel.removeClient(targetClient);
+	channel.addOperator(*clientPtr);
+	std::cout << "Operator privileges granted to: " << targetClient << std::endl;
 }
 
 void Handler::deactivateOperatorMode(Channel &channel, std::string targetClient)
 {
-	try{
-		Client* clientPtr = channel.getOperatorClient(targetClient);
-		channel.removeClient(targetClient);
-		channel.addUser(*clientPtr);
-		std::cout << "Operator privileges removed to: " << targetClient << std::endl;
-	}catch(std::exception &e){}
+	Client* clientPtr = channel.getOperatorClient(targetClient);
+	if (!clientPtr){
+		std::cerr << "DEACTIVATE OPERATOR MODE: Target Client is not an operator" << std::endl;
+		return;
+	}
+	channel.removeClient(targetClient);
+	channel.addUser(*clientPtr);
+	std::cout << "Operator privileges removed to: " << targetClient << std::endl;
 }
 
 /*					*/
@@ -834,9 +841,9 @@ void	Handler::handleInviteCmd(std::vector<std::string> input, Client &client) {
 	std::string	invChannelName	= input[2];
 
 	// Find the appropiate channel in our channels list
-	Channel				*invitedChannel	= client.getChannel(invChannelName);
 	Server				*server	= const_cast<Server *>(client.getServer());
 	std::list<Client>	*clients	= server->getClientsPtr();
+	Channel				*invitedChannel	= client.getChannel(invChannelName);
 	if (!invitedChannel) {
 		std::cout << invChannelName << " does not exist" << std::endl;
 		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOSUCHCHANNEL_CODE + " " + client.getNickname() + " " + invChannelName + " " + ERR_NOSUCHCHANNEL + "\n", client.getSocketFd());
