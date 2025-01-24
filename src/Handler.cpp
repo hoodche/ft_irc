@@ -409,6 +409,11 @@ void Handler::authClientToChannel(Channel &channel, std::string &password, Clien
 	bool limitBool = true;
 	bool inviteBool = true;
 
+	std::string nick = client.getNickname();
+	if (channel.getClient(nick)){
+		std::cerr << "JOIN ERROR: Client is already in the channel" << std::endl;
+		return;
+	}
 	if (channel.getPassword() != "")
 	{
 		if (channel.getPassword() != password)
