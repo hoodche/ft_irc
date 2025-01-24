@@ -44,10 +44,10 @@ class Client {
 		void						setVerified(bool tf);
 		void						setRegistered(bool tf);
 
-		void			addServer(Server &newServer);
-		void			addChannel(Channel &newChannel);
-		void			addInvitedChannel(Channel &invitedChannel);
-		void			removeInvitation(Channel &channel);
+		void						addServer(Server &newServer);
+		void						addChannel(Channel &newChannel);
+		void						addInvitedChannel(Channel &invitedChannel);
+		void						removeInvitation(Channel &channel);
 		// Methods
 		static Client				*findClientByFd(int fd, std::list<Client> &clients);
 		static Client				*findClientByName(std::string name, std::list<Client> &clients);
