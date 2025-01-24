@@ -48,6 +48,30 @@ bool Client::isRegistered(void) const {
 	return this->registered;
 }
 
+bool Client::isInvited(Channel &channel) const{
+	std::vector<Channel *>::const_iterator it = invitedChannels.begin();
+	while (it != invitedChannels.end())
+	{
+		if ((*it)->getName() == channel.getName())
+			return (true);
+		it++;
+	}
+	return (false);
+}
+
+void Client::removeInvitation(Channel &channel){
+	std::vector<Channel *>::iterator it = invitedChannels.begin();
+	while (it != invitedChannels.end())
+	{
+		if ((*it)->getName() == channel.getName())
+		{
+			invitedChannels.erase(it);
+			return;
+		}
+		it++;
+	}
+	return;
+}
 void Client::setNickname(std::string nickname) {
 	this->nick = nickname;
 	return ;

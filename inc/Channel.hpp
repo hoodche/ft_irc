@@ -14,7 +14,6 @@ class Channel {
 		std::string					topic;	
 		std::vector<Client *>		operators;
 		std::vector<Client *>		users;
-		std::vector<Client *>		invites;
 		std::string					password;
 		unsigned int				userLimit;
 
