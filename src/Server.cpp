@@ -46,6 +46,11 @@ std::list<Client> Server::getClients(void) const
 {
 	return this->clients;
 }
+
+std::list<Client> *Server::getClientsPtr(void)
+{
+	return (&clients);
+}
 /**
  * @brief		closes all socket descriptors opened so far in the server 
  * 				(in the fds vector -listening socket + connected sockets)

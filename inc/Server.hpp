@@ -47,6 +47,7 @@ class Server
 		static bool signalReceived;
 		Server();
 		std::list<Client> getClients(void) const;
+		std::list<Client> *getClientsPtr(void);
 		void closeFds();
 		void initSocket();
 		void init(int port, std::string pass);

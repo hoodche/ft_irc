@@ -835,8 +835,8 @@ void	Handler::handleInviteCmd(std::vector<std::string> input, Client &client) {
 
 	// Find the appropiate channel in our channels list
 	Channel				*invitedChannel	= client.getChannel(invChannelName);
-	const Server		*server	= client.getServer();
-	std::list<Client>	clients	= server->getClients();
+	Server				*server	= const_cast<Server *>(client.getServer());
+	std::list<Client>	*clients	= server->getClientsPtr();
 	if (!invitedChannel) {
 		std::cout << invChannelName << " does not exist" << std::endl;
 		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOSUCHCHANNEL_CODE + " " + client.getNickname() + " " + invChannelName + " " + ERR_NOSUCHCHANNEL + "\n", client.getSocketFd());
@@ -850,17 +850,17 @@ void	Handler::handleInviteCmd(std::vector<std::string> input, Client &client) {
 		return ;
 	}
 
-	Client	*invitedClient = Client::findClientByName(invitedNickname, clients);
-	// Check that channel is in invite mode. If it is, add invited client to array.
-	if (invitedChannel->getInviteMode()) {
-		client.addInvitedChannel(*invitedChannel);
-	}
-	// Check if the client is Already in the channel
+	Client	*invitedClient = Client::findClientByName(invitedNickname, *clients);
 	if (!invitedClient) {
 		std::cout << "Invited client does not exist" << std::endl;
 		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOSUCHNICK_CODE + " " + client.getNickname() + " " + invitedNickname + " " + ERR_NOSUCHNICK + "\n", client.getSocketFd());
 		return ;
 	}
+	// Check that channel is in invite mode. If it is, add invited client to array.
+	if (invitedChannel->getInviteMode()) {
+		invitedClient->addInvitedChannel(*invitedChannel);
+	}
+	// Check if the client is Already in the channel
 	std::string	channelsName = invitedChannel->getName();
 	if (invitedClient->isClientInChannel(channelsName)) {
 		std::cout << "Invited client is already in the invited channel" << std::endl;
