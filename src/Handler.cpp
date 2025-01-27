@@ -595,6 +595,7 @@ std::string Handler::createKickMessage(std::vector<std::string> &input)
 /*	 MODE command	*/
 /*					*/
 
+
 void Handler::handleModeCmd(std::vector<std::string> input, Client &client)
 {
 	(void)client;
@@ -604,20 +605,32 @@ void Handler::handleModeCmd(std::vector<std::string> input, Client &client)
 	int							status;	
 
 	status = 0;
-	if (input.size() < 3){
-		std::cerr << "not enough argv" << std::endl;
+	if (input.size() < 2){
+		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + client.getNickname() + " MODE " + ERR_NEEDMOREPARAMS + "\r\n", client.getSocketFd());
 		return;
 	}
 
 	std::list<Channel>::iterator itChannel = findChannel(input[1]);
 	if (itChannel == channels.end())
 	{
-		std::cerr << "Error: Channel does not exists" << std::endl;
+		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOSUCHCHANNEL_CODE + client.getNickname() + " " + input[1] + " " + ERR_NOSUCHCHANNEL + "\r\n", client.getSocketFd());
 		return;
 	}
+
+	Channel *isInChannel = client.getChannel(input[1]);
+	if (!isInChannel){
+		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOTONCHANNEL_CODE + client.getNickname() + " " + input[1] + " " + ERR_NOTONCHANNEL + "\r\n", client.getSocketFd());
+		return;
+	}
+
 	std::string temp = client.getNickname();
 	if (!itChannel->getOperatorClient(temp)){
-		std::cerr << "MODE ERROR: Client does not have operator privileges" << std::endl;
+		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_CHANOPRIVSNEEDED_CODE + client.getNickname() + " " + input[1] + " " + ERR_CHANOPRIVSNEEDED + "\r\n", client.getSocketFd());
+		return;
+	}
+
+	if (input.size() == 2){
+		sendChannelModeIs(client, isInChannel);
 		return;
 	}
 
@@ -662,6 +675,31 @@ void Handler::handleModeCmd(std::vector<std::string> input, Client &client)
 		flagIt++;
 	}
 	return;
+}
+
+void Handler::sendChannelModeIs(Client &client, Channel *channel)
+{
+	std::string flagStr("+"); //This init is correct, really. If not modes sets, it sends only "+"
+
+	std::string argv;
+	if (channel->getInviteMode() == true)
+		flagStr.append("i");
+	if (channel->getPassword() != ""){
+		flagStr.append("k");
+		argv.append(channel->getPassword());
+	}
+	if (channel->getUserLimit() != 0){
+		flagStr.append("l");
+		if (argv != "")
+			argv.append(" ");
+		std::stringstream ss;
+		ss << channel->getUserLimit();
+		argv.append(ss.str());
+	}
+	if (channel->getTopicMode() == true)
+		flagStr.append("t");
+
+	sendResponse(prependMyserverName(client.getSocketFd()) + RPL_UMODEIS_CODE + client.getNickname() + " " + flagStr + " " + argv + "\r\n", client.getSocketFd());
 }
 
 void Handler::parseModeString(std::vector<std::string> &flagVector, std::vector<std::string> &argvVector, int &status, std::string const &modeStr)
