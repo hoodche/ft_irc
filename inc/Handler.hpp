@@ -20,6 +20,11 @@
 # define USERLEN	12
 # define RPL_WELCOME_CODE			"001 "
 
+# define RPL_NOTOPIC_CODE			"331 "
+# define RPL_NOTOPIC				":No topic is set"
+# define RPL_TOPIC_CODE				"332 "
+# define RPL_INVITING_CODE			"341 "
+
 # define ERR_NOSUCHNICK_CODE		"401 "
 # define ERR_NOSUCHNICK				"No such nick/channel"
 # define ERR_NOSUCHCHANNEL_CODE		"403 "
@@ -36,6 +41,8 @@
 # define ERR_ERRONEUSNICKNAME		":Erroneous nickname"
 # define ERR_NICKNAMEINUSE_CODE		"433 "
 # define ERR_NICKNAMEINUSE			":Nickname is already in use"
+# define ERR_NOTONCHANNEL_CODE		"442 "
+# define ERR_NOTONCHANNEL			":You're not on that channel"
 # define ERR_USERONCHANNEL_CODE		"443 "
 # define ERR_USERONCHANNEL			":is already on channel"
 # define ERR_NEEDMOREPARAMS_CODE	"461 "
@@ -44,7 +51,12 @@
 # define ERR_ALREADYREGISTERED		":You may not reregister"
 # define ERR_PASSWDMISMATCH_CODE	"464 "
 # define ERR_PASSWDMISMATCH			":Password incorrect"
-# define ERR_NICKNAMEINUSE			":Nickname is already in use"
+# define ERR_CHANNELISFULL_CODE		"471 "
+# define ERR_CHANNELISFULL			":Cannot join channel (+l)"
+# define ERR_INVITEONLYCHAN_CODE	"473 "
+# define ERR_INVITEONLYCHAN			":Cannot join channel (+i)"
+# define ERR_BADCHANNELKEY_CODE		"475 "
+# define ERR_BADCHANNELKEY			":Cannot join channel (+k)"
 # define ERR_CHANOPRIVSNEEDED_CODE	"482 "
 # define ERR_CHANOPRIVSNEEDED		":You're not channel operator"
 
@@ -69,7 +81,7 @@ class Handler {
 		static void									joinCmdExec(std::map<std::string, std::string> channelDictionary, Client &client);
 		static void									createChannel(std::string channelName, Client &client);
 		static void									addClientToChannel(Channel &channel, Client &client);
-		static std::vector<std::string>				getChannelVector(std::string channelString);
+		static std::vector<std::string>				getChannelVector(std::string channelString, Client &client);
 		static std::vector<std::string>				getPassVector(std::string channelString);
 		static std::map<std::string, std::string>	createDictionary(std::vector<std::string> &channelVector, std::vector<std::string> &passVector);	
 		static std::list<Channel>::iterator			findChannel(const std::string &channelName);
