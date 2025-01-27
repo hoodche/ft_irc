@@ -349,11 +349,7 @@ std::vector<std::string> Handler::getPassVector(std::string passString)
 	std::string					tempPass;
 
 	while(std::getline(ss, tempPass, ','))
-	{
-		if (*tempPass.begin() == '#')
-			throw std::invalid_argument("Invalidad JOIN command format");
 		passwords.push_back(tempPass);
-	}
 	return (passwords);
 }
 
@@ -527,16 +523,26 @@ void Handler::handleKickCmd(std::vector<std::string> input, Client &client)
 		std::cerr << "KICK ERROR: Channel does not exist" << std::endl;
 		return;
 	}
+
+	bool isClientKicked = false; //Check if any client has been kicked so it can send the optional message
 	if (itChannel->isClientOperator(client) == true)
 	{
-		Client *clientPtr = itChannel->getClient(input[2]);
-		if (!clientPtr){
-			std::cerr << "KICK ERROR: Target client is not in channel" << std::endl;
-			return;
+		std::vector<std::string> kickedClients = getPassVector(input[2]);
+		std::vector<std::string>::iterator it = kickedClients.begin();
+		while (it != kickedClients.end())
+		{
+			Client *clientPtr = itChannel->getClient(*it);
+			if (!clientPtr){
+				std::cerr << "KICK ERROR: Target client is not in channel" << std::endl;
+				break;
+			} //When it tries to kick someone a client that is not in the channel, the loop stops
+			isClientKicked = true;
+			clientPtr->removeChannel(input[1]);
+			itChannel->removeClient(*it);
+			it++;
 		}
-		clientPtr->removeChannel(input[1]);
-		itChannel->removeClient(input[2]);
-		std::cout << createKickMessage(input) << std::endl; //Created msg we should send to client
+		if (isClientKicked == true)
+			std::cout << createKickMessage(input) << std::endl; //created msg we should send to client
 	}
 	return;
 }
