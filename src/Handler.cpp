@@ -531,12 +531,20 @@ void Handler::handleKickCmd(std::vector<std::string> input, Client &client)
 {
 	if (input.size() < 3)
 	{
-		std::cerr << "KICK ERROR: Incorrect format" << std::endl;
+		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + client.getNickname() + " KICK " + ERR_NEEDMOREPARAMS + "\r\n", client.getSocketFd());
+		//std::cerr << "KICK ERROR: Incorrect format" << std::endl;
 		return;
 	}
 	std::list<Channel>::iterator itChannel = findChannel(input[1]);
 	if (itChannel == channels.end()){
+		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOSUCHCHANNEL_CODE + client.getNickname() + " " + input[1] + " " + ERR_NOSUCHCHANNEL + "\r\n", client.getSocketFd());
 		std::cerr << "KICK ERROR: Channel does not exist" << std::endl;
+		return;
+	}
+
+	Channel *isInChannel = client.getChannel(input[1]);
+	if (!isInChannel){
+		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOTONCHANNEL_CODE + client.getNickname() + " " + input[1] + " " + ERR_NOTONCHANNEL + "\r\n", client.getSocketFd());
 		return;
 	}
 
@@ -549,7 +557,8 @@ void Handler::handleKickCmd(std::vector<std::string> input, Client &client)
 		{
 			Client *clientPtr = itChannel->getClient(*it);
 			if (!clientPtr){
-				std::cerr << "KICK ERROR: Target client is not in channel" << std::endl;
+				sendResponse(prependMyserverName(client.getSocketFd()) + ERR_USERNOTINCHANNEL_CODE + client.getNickname() + " " + *it + " " + input[1] + " " + ERR_USERNOTINCHANNEL + "\r\n", client.getSocketFd());
+				std::cerr << "KICK ERROR: Target client is not in channel" << std::endl; //Try in hexchat
 				break;
 			} //When it tries to kick someone a client that is not in the channel, the loop stops
 			isClientKicked = true;
@@ -560,6 +569,8 @@ void Handler::handleKickCmd(std::vector<std::string> input, Client &client)
 		if (isClientKicked == true)
 			std::cout << createKickMessage(input) << std::endl; //created msg we should send to client
 	}
+	else
+		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_CHANOPRIVSNEEDED_CODE + client.getNickname() + " " + input[1] + " " + ERR_CHANOPRIVSNEEDED + "\r\n", client.getSocketFd());
 	return;
 }
 
