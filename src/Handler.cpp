@@ -476,6 +476,13 @@ void Handler::handleTopicCmd(std::vector<std::string> input, Client &client)
 		Handler::sendResponse(Handler::prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + " TOPIC " + ERR_NEEDMOREPARAMS + "\n", client.getSocketFd());
 		return;
 	}
+
+	std::list<Channel>::iterator itChannel = findChannel(input[1]);
+	if (itChannel == channels.end()){
+		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOSUCHCHANNEL_CODE + client.getNickname() + " " + input[1] + " " + ERR_NOSUCHCHANNEL + "\r\n", client.getSocketFd());
+		return;
+	}
+
 	Channel *targetChannel = client.getChannel(input[1]);//RFC does not clarify if the client can get the topic of a channel he is not in. We assume he can´t
 	if (!targetChannel){
 		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOTONCHANNEL_CODE + " " + input[1] + " " + ERR_NOTONCHANNEL + "\n", client.getSocketFd());
@@ -617,12 +624,6 @@ void Handler::handleModeCmd(std::vector<std::string> input, Client &client)
 		return;
 	}
 
-	Channel *isInChannel = client.getChannel(input[1]);
-	if (!isInChannel){
-		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOTONCHANNEL_CODE + client.getNickname() + " " + input[1] + " " + ERR_NOTONCHANNEL + "\r\n", client.getSocketFd());
-		return;
-	}
-
 	std::string temp = client.getNickname();
 	if (!itChannel->getOperatorClient(temp)){
 		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_CHANOPRIVSNEEDED_CODE + client.getNickname() + " " + input[1] + " " + ERR_CHANOPRIVSNEEDED + "\r\n", client.getSocketFd());
@@ -630,7 +631,7 @@ void Handler::handleModeCmd(std::vector<std::string> input, Client &client)
 	}
 
 	if (input.size() == 2){
-		sendChannelModeIs(client, isInChannel);
+		sendChannelModeIs(client, (*itChannel));
 		return;
 	}
 
@@ -677,29 +678,28 @@ void Handler::handleModeCmd(std::vector<std::string> input, Client &client)
 	return;
 }
 
-void Handler::sendChannelModeIs(Client &client, Channel *channel)
+void Handler::sendChannelModeIs(Client &client, Channel &channel)
 {
 	std::string flagStr("+"); //This init is correct, really. If not modes sets, it sends only "+"
 
 	std::string argv;
-	if (channel->getInviteMode() == true)
+	if (channel.getInviteMode() == true)
 		flagStr.append("i");
-	if (channel->getPassword() != ""){
+	if (channel.getPassword() != ""){
 		flagStr.append("k");
-		argv.append(channel->getPassword());
+		argv.append(channel.getPassword());
 	}
-	if (channel->getUserLimit() != 0){
+	if (channel.getUserLimit() != 0){
 		flagStr.append("l");
 		if (argv != "")
 			argv.append(" ");
 		std::stringstream ss;
-		ss << channel->getUserLimit();
+		ss << channel.getUserLimit();
 		argv.append(ss.str());
 	}
-	if (channel->getTopicMode() == true)
+	if (channel.getTopicMode() == true)
 		flagStr.append("t");
-
-	sendResponse(prependMyserverName(client.getSocketFd()) + RPL_UMODEIS_CODE + client.getNickname() + " " + flagStr + " " + argv + "\r\n", client.getSocketFd());
+	sendResponse(prependMyserverName(client.getSocketFd()) + RPL_CHANNELMODEIS_CODE + client.getNickname() + " " + flagStr + " " + argv + "\r\n", client.getSocketFd());
 }
 
 void Handler::parseModeString(std::vector<std::string> &flagVector, std::vector<std::string> &argvVector, int &status, std::string const &modeStr)
@@ -873,7 +873,7 @@ void Handler::activateOperatorMode(Channel &channel, std::string targetClient)
 {
 	Client* clientPtr = channel.getUserClient(targetClient);
 	if (!clientPtr){
-		std::cerr << "ACTIVATE OPERATOR MODE: Target Client is not an user" << std::endl;
+		//sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOSUCHNICK_CODE + targetClient + " " + ERR_NOSUCHNICK + "\r\n", client.getSocketFd());
 		return;
 	}
 	channel.removeClient(targetClient);
@@ -911,6 +911,12 @@ void	Handler::handleInviteCmd(std::vector<std::string> input, Client &client) {
 		//std::cout << "INVITE cmd needs three arguments INVITE <nickname> <channel>" << std::endl,
 		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + " INVITE " + ERR_NEEDMOREPARAMS "\n", client.getSocketFd());
 		return ;
+	}
+
+	std::list<Channel>::iterator itChannel = findChannel(input[1]);
+	if (itChannel == channels.end()){
+		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOSUCHCHANNEL_CODE + client.getNickname() + " " + input[1] + " " + ERR_NOSUCHCHANNEL + "\r\n", client.getSocketFd());
+		return;
 	}
 
 	std::string	invitedNickname	= input[1];

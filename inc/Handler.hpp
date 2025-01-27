@@ -20,8 +20,8 @@
 # define USERLEN	12
 # define RPL_WELCOME_CODE			"001 "
 
-# define RPL_UMODEIS_CODE			"221 "
 
+# define RPL_CHANNELMODEIS_CODE		"324 "
 # define RPL_NOTOPIC_CODE			"331 "
 # define RPL_NOTOPIC				":No topic is set"
 # define RPL_TOPIC_CODE				"332 "
@@ -96,7 +96,7 @@ class Handler {
 		static bool									isCharInStr(std::string const &ref, const char &c);
 		static void									addModeFlag(std::vector<std::string> &flagVector, int &status, char c);
 		static void									authClientToChannel(Channel &channel, std::string &password, Client &client);
-		static void									sendChannelModeIs(Client &client, Channel *channel);
+		static void									sendChannelModeIs(Client &client, Channel &channel);
 	//it is common to all the instances
 
 	//Mode Function Pointers
