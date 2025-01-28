@@ -455,7 +455,7 @@ void Handler::createChannel(std::string channelName, Client &client)
 	channel.setName(channelName);
 	channels.push_back(channel);
 	client.addChannel(channels.back());
-	sendResponse(getClientPrefix(client) + " JOIN " + channelName + "\r\n", client.getSocketFd());
+	sendMsgClientsInChannel(channel, client, "JOIN", "");
 	return;
 }
 
@@ -463,21 +463,7 @@ void Handler::addClientToChannel(Channel &channel, Client &client)
 {
 	channel.addUser(client);
 	client.addChannel(channel);
-
-	std::vector<Client *> operators = channel.getOperators();
-	std::vector<Client *> users = channel.getUsers();
-	std::vector<Client *>::iterator opIt = operators.begin();
-	std::vector<Client *>::iterator usersIt = users.begin();
-
-	while (opIt != operators.end()){
-		sendResponse(getClientPrefix(client) + " JOIN " + channel.getName() + "\r\n", (*opIt)->getSocketFd());
-		opIt++;
-	}
-
-	while (usersIt != users.end()){
-		sendResponse(getClientPrefix(client) + " JOIN " + channel.getName() + "\r\n", (*usersIt)->getSocketFd());
-		usersIt++;
-	}
+	sendMsgClientsInChannel(channel, client, "JOIN", "");
 	return;
 }
 
@@ -527,7 +513,7 @@ void Handler::handleTopicCmd(std::vector<std::string> input, Client &client)
 			}
 		}
 		targetChannel->setTopic(topic, client);
-		sendResponse(prependMyserverName(client.getSocketFd()) + RPL_TOPIC_CODE + " " + targetChannel->getName() + " :" + topic + "\n", client.getSocketFd());
+		sendMsgClientsInChannel(*targetChannel, client, "TOPIC", topic);
 		return;
 	}
 }
@@ -985,5 +971,37 @@ std::string Handler::getClientPrefix(Client const &client) {
 	prefix.append("@");
 	prefix.append(client.getIpAddr());
 	return (prefix);
+}
+
+void Handler::sendMsgClientsInChannel(Channel &channel, Client &client, std::string cmd, std::string argv){
+
+	std::vector<Client *> operators = channel.getOperators();
+	std::vector<Client *> users = channel.getUsers();
+	std::vector<Client *>::iterator opIt = operators.begin();
+	std::vector<Client *>::iterator usersIt = users.begin();
+
+	std::string response;
+
+	response.append(getClientPrefix(client));
+	response.append(" ");
+	response.append(cmd);
+	response.append(" ");
+	response.append(channel.getName());
+	if (argv != ""){
+		response.append(" :");
+		response.append(argv);
+	}
+	response.append("\r\n");
+
+	while (opIt != operators.end()){
+		sendResponse(response, (*opIt)->getSocketFd());
+		opIt++;
+	}
+
+	while (usersIt != users.end()){
+		sendResponse(response, (*usersIt)->getSocketFd());
+		usersIt++;
+	}
+	return;
 }
 

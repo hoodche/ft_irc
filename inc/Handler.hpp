@@ -98,6 +98,7 @@ class Handler {
 		static void									authClientToChannel(Channel &channel, std::string &password, Client &client);
 		static void									sendChannelModeIs(Client &client, Channel &channel);
 		static std::string							getClientPrefix(Client const &client);
+		static void									sendMsgClientsInChannel(Channel &channel, Client &client, std::string cmd, std::string argv);
 	//it is common to all the instances
 
 	//Mode Function Pointers
