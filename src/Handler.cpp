@@ -557,7 +557,6 @@ void Handler::handleKickCmd(std::vector<std::string> input, Client &client)
 		return;
 	}
 
-	bool isClientKicked = false; //Check if any client has been kicked so it can send the optional message
 	if (itChannel->isClientOperator(client) == true)
 	{
 		std::vector<std::string> kickedClients = getPassVector(input[2]);
@@ -570,13 +569,12 @@ void Handler::handleKickCmd(std::vector<std::string> input, Client &client)
 				std::cerr << "KICK ERROR: Target client is not in channel" << std::endl; //Try in hexchat
 				break;
 			} //When it tries to kick someone a client that is not in the channel, the loop stops
-			isClientKicked = true;
+			std::string msg = createKickMessage(input);
+			sendMsgClientsInChannel(*isInChannel, client, "KICK", msg);
 			clientPtr->removeChannel(input[1]);
 			itChannel->removeClient(*it);
 			it++;
 		}
-		if (isClientKicked == true)
-			std::cout << createKickMessage(input) << std::endl; //created msg we should send to client
 	}
 	else
 		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_CHANOPRIVSNEEDED_CODE + client.getNickname() + " " + input[1] + " " + ERR_CHANOPRIVSNEEDED + "\r\n", client.getSocketFd());
@@ -597,6 +595,7 @@ std::string Handler::createKickMessage(std::vector<std::string> &input)
 			return ("");
 		}
 	}
+	message.erase(0, 1);
 	return message;
 }
 
