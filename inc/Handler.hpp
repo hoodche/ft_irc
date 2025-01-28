@@ -116,8 +116,8 @@ class Handler {
 		static void sendResponse(std::string message, int clientFd);
 
 		// Methods for Auth Functions
-		static void handleUserCmd(std::vector<std::string> divMsg, Client &client);
-		static void handleNickCmd(std::vector<std::string> divMsg, Client &client);
+		static void handleUserCmd(std::vector<std::string> input, Client &client);
+		static void handleNickCmd(std::vector<std::string> input, Client &client);
 		static void	handleJoinCmd(std::vector<std::string>input, Client &client);
 		static void handleTopicCmd(std::vector<std::string> input, Client &client);
 		static void handleKickCmd(std::vector<std::string> input, Client &client);
@@ -126,6 +126,7 @@ class Handler {
 		static void	handleInviteCmd(std::vector<std::string> input, Client &client);
 		static void	handlePrivmsgCmd(std::vector<std::string> input, Client &client);
 		static void	handleQuitCmd(std::vector<std::string> input, Client &client);
+		static void handlePartCmd(std::vector<std::string> input, Client &client);
 		//static void handlePongCmd(std::vector<std::string> input, Client &client);
 };
 

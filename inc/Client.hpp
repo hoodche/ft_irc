@@ -54,7 +54,7 @@ class Client {
 		bool						isClientInChannel(std::string &channelName);
 		
 		void			removeChannel(std::string &channelStr);
-		void			removeInvitedChannels(std::string &channelName);
+		void				removeInvitedChannels(std::string &channelName);
 };
 
 #endif
