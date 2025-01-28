@@ -455,6 +455,7 @@ void Handler::createChannel(std::string channelName, Client &client)
 	channel.setName(channelName);
 	channels.push_back(channel);
 	client.addChannel(channels.back());
+	sendResponse(getClientPrefix(client) + " JOIN " + channelName + "\r\n", client.getSocketFd());
 	return;
 }
 
@@ -462,6 +463,21 @@ void Handler::addClientToChannel(Channel &channel, Client &client)
 {
 	channel.addUser(client);
 	client.addChannel(channel);
+
+	std::vector<Client *> operators = channel.getOperators();
+	std::vector<Client *> users = channel.getUsers();
+	std::vector<Client *>::iterator opIt = operators.begin();
+	std::vector<Client *>::iterator usersIt = users.begin();
+
+	while (opIt != operators.end()){
+		sendResponse(getClientPrefix(client) + " JOIN " + channel.getName() + "\r\n", (*opIt)->getSocketFd());
+		opIt++;
+	}
+
+	while (usersIt != users.end()){
+		sendResponse(getClientPrefix(client) + " JOIN " + channel.getName() + "\r\n", (*usersIt)->getSocketFd());
+		usersIt++;
+	}
 	return;
 }
 
@@ -913,7 +929,7 @@ void	Handler::handleInviteCmd(std::vector<std::string> input, Client &client) {
 		return ;
 	}
 
-	std::list<Channel>::iterator itChannel = findChannel(input[1]);
+	std::list<Channel>::iterator itChannel = findChannel(input[2]);
 	if (itChannel == channels.end()){
 		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOSUCHCHANNEL_CODE + client.getNickname() + " " + input[1] + " " + ERR_NOSUCHCHANNEL + "\r\n", client.getSocketFd());
 		return;
@@ -960,3 +976,14 @@ void	Handler::handleInviteCmd(std::vector<std::string> input, Client &client) {
 	sendResponse(prependMyserverName(client.getSocketFd()) + RPL_INVITING_CODE + " " + invChannelName + " " + invitedNickname + "\n", client.getSocketFd());
 	return ;
 }
+
+std::string Handler::getClientPrefix(Client const &client) {
+	std::string prefix(":");
+	prefix.append(client.getNickname());
+	prefix.append("!~");
+	prefix.append(client.getUsername());
+	prefix.append("@");
+	prefix.append(client.getIpAddr());
+	return (prefix);
+}
+

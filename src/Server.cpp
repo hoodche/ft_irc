@@ -152,7 +152,7 @@ void Server::acceptClient()
 	this->connectedSocket.events = POLLIN;
 	this->connectedSocket.revents = 0;
 	this->fds.push_back(this->connectedSocket);
-	clients.push_back(Client(connectedSocketFd, *this)); // Adds new accepted client to the end of the vector
+	clients.push_back(Client(connectedSocketFd, *this, std::string(inet_ntoa(clientAddress.sin_addr)))); // Adds new accepted client to the end of the vector
 	std::cout << "a new client from IP "<< inet_ntoa(clientAddress.sin_addr) << " and port " << ntohs(clientAddress.sin_port) << " has been connected with socket fd " << connectedSocketFd << std::endl;
 }
 

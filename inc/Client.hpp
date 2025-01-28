@@ -20,18 +20,20 @@ class Client {
 		std::string				realname;
 		std::vector<Channel *>	invitedChannels;
 		std::vector<Channel *>	clientChannels;
+		std::string				ipAddr;
 		const Server			*connectedToServer;
 
 	public:
-		Client(int receivedFd, const Server &newServer);
+		Client(int receivedFd, const Server &newServer, std::string ip);
 		~Client(void);
 
 		// Getters
 		int							getSocketFd(void) const;
 		std::string					getNickname(void) const;
 		std::string					getUsername(void) const;
-		const Server*				getServer(void) const;
 		std::string					getRealname(void) const;
+		std::string					getIpAddr(void) const;
+		const Server*				getServer(void) const;
 		std::vector<Channel *> 		getClientChannels(void) const;
 		bool						isVerified(void) const;
 		bool						isRegistered(void) const;

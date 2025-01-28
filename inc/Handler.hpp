@@ -97,6 +97,7 @@ class Handler {
 		static void									addModeFlag(std::vector<std::string> &flagVector, int &status, char c);
 		static void									authClientToChannel(Channel &channel, std::string &password, Client &client);
 		static void									sendChannelModeIs(Client &client, Channel &channel);
+		static std::string							getClientPrefix(Client const &client);
 	//it is common to all the instances
 
 	//Mode Function Pointers
