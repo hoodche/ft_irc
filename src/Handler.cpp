@@ -541,7 +541,6 @@ void Handler::handleKickCmd(std::vector<std::string> input, Client &client)
 	if (input.size() < 3)
 	{
 		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + client.getNickname() + " KICK " + ERR_NEEDMOREPARAMS + "\r\n", client.getSocketFd());
-		//std::cerr << "KICK ERROR: Incorrect format" << std::endl;
 		return;
 	}
 	std::list<Channel>::iterator itChannel = findChannel(input[1]);
@@ -956,7 +955,8 @@ void	Handler::handleInviteCmd(std::vector<std::string> input, Client &client) {
 	if (invitedClient->isInvited(*invitedChannel) == false)
 			invitedClient->addInvitedChannel(*invitedChannel);
 	// Inform the invited client he has been invited
-	sendResponse(prependMyserverName(client.getSocketFd()) + ":" + client.getNickname() + " INVITE " + invitedNickname + " " + invChannelName + "\n", invitedClient->getSocketFd());
+	//sendResponse(prependMyserverName(client.getSocketFd()) + ":" + client.getNickname() + " INVITE " + invitedNickname + " " + invChannelName + "\n", invitedClient->getSocketFd());
+	sendResponse(getClientPrefix(client) + " INVITE " + invitedNickname + " :" + invChannelName + "\r\n", invitedClient->getSocketFd());
 	// Inform inviter user that invitation was successfully issued
 	sendResponse(prependMyserverName(client.getSocketFd()) + RPL_INVITING_CODE + " " + invChannelName + " " + invitedNickname + "\n", client.getSocketFd());
 	return ;
