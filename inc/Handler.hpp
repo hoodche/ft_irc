@@ -92,6 +92,7 @@ class Handler {
 		static std::string							vectorToString(std::vector<std::string> vectorTopic, char delim);
 		static std::string							createKickMessage(std::vector<std::string> &input);
 		static void									getStatus(const char &symbol, int &status);
+		static int									getStatusSymbol(std::string str);
 		static void									parseModeString(std::vector<std::string> &flagVector, std::vector<std::string> &argvVector, int &status, std::string const &modeStr);
 		static bool									isCharInStr(std::string const &ref, const char &c);
 		static void									addModeFlag(std::vector<std::string> &flagVector, int &status, char c);
@@ -99,6 +100,7 @@ class Handler {
 		static void									sendChannelModeIs(Client &client, Channel &channel);
 		static std::string							getClientPrefix(Client const &client);
 		static void									sendMsgClientsInChannel(Channel &channel, Client &client, std::string cmd, std::string argv);
+		static void									sendMsgClientsInChannelNoPrintCh(Channel &channel, Client &client, std::string cmd, std::string argv);
 	//it is common to all the instances
 
 	//Mode Function Pointers

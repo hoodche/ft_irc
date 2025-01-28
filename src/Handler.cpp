@@ -659,10 +659,23 @@ void Handler::handleModeCmd(std::vector<std::string> input, Client &client)
 	}
 	std::cout << std::endl;
 	*/
+	std::string flagSendStr;
+	status = 0;
+	int newStatus = 0;
 	std::vector<std::string>::iterator flagIt = flagVector.begin();
 	std::vector<std::string>::iterator argvIt = argvVector.begin();
 	while (flagIt != flagVector.end())
 	{
+		newStatus = getStatusSymbol(*flagIt);
+		if (newStatus != status)
+		{
+			if (newStatus == PLUS_STATUS)
+				flagSendStr.append("+");
+			else
+				flagSendStr.append("-");
+		}
+		status = newStatus;
+		flagSendStr.append(1, (*flagIt)[1]);
 		if (cmdModeMapNoArgv.find(*flagIt) != cmdModeMapNoArgv.end())
 			cmdModeMapNoArgv[*flagIt](*itChannel);
 		else
@@ -675,7 +688,16 @@ void Handler::handleModeCmd(std::vector<std::string> input, Client &client)
 		}
 		flagIt++;
 	}
+	std::string argvVectorToStr = vectorToString(argvVector, ' ');
+	sendMsgClientsInChannelNoPrintCh(*itChannel, client, flagSendStr + " " + argvVectorToStr, "");
 	return;
+}
+
+int		Handler::getStatusSymbol(std::string str)
+{
+	if (str[0] == '+')
+		return (PLUS_STATUS);
+	return (MINUS_STATUS);
 }
 
 void Handler::sendChannelModeIs(Client &client, Channel &channel)
@@ -1004,3 +1026,32 @@ void Handler::sendMsgClientsInChannel(Channel &channel, Client &client, std::str
 	return;
 }
 
+void Handler::sendMsgClientsInChannelNoPrintCh(Channel &channel, Client &client, std::string cmd, std::string argv){
+
+	std::vector<Client *> operators = channel.getOperators();
+	std::vector<Client *> users = channel.getUsers();
+	std::vector<Client *>::iterator opIt = operators.begin();
+	std::vector<Client *>::iterator usersIt = users.begin();
+
+	std::string response;
+
+	response.append(getClientPrefix(client));
+	response.append(" ");
+	response.append(cmd);
+	if (argv != ""){
+		response.append(" :");
+		response.append(argv);
+	}
+	response.append("\r\n");
+
+	while (opIt != operators.end()){
+		sendResponse(response, (*opIt)->getSocketFd());
+		opIt++;
+	}
+
+	while (usersIt != users.end()){
+		sendResponse(response, (*usersIt)->getSocketFd());
+		usersIt++;
+	}
+	return;
+}
