@@ -146,7 +146,7 @@ void Handler::handleNickCmd(std::vector<std::string> input , Client &client) {
 
 /**
  * @brief	handles the irc PRIVMSG command (sending a message to a user or a channel)
- * @param	std::vector<std::string> input whole command (message target -either a user or a channel- follows after "PRIVMSG" )
+ * @param	std::vector<std::string> input whole command (message target -either a user or a channel- follows after "PRIVMSG" ); third parameter, message, must begin with :
  * @param	Client &client who sent the PRIVMSG command
  * 
  */
@@ -161,7 +161,7 @@ void Handler::handlePrivmsgCmd(std::vector<std::string> input , Client &client) 
 		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOTEXTTOSEND_CODE + ERR_NOTEXTTOSEND + "\n", client.getSocketFd());
 		return ;
 	}
-	if (input[2][0] != ':'){
+	if (input[2][0] != ':'){ // message must begin with :
 		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_TOOMANYTARGETS_CODE + input[1] + input[2] + ERR_TOOMANYTARGETS + "\n", client.getSocketFd());//should implement response for 3,4,5,.... targets
 		return ;
 	}
@@ -923,11 +923,10 @@ void	Handler::handlePartCmd(std::vector<std::string> input, Client &client) {
 
 	// Extract the reason 
 	std::string	reason;
-	if (input.size() > 2) {
+	if (input.size() > 2 && input[2][0] == ':') {
 		std::vector<std::string>  reasonParts(input.begin() + 2, input.end());
 		reason	=	vectorToString(reasonParts, ' ');
 	}
-	std::cout << "Reason: " << reason << std::endl;
 
 	for (size_t i = 0; i < partChannels.size(); ++i) {
 		std::string	channelName	= partChannels[i];
@@ -949,11 +948,25 @@ void	Handler::handlePartCmd(std::vector<std::string> input, Client &client) {
 
 		std::vector<Client *> users = channel->getUsers();
 		for (size_t j = 0; j < users.size(); ++j)
-			sendResponse(":" + client.getNickname() + " is leaving the channel - " + channelName + ":" + reason + "\n", users[j]->getSocketFd());
+			sendResponse(":" + client.getNickname() + " is leaving the channel - " + channelName + reason + "\n", users[j]->getSocketFd());
 		
 		// If the channel is empty, delete it
-		if (channel->getUsers().empty())
+		if (channel->getUsers().empty()) {
 			client.removeChannel(channelName);
+			deleteChannel(channels, channelName);
+		}
 	}
 	return ;
+}
+
+void	Handler::deleteChannel(std::list<Channel> channels, std::string channelName) {
+	if (channels.empty())
+		return ;
+	std::list<Channel>::iterator it	= channels.begin();
+	while (it != channels.end()) {
+		if (it->getName() == channelName)
+			it = channels.erase(it);
+		else
+			++it;
+	}
 }

@@ -92,6 +92,7 @@ class Handler {
 		static bool									isCharInStr(std::string const &ref, const char &c);
 		static void									addModeFlag(std::vector<std::string> &flagVector, int &status, char c);
 		static void									authClientToChannel(Channel &channel, std::string &password, Client &client);
+		static void									deleteChannel(std::list<Channel> channels, std::string channelName);
 	//it is common to all the instances
 
 	//Mode Function Pointers
