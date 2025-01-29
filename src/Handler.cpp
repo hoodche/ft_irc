@@ -487,16 +487,16 @@ void Handler::handleTopicCmd(std::vector<std::string> input, Client &client)
 
 	Channel *targetChannel = client.getChannel(input[1]);//RFC does not clarify if the client can get the topic of a channel he is not in. We assume he can´t
 	if (!targetChannel){
-		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOTONCHANNEL_CODE + " " + input[1] + " " + ERR_NOTONCHANNEL + "\n", client.getSocketFd());
+		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOTONCHANNEL_CODE + input[1] + " " + ERR_NOTONCHANNEL + "\n", client.getSocketFd());
 		return;
 	}
 	if (input.size() == 2){
 		if (targetChannel->getTopic() == ""){
-			sendResponse(prependMyserverName(client.getSocketFd()) + RPL_NOTOPIC_CODE + " " + targetChannel->getName() + " " + RPL_NOTOPIC + "\n", client.getSocketFd());
+			sendResponse(prependMyserverName(client.getSocketFd()) + RPL_NOTOPIC_CODE + targetChannel->getName() + " " + RPL_NOTOPIC + "\n", client.getSocketFd());
 			return;
 		}
 		else{
-			sendResponse(prependMyserverName(client.getSocketFd()) + RPL_TOPIC_CODE + " " + targetChannel->getName() + " :" + targetChannel->getTopic() + "\n", client.getSocketFd());
+			sendResponse(prependMyserverName(client.getSocketFd()) + RPL_TOPIC_CODE + targetChannel->getName() + " " + targetChannel->getTopic() + "\n", client.getSocketFd());
 			return;
 		}
 	}
@@ -1008,8 +1008,9 @@ void Handler::sendMsgClientsInChannel(Channel &channel, Client &client, std::str
 	response.append(cmd);
 	response.append(" ");
 	response.append(channel.getName());
+	response.append(" ");
 	if (argv != ""){
-		response.append(" :");
+		//response.append(" :");
 		response.append(argv);
 	}
 	response.append("\r\n");
@@ -1038,8 +1039,9 @@ void Handler::sendMsgClientsInChannelNoPrintCh(Channel &channel, Client &client,
 	response.append(getClientPrefix(client));
 	response.append(" ");
 	response.append(cmd);
+	response.append(" ");
 	if (argv != ""){
-		response.append(" :");
+		//response.append(" :");
 		response.append(argv);
 	}
 	response.append("\r\n");
