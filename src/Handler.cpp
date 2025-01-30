@@ -496,7 +496,7 @@ void Handler::handleTopicCmd(std::vector<std::string> input, Client &client)
 			return;
 		}
 		else{
-			sendResponse(prependMyserverName(client.getSocketFd()) + RPL_TOPIC_CODE + client.getNickname() + " " + targetChannel->getName() + " " + targetChannel->getTopic() + "\n", client.getSocketFd());
+			sendResponse(prependMyserverName(client.getSocketFd()) + RPL_TOPIC_CODE + targetChannel->getName() + " " + targetChannel->getTopic() + "\n", client.getSocketFd());
 			return;
 		}
 	}
@@ -566,12 +566,13 @@ void Handler::handleKickCmd(std::vector<std::string> input, Client &client)
 			if (!clientPtr){
 				sendResponse(prependMyserverName(client.getSocketFd()) + ERR_USERNOTINCHANNEL_CODE + client.getNickname() + " " + *it + " " + input[1] + " " + ERR_USERNOTINCHANNEL + "\r\n", client.getSocketFd());
 				std::cerr << "KICK ERROR: Target client is not in channel" << std::endl; //Try in hexchat
-				break;
-			} //When it tries to kick someone a client that is not in the channel, the loop stops
-			std::string msg = createKickMessage(input);
-			sendMsgClientsInChannelKick(*isInChannel, client, "KICK", clientPtr->getNickname(), msg);
-			clientPtr->removeChannel(input[1]);
-			itChannel->removeClient(*it);
+			}
+			else{
+				std::string msg = createKickMessage(input);
+				sendMsgClientsInChannelKick(*isInChannel, client, "KICK", clientPtr->getNickname(), msg);
+				clientPtr->removeChannel(input[1]);
+				itChannel->removeClient(*it);
+			}
 			it++;
 		}
 	}
