@@ -100,6 +100,7 @@ class Handler {
 		static void									sendChannelModeIs(Client &client, Channel &channel);
 		static std::string							getClientPrefix(Client const &client);
 		static void									sendMsgClientsInChannel(Channel &channel, Client &client, std::string cmd, std::string argv);
+		static void									sendMsgClientsInChannelKick(Channel &channel, Client &client, std::string cmd, std::string kickedClient, std::string argv);
 		static void									sendMsgClientsInChannelNoPrintCh(Channel &channel, Client &client, std::string cmd, std::string argv);
 	//it is common to all the instances
 

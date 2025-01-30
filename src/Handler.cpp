@@ -492,11 +492,11 @@ void Handler::handleTopicCmd(std::vector<std::string> input, Client &client)
 	}
 	if (input.size() == 2){
 		if (targetChannel->getTopic() == ""){
-			sendResponse(prependMyserverName(client.getSocketFd()) + RPL_NOTOPIC_CODE + targetChannel->getName() + " " + RPL_NOTOPIC + "\n", client.getSocketFd());
+			sendResponse(prependMyserverName(client.getSocketFd()) + RPL_NOTOPIC_CODE + client.getNickname() + " " + targetChannel->getName() + " " + RPL_NOTOPIC + "\n", client.getSocketFd());
 			return;
 		}
 		else{
-			sendResponse(prependMyserverName(client.getSocketFd()) + RPL_TOPIC_CODE + targetChannel->getName() + " " + targetChannel->getTopic() + "\n", client.getSocketFd());
+			sendResponse(prependMyserverName(client.getSocketFd()) + RPL_TOPIC_CODE + client.getNickname() + " " + targetChannel->getName() + " " + targetChannel->getTopic() + "\n", client.getSocketFd());
 			return;
 		}
 	}
@@ -569,7 +569,7 @@ void Handler::handleKickCmd(std::vector<std::string> input, Client &client)
 				break;
 			} //When it tries to kick someone a client that is not in the channel, the loop stops
 			std::string msg = createKickMessage(input);
-			sendMsgClientsInChannel(*isInChannel, client, "KICK", msg);
+			sendMsgClientsInChannelKick(*isInChannel, client, "KICK", clientPtr->getNickname(), msg);
 			clientPtr->removeChannel(input[1]);
 			itChannel->removeClient(*it);
 			it++;
@@ -1010,7 +1010,8 @@ void Handler::sendMsgClientsInChannel(Channel &channel, Client &client, std::str
 	response.append(channel.getName());
 	response.append(" ");
 	if (argv != ""){
-		//response.append(" :");
+		if (argv[0] != ':')
+			argv.insert(0, ":");
 		response.append(argv);
 	}
 	response.append("\r\n");
@@ -1041,7 +1042,44 @@ void Handler::sendMsgClientsInChannelNoPrintCh(Channel &channel, Client &client,
 	response.append(cmd);
 	response.append(" ");
 	if (argv != ""){
-		//response.append(" :");
+		if (argv[0] != ':')
+			argv.insert(0, ":");
+		response.append(argv);
+	}
+	response.append("\r\n");
+
+	while (opIt != operators.end()){
+		sendResponse(response, (*opIt)->getSocketFd());
+		opIt++;
+	}
+
+	while (usersIt != users.end()){
+		sendResponse(response, (*usersIt)->getSocketFd());
+		usersIt++;
+	}
+	return;
+}
+
+void Handler::sendMsgClientsInChannelKick(Channel &channel, Client &client, std::string cmd, std::string kickedClient, std::string argv)
+{
+	std::vector<Client *> operators = channel.getOperators();
+	std::vector<Client *> users = channel.getUsers();
+	std::vector<Client *>::iterator opIt = operators.begin();
+	std::vector<Client *>::iterator usersIt = users.begin();
+
+	std::string response;
+
+	response.append(getClientPrefix(client));
+	response.append(" ");
+	response.append(cmd);
+	response.append(" ");
+	response.append(channel.getName());
+	response.append(" ");
+	response.append(kickedClient);
+	response.append(" ");
+	if (argv != ""){
+		if (argv[0] != ':')
+			argv.insert(0, ":");
 		response.append(argv);
 	}
 	response.append("\r\n");
