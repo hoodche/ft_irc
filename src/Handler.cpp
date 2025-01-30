@@ -636,30 +636,17 @@ void Handler::handleModeCmd(std::vector<std::string> input, Client &client)
 		return;
 	}
 
-	std::vector<std::string>::iterator it = input.begin() + 2;
+	if (parseFlagString(flagVector, input[2], client) == false){
+		return;
+	}
+
+	std::vector<std::string>::iterator it = input.begin() + 3;
 	while(it != input.end())
 	{
-		parseModeString(flagVector, argvVector, status, *it);
+		argvVector.push_back(*it);
 		it++;
 	}
-	/*
-	std::cout << "flagVector: ";
-	it = flagVector.begin();
-	while (it != flagVector.end())
-	{
-		std::cout << *it << " ";
-		it++;
-	}
-	std::cout << std::endl;
-	std::cout << "argvVector: ";
-	it = argvVector.begin();
-	while (it != argvVector.end())
-	{
-		std::cout << *it << " ";
-		it++;
-	}
-	std::cout << std::endl;
-	*/
+
 	std::string flagSendStr;
 	status = 0;
 	int newStatus = 0;
@@ -683,8 +670,8 @@ void Handler::handleModeCmd(std::vector<std::string> input, Client &client)
 		{
 			if (argvIt != argvVector.end())
 			{
-				cmdModeMap[*flagIt](*itChannel, *argvIt);
-				argvIt++;
+				if (cmdModeMap[*flagIt](*itChannel, *argvIt) == true)
+					argvIt++;
 			}
 		}
 		flagIt++;
@@ -692,6 +679,36 @@ void Handler::handleModeCmd(std::vector<std::string> input, Client &client)
 	std::string argvVectorToStr = vectorToString(argvVector, ' ');
 	sendMsgClientsInChannelNoPrintCh(*itChannel, client, flagSendStr + " " + argvVectorToStr, "");
 	return;
+}
+
+bool Handler::parseFlagString(std::vector<std::string> flagVector, std::string flags, Client &client)
+{
+	int status = PLUS_STATUS;
+	std::string ref = "itkol+-";
+
+	std::string::iterator itStr = flags.begin();
+	while (itStr != flags.end())
+	{
+		if (!isCharInStr(ref, *itStr)){
+			sendResponse(prependMyserverName(client.getSocketFd()) + ERR_CHANOPRIVSNEEDED_CODE + client.getNickname() + " " + *itStr + " " + ERR_CHANOPRIVSNEEDED + "\r\n", client.getSocketFd());
+			return (false);
+		}
+		if (*itStr == '+')
+			status = PLUS_STATUS;
+		else if(*itStr == '-')
+			status = MINUS_STATUS;
+		else{
+			std::string addFlag;
+			if (status == PLUS_STATUS)
+				addFlag.append("+");
+			else 
+				addFlag.append("-");
+			addFlag += *itStr;
+			flagVector.push_back(addFlag);
+		}
+		itStr++;
+	}
+	return (true);
 }
 
 int		Handler::getStatusSymbol(std::string str)
@@ -725,56 +742,6 @@ void Handler::sendChannelModeIs(Client &client, Channel &channel)
 	sendResponse(prependMyserverName(client.getSocketFd()) + RPL_CHANNELMODEIS_CODE + client.getNickname() + " " + flagStr + " " + argv + "\r\n", client.getSocketFd());
 }
 
-void Handler::parseModeString(std::vector<std::string> &flagVector, std::vector<std::string> &argvVector, int &status, std::string const &modeStr)
-{
-	std::string::const_iterator itStr = modeStr.begin();
-	std::string ref= "itkol";
-	std::string refWithSymbols = "itkol+-";
-	bool		isFlag = false;
-
-	while(itStr != modeStr.end())
-	{
-		if (!isCharInStr(refWithSymbols ,*itStr))
-		{
-			status = ARGV_STATUS;
-			break;
-		}
-		itStr++;
-	}
-	itStr = modeStr.begin();
-	getStatus(*itStr, status);
-	while(itStr != modeStr.end())
-	{
-		if (status == ARGV_STATUS)
-		{
-			argvVector.push_back(modeStr);
-			return;
-		}
-		if (isCharInStr(ref, *itStr))
-		{
-			addModeFlag(flagVector, status, *itStr);
-			isFlag = true;
-		}
-		else
-			getStatus(*itStr, status);
-		itStr++;
-	}
-	if (isFlag == false)
-		argvVector.push_back(modeStr);
-	return;
-}
-
-void Handler::getStatus(const char &symbol, int &status)
-{
-	if (symbol == '+' && status != ARGV_STATUS)
-		status = PLUS_STATUS;
-	else if (symbol == '-' && status != ARGV_STATUS)
-		status = MINUS_STATUS;
-	else
-		status = ARGV_STATUS;
-	return;
-}
-
 bool Handler::isCharInStr(std::string const &ref, const char &c)
 {
 	std::string::const_iterator itStr = ref.begin();
@@ -784,20 +751,6 @@ bool Handler::isCharInStr(std::string const &ref, const char &c)
 		itStr++;
 	}
 	return (false);
-}
-
-void Handler::addModeFlag(std::vector<std::string> &flagVector, int &status, char c)
-{
-	if (status == PLUS_STATUS)
-	{
-		std::string flagWithPlus = std::string("+")  + c;
-		flagVector.push_back(flagWithPlus);
-	}
-	else
-	{
-		std::string flagWithMinus = std::string("-")  + c;
-		flagVector.push_back(flagWithMinus);
-	}
 }
 
 //Mode Function Pointers
@@ -850,7 +803,7 @@ void Handler::deactivateUserLimitMode(Channel &channel)
 	}
 }
 
-void Handler::activateUserLimitMode(Channel &channel, std::string newLimit)
+bool Handler::activateUserLimitMode(Channel &channel, std::string newLimit)
 {
 	unsigned int number;
 	std::stringstream ss(newLimit);
@@ -861,7 +814,7 @@ void Handler::activateUserLimitMode(Channel &channel, std::string newLimit)
 	while(it != newLimit.end())
 	{
 		if (isdigit(*it) == false)
-			return;
+			return false;
 		it++;
 	}
 
@@ -871,49 +824,57 @@ void Handler::activateUserLimitMode(Channel &channel, std::string newLimit)
 	{
 		channel.setUserLimit(number);
 		std::cout << "Limit mode restrictions activated: " << number << std::endl;
+		return true;
 	}
+	return false;
 }
 
-void Handler::activatePasswordMode(Channel &channel, std::string newPassword)
+bool Handler::activatePasswordMode(Channel &channel, std::string newPassword)
 {
 	if (channel.getPassword() == "")
 	{
 		channel.setPassword(newPassword);
 		std::cout << "Password mode restrictions activated" << std::endl;
+		return true;
 	}
+	return false;
 }
 
-void Handler::deactivatePasswordMode(Channel &channel, std::string newPassword)
+bool Handler::deactivatePasswordMode(Channel &channel, std::string newPassword)
 {
 	if (channel.getPassword() == newPassword && channel.getPassword() != "")
 	{
 		channel.setPassword("");
 		std::cout << "Password mode restrictions deactivated" << std::endl;
+		return true;
 	}
+	return false;
 }
 
-void Handler::activateOperatorMode(Channel &channel, std::string targetClient)
+bool Handler::activateOperatorMode(Channel &channel, std::string targetClient)
 {
 	Client* clientPtr = channel.getUserClient(targetClient);
 	if (!clientPtr){
 		//sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOSUCHNICK_CODE + targetClient + " " + ERR_NOSUCHNICK + "\r\n", client.getSocketFd());
-		return;
+		return false;
 	}
 	channel.removeClient(targetClient);
 	channel.addOperator(*clientPtr);
 	std::cout << "Operator privileges granted to: " << targetClient << std::endl;
+	return true;
 }
 
-void Handler::deactivateOperatorMode(Channel &channel, std::string targetClient)
+bool Handler::deactivateOperatorMode(Channel &channel, std::string targetClient)
 {
 	Client* clientPtr = channel.getOperatorClient(targetClient);
 	if (!clientPtr){
 		std::cerr << "DEACTIVATE OPERATOR MODE: Target Client is not an operator" << std::endl;
-		return;
+		return false;
 	}
 	channel.removeClient(targetClient);
 	channel.addUser(*clientPtr);
 	std::cout << "Operator privileges removed to: " << targetClient << std::endl;
+	return true;
 }
 
 /*					*/

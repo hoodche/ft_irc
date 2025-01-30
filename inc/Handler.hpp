@@ -57,6 +57,8 @@
 # define ERR_PASSWDMISMATCH			":Password incorrect"
 # define ERR_CHANNELISFULL_CODE		"471 "
 # define ERR_CHANNELISFULL			":Cannot join channel (+l)"
+# define ERR_UNKNOWNMODE_CODE		":472 "
+# define ERR_UNKNOWNMODE			":is unknown mode char to me"
 # define ERR_INVITEONLYCHAN_CODE	"473 "
 # define ERR_INVITEONLYCHAN			":Cannot join channel (+i)"
 # define ERR_BADCHANNELKEY_CODE		"475 "
@@ -69,7 +71,7 @@
 # define ARGV_STATUS					3
 
 typedef void (*cmdHandler)(std::vector<std::string>, Client &);
-typedef void (*modeHandler)(Channel &, std::string);
+typedef bool (*modeHandler)(Channel &, std::string);
 typedef void (*modeHandlerNoArgv)(Channel &);
 
 class Handler {
@@ -91,17 +93,15 @@ class Handler {
 		static std::list<Channel>::iterator			findChannel(const std::string &channelName);
 		static std::string							vectorToString(std::vector<std::string> vectorTopic, char delim);
 		static std::string							createKickMessage(std::vector<std::string> &input);
-		static void									getStatus(const char &symbol, int &status);
-		static int									getStatusSymbol(std::string str);
-		static void									parseModeString(std::vector<std::string> &flagVector, std::vector<std::string> &argvVector, int &status, std::string const &modeStr);
 		static bool									isCharInStr(std::string const &ref, const char &c);
-		static void									addModeFlag(std::vector<std::string> &flagVector, int &status, char c);
 		static void									authClientToChannel(Channel &channel, std::string &password, Client &client);
 		static void									sendChannelModeIs(Client &client, Channel &channel);
 		static std::string							getClientPrefix(Client const &client);
 		static void									sendMsgClientsInChannel(Channel &channel, Client &client, std::string cmd, std::string argv);
 		static void									sendMsgClientsInChannelKick(Channel &channel, Client &client, std::string cmd, std::string kickedClient, std::string argv);
 		static void									sendMsgClientsInChannelNoPrintCh(Channel &channel, Client &client, std::string cmd, std::string argv);
+		static int									getStatusSymbol(std::string str);
+		static bool									parseFlagString(std::vector<std::string> flagVector, std::string flags, Client &client);
 	//it is common to all the instances
 
 	//Mode Function Pointers
@@ -111,11 +111,11 @@ class Handler {
 		static void									deactivateTopicPrivMode(Channel &channel);
 		static void									deactivateUserLimitMode(Channel &channel);
 
-		static void									activateUserLimitMode(Channel &channel, std::string newLimit);
-		static void									activatePasswordMode(Channel &channel, std::string newPassword);
-		static void									deactivatePasswordMode(Channel &channel, std::string newPassword);
-		static void									activateOperatorMode(Channel &channel, std::string targetClient);
-		static void									deactivateOperatorMode(Channel &channel, std::string targetClient);
+		static bool									activateUserLimitMode(Channel &channel, std::string newLimit);
+		static bool									activatePasswordMode(Channel &channel, std::string newPassword);
+		static bool									deactivatePasswordMode(Channel &channel, std::string newPassword);
+		static bool									activateOperatorMode(Channel &channel, std::string targetClient);
+		static bool									deactivateOperatorMode(Channel &channel, std::string targetClient);
 
 	public:
 		Handler(void);
