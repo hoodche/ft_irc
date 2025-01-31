@@ -669,10 +669,16 @@ void Handler::handleModeCmd(std::vector<std::string> input, Client &client)
 					if (argvIt + 1 != argvVector.end())
 						argvSendStr.append(" ");
 				}
+				else{
+					if (*flagIt == "+k" || *flagIt == "-k"){
+						if (itChannel->getPassword() != "")
+							sendResponse(prependMyserverName(client.getSocketFd()) + ERR_KEYSET_CODE + client.getNickname() + " " + itChannel->getName() + " " + ERR_KEYSET + "\r\n", client.getSocketFd());
+					}
+				}
 				argvIt++;
 			}
 			else
-				sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + client.getNickname() + " MODE " + *flagIt + " " + ERR_NEEDMOREPARAMS + "\r\n", client.getSocketFd());
+				sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + client.getNickname() + " MODE " + itChannel->getName() + " " + *flagIt + " " + ERR_NEEDMOREPARAMS + "\r\n", client.getSocketFd()); //This message is deprecated and hexchat does not use it, but it is useful for debug purposes
 		}
 		flagIt++;
 	}

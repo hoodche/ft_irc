@@ -55,6 +55,8 @@
 # define ERR_ALREADYREGISTERED		":You may not reregister"
 # define ERR_PASSWDMISMATCH_CODE	"464 "
 # define ERR_PASSWDMISMATCH			":Password incorrect"
+# define ERR_KEYSET_CODE			"467 "
+# define ERR_KEYSET					":Channel key already set"
 # define ERR_CHANNELISFULL_CODE		"471 "
 # define ERR_CHANNELISFULL			":Cannot join channel (+l)"
 # define ERR_UNKNOWNMODE_CODE		":472 "
