@@ -72,7 +72,7 @@
 
 typedef void (*cmdHandler)(std::vector<std::string>, Client &);
 typedef bool (*modeHandler)(Channel &, std::string);
-typedef void (*modeHandlerNoArgv)(Channel &);
+typedef bool (*modeHandlerNoArgv)(Channel &);
 
 class Handler {
 	private:
@@ -102,14 +102,15 @@ class Handler {
 		static void									sendMsgClientsInChannelNoPrintCh(Channel &channel, Client &client, std::string cmd, std::string argv);
 		static int									getStatusSymbol(std::string str);
 		static bool									parseFlagString(std::vector<std::string> &flagVector, std::string flags, Client &client);
+		static void									appendToFlagStr(int &status, int &newStatus, std::string &flag, std::string &flagSendStr);
 	//it is common to all the instances
 
 	//Mode Function Pointers
-		static void									activateInviteMode(Channel &channel);
-		static void									deactivateInviteMode(Channel &channel);
-		static void									activateTopicPrivMode(Channel &channel);
-		static void									deactivateTopicPrivMode(Channel &channel);
-		static void									deactivateUserLimitMode(Channel &channel);
+		static bool									activateInviteMode(Channel &channel);
+		static bool									deactivateInviteMode(Channel &channel);
+		static bool									activateTopicPrivMode(Channel &channel);
+		static bool									deactivateTopicPrivMode(Channel &channel);
+		static bool									deactivateUserLimitMode(Channel &channel);
 
 		static bool									activateUserLimitMode(Channel &channel, std::string newLimit);
 		static bool									activatePasswordMode(Channel &channel, std::string newPassword);

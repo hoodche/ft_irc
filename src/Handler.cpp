@@ -648,39 +648,36 @@ void Handler::handleModeCmd(std::vector<std::string> input, Client &client)
 	}
 
 	std::string flagSendStr;
+	std::string argvSendStr;
 	status = 0;
 	int newStatus = 0;
 	std::vector<std::string>::iterator flagIt = flagVector.begin();
 	std::vector<std::string>::iterator argvIt = argvVector.begin();
 	while (flagIt != flagVector.end())
 	{
-		std::cerr << "flag: " << *flagIt << std::endl;
-		if (argvIt != argvVector.end())
-			std::cerr << "argv: " << *argvIt << std::endl;
-		newStatus = getStatusSymbol(*flagIt);
-		if (newStatus != status)
-		{
-			if (newStatus == PLUS_STATUS)
-				flagSendStr.append("+");
-			else
-				flagSendStr.append("-");
+		if (cmdModeMapNoArgv.find(*flagIt) != cmdModeMapNoArgv.end()){
+			if (cmdModeMapNoArgv[*flagIt](*itChannel) == true)
+				appendToFlagStr(status, newStatus, *flagIt, flagSendStr);
 		}
-		status = newStatus;
-		flagSendStr.append(1, (*flagIt)[1]);
-		if (cmdModeMapNoArgv.find(*flagIt) != cmdModeMapNoArgv.end())
-			cmdModeMapNoArgv[*flagIt](*itChannel);
 		else
 		{
-			if (argvIt != argvVector.end())
-			{
+			if (argvIt != argvVector.end()){
 				if (cmdModeMap[*flagIt](*itChannel, *argvIt) == true)
-					argvIt++;
+				{
+					appendToFlagStr(status, newStatus, *flagIt, flagSendStr);
+					argvSendStr.append(*argvIt);
+					if (argvIt + 1 != argvVector.end())
+						argvSendStr.append(" ");
+				}
+				argvIt++;
 			}
+			else
+				sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + client.getNickname() + " MODE " + *flagIt + " " + ERR_NEEDMOREPARAMS + "\r\n", client.getSocketFd());
 		}
 		flagIt++;
 	}
-	std::string argvVectorToStr = vectorToString(argvVector, ' ');
-	sendMsgClientsInChannelNoPrintCh(*itChannel, client, "MODE " + itChannel->getName() + " " + flagSendStr + " " + argvVectorToStr, "");
+	if (flagSendStr.empty() == false)
+		sendMsgClientsInChannelNoPrintCh(*itChannel, client, "MODE " + itChannel->getName() + " " + flagSendStr + " " + argvSendStr, "");
 	return;
 }
 
@@ -756,54 +753,70 @@ bool Handler::isCharInStr(std::string const &ref, const char &c)
 	return (false);
 }
 
+void Handler::appendToFlagStr(int &status, int &newStatus, std::string &flag, std::string &flagSendStr)
+{
+	newStatus = getStatusSymbol(flag);
+	if (newStatus != status)
+	{
+		if (newStatus == PLUS_STATUS)
+			flagSendStr.append("+");
+		else
+			flagSendStr.append("-");
+	}
+	status = newStatus;
+	flagSendStr.append(1, flag[1]);
+	return;
+}
+
 //Mode Function Pointers
-void Handler::activateInviteMode(Channel &channel)
+bool Handler::activateInviteMode(Channel &channel)
 {
 	if (channel.getInviteMode() == false)
 	{
 		channel.setInviteMode(true);
-		std::cout << "Invite mode restrictions activated" << std::endl;
+		return true;
 	}
-	return;
+	return false;
 }
 
-void Handler::deactivateInviteMode(Channel &channel)
+bool Handler::deactivateInviteMode(Channel &channel)
 {
 	if (channel.getInviteMode() == true)
 	{
 		channel.setInviteMode(false);
-		std::cout << "Invite mode restrictions deactivated" << std::endl;
+		return true;
 	}
-	return;
+	return false;
 }
 
-void Handler::activateTopicPrivMode(Channel &channel)
+bool Handler::activateTopicPrivMode(Channel &channel)
 {
 	if (channel.getTopicMode() == false)
 	{
 		channel.setTopicMode(true);
-		std::cout << "Topic mode restrictions activated" << std::endl;
+		return true;
 	}
-	return;
+	return false;
 }
 
-void Handler::deactivateTopicPrivMode(Channel &channel)
+bool Handler::deactivateTopicPrivMode(Channel &channel)
 {
 	if (channel.getTopicMode() == true)
 	{
 		channel.setTopicMode(false);
-		std::cout << "Topic mode restrictions deactivated" << std::endl;
+		return true;
 	}
-	return;
+	return false;
 }
 
-void Handler::deactivateUserLimitMode(Channel &channel)
+bool Handler::deactivateUserLimitMode(Channel &channel)
 {
 	if (channel.getUserLimit() != 0)
 	{
 		channel.setUserLimit(0);
-		std::cout << "Limit mode restrictions deactivated" << std::endl;
+		return true;
 	}
+	return false;
 }
 
 bool Handler::activateUserLimitMode(Channel &channel, std::string newLimit)
@@ -826,7 +839,6 @@ bool Handler::activateUserLimitMode(Channel &channel, std::string newLimit)
 	if (channel.getUserLimit() != number && number != 0)
 	{
 		channel.setUserLimit(number);
-		std::cout << "Limit mode restrictions activated: " << number << std::endl;
 		return true;
 	}
 	return false;
@@ -837,7 +849,6 @@ bool Handler::activatePasswordMode(Channel &channel, std::string newPassword)
 	if (channel.getPassword() == "")
 	{
 		channel.setPassword(newPassword);
-		std::cout << "Password mode restrictions activated" << std::endl;
 		return true;
 	}
 	return false;
@@ -848,7 +859,6 @@ bool Handler::deactivatePasswordMode(Channel &channel, std::string newPassword)
 	if (channel.getPassword() == newPassword && channel.getPassword() != "")
 	{
 		channel.setPassword("");
-		std::cout << "Password mode restrictions deactivated" << std::endl;
 		return true;
 	}
 	return false;
