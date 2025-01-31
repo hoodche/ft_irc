@@ -101,7 +101,7 @@ class Handler {
 		static void									sendMsgClientsInChannelKick(Channel &channel, Client &client, std::string cmd, std::string kickedClient, std::string argv);
 		static void									sendMsgClientsInChannelNoPrintCh(Channel &channel, Client &client, std::string cmd, std::string argv);
 		static int									getStatusSymbol(std::string str);
-		static bool									parseFlagString(std::vector<std::string> flagVector, std::string flags, Client &client);
+		static bool									parseFlagString(std::vector<std::string> &flagVector, std::string flags, Client &client);
 	//it is common to all the instances
 
 	//Mode Function Pointers

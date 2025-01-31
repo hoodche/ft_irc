@@ -654,6 +654,9 @@ void Handler::handleModeCmd(std::vector<std::string> input, Client &client)
 	std::vector<std::string>::iterator argvIt = argvVector.begin();
 	while (flagIt != flagVector.end())
 	{
+		std::cerr << "flag: " << *flagIt << std::endl;
+		if (argvIt != argvVector.end())
+			std::cerr << "argv: " << *argvIt << std::endl;
 		newStatus = getStatusSymbol(*flagIt);
 		if (newStatus != status)
 		{
@@ -677,11 +680,11 @@ void Handler::handleModeCmd(std::vector<std::string> input, Client &client)
 		flagIt++;
 	}
 	std::string argvVectorToStr = vectorToString(argvVector, ' ');
-	sendMsgClientsInChannelNoPrintCh(*itChannel, client, flagSendStr + " " + argvVectorToStr, "");
+	sendMsgClientsInChannelNoPrintCh(*itChannel, client, "MODE " + itChannel->getName() + " " + flagSendStr + " " + argvVectorToStr, "");
 	return;
 }
 
-bool Handler::parseFlagString(std::vector<std::string> flagVector, std::string flags, Client &client)
+bool Handler::parseFlagString(std::vector<std::string> &flagVector, std::string flags, Client &client)
 {
 	int status = PLUS_STATUS;
 	std::string ref = "itkol+-";
