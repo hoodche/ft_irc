@@ -316,21 +316,16 @@ void Handler::handleJoinCmd(std::vector<std::string> input, Client &client) {
 	if (input.size() > 3)// JOIN <#channel>{,<#channel>} [<password>{,<password>}]
 		return;
 
-	std::vector<std::string>::iterator argvIt = input.begin();
-	try{
-		argvIt++;//skip JOIN command
-		channelVector = getChannelVector(*argvIt, client);//more than one channel can be joined at once (they are separated by commas)
-		if (channelVector.empty())
-			return;
-		argvIt++;
-		if (argvIt != input.end())
-			passVector = getPassVector(*argvIt);//last parameter is the password (or passwords) for the channel(s)
-		channelDictionary = createDictionary(channelVector, passVector);
-		joinCmdExec(channelDictionary, client);
-	}catch(const std::exception &e){
-		std::cout << e.what() << std::endl;
-	}
+	std::vector<std::string>::iterator argvIt = input.begin() + 1;
 
+	channelVector = getChannelVector(*argvIt, client);//more than one channel can be joined at once (they are separated by commas)
+	if (channelVector.empty())
+		return;
+	argvIt++;
+	if (argvIt != input.end())
+		passVector = getPassVector(*argvIt);//last parameter is the password (or passwords) for the channel(s)
+	channelDictionary = createDictionary(channelVector, passVector);
+	joinCmdExec(channelDictionary, client);
 }
 
 std::vector<std::string> Handler::getChannelVector(std::string channelString, Client &client)
@@ -341,12 +336,10 @@ std::vector<std::string> Handler::getChannelVector(std::string channelString, Cl
 
 	while(std::getline(ss, tempChannel, ','))
 	{
-		if (*tempChannel.begin() != '#'){
-				sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOSUCHCHANNEL_CODE + " " + tempChannel + " " + ERR_NOSUCHCHANNEL + "\n", client.getSocketFd());
-				channels.clear();
-				return (channels);
-		}
-		channels.push_back(tempChannel);
+		if (*tempChannel.begin() != '#')
+			sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOSUCHCHANNEL_CODE + " " + tempChannel + " " + ERR_NOSUCHCHANNEL + "\n", client.getSocketFd());
+		else
+			channels.push_back(tempChannel);
 	}
 	return (channels);
 }
@@ -392,9 +385,8 @@ void Handler::joinCmdExec(std::map<std::string, std::string> channelDictionary, 
 		itChannels = findChannel(itMap->first);
 		if (itChannels == channels.end())
 			createChannel(itMap->first, client);
-		else{
+		else
 			authClientToChannel(*itChannels, itMap->second, client);
-		}
 		itMap++;
 	}
 }
@@ -1077,7 +1069,6 @@ void Handler::sendMsgClientsInChannelKick(Channel &channel, Client &client, std:
 	}
 	return;
 }
-
 // PART <channel>{,<channel>} [<reason>]
 void	Handler::handlePartCmd(std::vector<std::string> input, Client &client) {
 	if (input.size() < 2) {
