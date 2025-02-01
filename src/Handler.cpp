@@ -1117,11 +1117,10 @@ void Handler::handlePartCmd(std::vector<std::string> input, Client &client) {
         sendResponse(getClientPrefix(client) + " PART " + channelName + " " + reason + "\r\n", client.getSocketFd());
 
         // Notify other users in the channel about the client leaving
-        std::vector<Client*> users = channel->getUsers();
-        for (size_t j = 0; j < users.size(); ++j) {
-            sendResponse(getClientPrefix(client) + " PART " + channelName + " " + reason + "\r\n", users[j]->getSocketFd());
+        std::vector<Client*>::iterator end = channel->getUsers().end();
+        for (std::vector<Client*>::iterator it = channel->getUsers().begin(); it != end; ++it) {
+            sendResponse(":" + (*it)->getNickname() + " PART " + channelName + " " + reason + "\r\n", (*it)->getSocketFd());
         }
-
         // If the channel is empty, delete it
         if (channel->getUsers().empty()) {
             deleteChannel(channels, channelName); // Remove the empty channel
