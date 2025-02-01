@@ -567,6 +567,8 @@ void Handler::handleKickCmd(std::vector<std::string> input, Client &client)
 				sendMsgClientsInChannelKick(*isInChannel, client, "KICK", clientPtr->getNickname(), msg);
 				clientPtr->removeChannel(input[1]);
 				itChannel->removeClient(*it);
+				if (itChannel->getUsers().empty())
+					deleteChannel(channels, itChannel->getName());
 			}
 			it++;
 		}
