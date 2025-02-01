@@ -105,7 +105,7 @@ class Handler {
 		static int									getStatusSymbol(std::string str);
 		static bool									parseFlagString(std::vector<std::string> &flagVector, std::string flags, Client &client);
 		static void									appendToFlagStr(int &status, int &newStatus, std::string &flag, std::string &flagSendStr);
-		static void									deleteChannel(std::list<Channel> channels, std::string channelName);
+		static void									deleteChannel(std::list<Channel> &channels, std::string channelName);
 	//it is common to all the instances
 
 	//Mode Function Pointers

@@ -235,11 +235,11 @@ void Handler::handleQuitCmd(std::vector<std::string> input , Client &client) {
 	else//quit was not followed by the optional quitting message
 		sendResponse("ERROR " + client.getNickname() + " (Quit)\n", client.getSocketFd());
 	//notify other clients in same channels that client is leaving (and erase leaving client from the channel)	
-	std::vector<Channel *> channels = client.getClientChannels();
-	std::vector<Channel *>::iterator itChannels = channels.begin();
+	std::vector<Channel *> clientChannels = client.getClientChannels();
+	std::vector<Channel *>::iterator itChannels = clientChannels.begin();
 	//debug print
 	std::cout << "comienza la iteracion por todos los canal del usuario saliente" << std::endl;
-	while (itChannels != channels.end())
+	while (itChannels != clientChannels.end())
 	{
 		std::cout << "canal: " << (*itChannels)->getName() << std::endl;
 		(*itChannels)->removeClient(client.getNickname());
@@ -258,6 +258,8 @@ void Handler::handleQuitCmd(std::vector<std::string> input , Client &client) {
 			sendResponse(":" + client.getNickname() + " QUIT :Client has left the server\n", (*itClients)->getSocketFd());
 			itClients++;
 		}
+		if ((*itChannels)->getUsers().empty())
+			deleteChannel(channels, (*itChannels)->getName()); //Test
 		itChannels++;
 	}
 	//disconnect client
@@ -565,6 +567,8 @@ void Handler::handleKickCmd(std::vector<std::string> input, Client &client)
 				sendMsgClientsInChannelKick(*isInChannel, client, "KICK", clientPtr->getNickname(), msg);
 				clientPtr->removeChannel(input[1]);
 				itChannel->removeClient(*it);
+				if (itChannel->getUsers().empty())
+					deleteChannel(channels, itChannel->getName());
 			}
 			it++;
 		}
@@ -1070,58 +1074,65 @@ void Handler::sendMsgClientsInChannelKick(Channel &channel, Client &client, std:
 	return;
 }
 // PART <channel>{,<channel>} [<reason>]
-void	Handler::handlePartCmd(std::vector<std::string> input, Client &client) {
-	if (input.size() < 2) {
-		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + "PART " + ERR_NEEDMOREPARAMS + "\n", client.getSocketFd());
-		return ;
-	}
+void Handler::handlePartCmd(std::vector<std::string> input, Client &client) {
+    if (input.size() < 2) {
+        sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + "PART " + ERR_NEEDMOREPARAMS + "\r\n", client.getSocketFd());
+        return;
+    }
 
-	// Extract the channels, separated by commas
-	std::vector<std::string> partChannels;
-	std::istringstream	stream(input[1]);
-	std::string			channelName;
-	while (std::getline(stream, channelName, ','))
-		partChannels.push_back(channelName);
+    // Extract the channels, separated by commas
+    std::vector<std::string> partChannels;
+    std::istringstream stream(input[1]);
+    std::string channelName;
+    while (std::getline(stream, channelName, ',')) {
+        partChannels.push_back(channelName);
+    }
 
-	// Extract the reason 
-	std::string	reason;
-	if (input.size() > 2 && input[2][0] == ':') {
-		std::vector<std::string>  reasonParts(input.begin() + 2, input.end());
-		reason	=	vectorToString(reasonParts, ' ');
-	}
+    // Extract the reason or default to "Leaving" if none is given
+    std::string reason = "Leaving";
+    if (input.size() > 2 && input[2][0] == ':') {
+        std::vector<std::string> reasonParts(input.begin() + 2, input.end());
+        reason = vectorToString(reasonParts, ' ');
+    }
 
-	for (size_t i = 0; i < partChannels.size(); ++i) {
-		std::string	channelName	= partChannels[i];
+    for (size_t i = 0; i < partChannels.size(); ++i) {
+        channelName = partChannels[i];
 
-		Channel	*channel = client.getChannel(channelName);
-		if (!channel) {
-			sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOSUCHCHANNEL_CODE + channelName + ERR_NOSUCHCHANNEL + "\n", client.getSocketFd());
-			continue ;
-		}
+        // Check if the channel exists
+        Channel* channel = client.getChannel(channelName);
+        if (!channel) {
+            sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOSUCHCHANNEL_CODE + channelName + ERR_NOSUCHCHANNEL + "\r\n", client.getSocketFd());
+            continue;
+        }
 
-		if (!client.isClientInChannel(channelName)) {
-			sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOTONCHANNEL_CODE + channelName + ERR_NOTONCHANNEL + "\n", client.getSocketFd());
-			continue ;
-		}
+        // Check if the client is actually in the channel
+        if (!client.isClientInChannel(channelName)) {
+            sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOTONCHANNEL_CODE + channelName + ERR_NOTONCHANNEL + "\r\n", client.getSocketFd());
+            continue;
+        }
 
-		channel->removeClient(client.getNickname());
-		client.removeChannel(channelName);
-		sendResponse(prependMyserverName(client.getSocketFd()) + "leaving channel " + channelName + "\n", client.getSocketFd());
+        // Remove the client from the channel
+        channel->removeClient(client.getNickname());
+        client.removeChannel(channelName);
+        
+        // Send response to the client about leaving the channel
+        sendResponse(getClientPrefix(client) + " PART " + channelName + " " + reason + "\r\n", client.getSocketFd());
 
-		std::vector<Client *> users = channel->getUsers();
-		for (size_t j = 0; j < users.size(); ++j)
-			sendResponse(":" + client.getNickname() + " is leaving the channel - " + channelName + reason + "\n", users[j]->getSocketFd());
-		
-		// If the channel is empty, delete it
-		if (channel->getUsers().empty()) {
-			client.removeChannel(channelName);
-			deleteChannel(channels, channelName);
-		}
-	}
-	return ;
+        // Notify other users in the channel about the client leaving
+        std::vector<Client*>::iterator end = channel->getUsers().end();
+        for (std::vector<Client*>::iterator it = channel->getUsers().begin(); it != end; ++it) {
+            sendResponse(":" + (*it)->getNickname() + " PART " + channelName + " " + reason + "\r\n", (*it)->getSocketFd());
+        }
+        // If the channel is empty, delete it
+        if (channel->getUsers().empty()) {
+            deleteChannel(channels, channelName); // Remove the empty channel
+        }
+    }
+    return;
 }
 
-void	Handler::deleteChannel(std::list<Channel> channels, std::string channelName) {
+
+void	Handler::deleteChannel(std::list<Channel> &channels, std::string channelName) {
 	if (channels.empty())
 		return ;
 	std::list<Channel>::iterator it	= channels.begin();
