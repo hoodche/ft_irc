@@ -56,9 +56,8 @@ void Handler::parseCommand(std::vector<std::string> input, Client &client) {
 		command = input[0];
 	if (cmdMap.find(command) != cmdMap.end()) {
 		cmdMap[command](input, client);
-	} else {
-		std::cout << "could not find " << command << " in our internal server commands map" << std::endl;
-	}
+	} else
+		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_UNKNOWNCOMMAND_CODE + command + " " + ERR_UNKNOWNCOMMAND "\r\n", client.getSocketFd());
 }
 
 /**

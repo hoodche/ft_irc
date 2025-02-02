@@ -6,7 +6,7 @@
 /*   By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/24 18:35:03 by igcastil          #+#    #+#             */
-/*   Updated: 2025/01/21 15:38:54 by igcastil         ###   ########.fr       */
+/*   Updated: 2025/02/02 11:29:52 by igcastil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,8 @@
 #include <poll.h> // for struct pollfd
 #include <map>
 #include <sstream>
+
+# define SOCKET_SIZE	131072	// 131072 Bytes = 128KB is the size of sockets, found out by calling getsockopt() in a test
 
 class Server
 {

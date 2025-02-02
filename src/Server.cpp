@@ -6,7 +6,7 @@
 /*   By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/24 18:26:33 by igcastil          #+#    #+#             */
-/*   Updated: 2025/01/31 09:58:47 by igcastil         ###   ########.fr       */
+/*   Updated: 2025/02/02 11:42:57 by igcastil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -182,8 +182,7 @@ void Server::acceptClient()
  */
 void Server::readFromFd(int clientConnectedfd)
 {
-	char	buffer[131072];//131072 Bytes = 128KB is the size of sockets, found out by calling getsockopt() in a test
-	std::cout << "sizeof(buffer): " << sizeof(buffer) << std::endl;
+	char	buffer[SOCKET_SIZE];
 	ssize_t	bytesRead =recv(clientConnectedfd, buffer, sizeof(buffer) - 1, 0);
 	if (bytesRead < 0) // Error handling
 		throw std::runtime_error("Server could not read incoming mesage ");
@@ -211,7 +210,11 @@ void Server::readFromFd(int clientConnectedfd)
 		return;
 	} */
 	while (Client::findClientByFd(clientConnectedfd, clients) && (pos = clientBuffers[clientConnectedfd].find("\r\n")) != std::string::npos) {
-		std::string message = clientBuffers[clientConnectedfd].substr(0, pos);
+		std::string message;
+		if(pos >= 510)
+			message = clientBuffers[clientConnectedfd].substr(0, 510);//server caps max message length to 510 characters according to rfc
+		else
+			message = clientBuffers[clientConnectedfd].substr(0, pos);
 		clientBuffers[clientConnectedfd].erase(0, pos + 2);  // Remove the processed part from the buffer
 		processMessage(clientConnectedfd, message);
 	}
