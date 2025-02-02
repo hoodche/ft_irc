@@ -237,7 +237,7 @@ void Handler::handleQuitCmd(std::vector<std::string> input , Client &client) {
 	std::vector<Channel *> clientChannels = client.getClientChannels();
 	std::vector<Channel *>::iterator itChannels = clientChannels.begin();
 	//debug print
-	std::cout << "comienza la iteracion por todos los canal del usuario saliente" << std::endl;
+	//std::cout << "comienza la iteracion por todos los canal del usuario saliente" << std::endl;
 	while (itChannels != clientChannels.end())
 	{
 		std::cout << "canal: " << (*itChannels)->getName() << std::endl;
