@@ -240,9 +240,9 @@ void Handler::handleQuitCmd(std::vector<std::string> input , Client &client) {
 	//std::cout << "comienza la iteracion por todos los canal del usuario saliente" << std::endl;
 	while (itChannels != clientChannels.end())
 	{
-		std::cout << "canal: " << (*itChannels)->getName() << std::endl;
+		//std::cout << "canal: " << (*itChannels)->getName() << std::endl;
 		(*itChannels)->removeClient(client.getNickname());
-		std::cout << "eliminado usuario saliente" << std::endl;
+		//std::cout << "eliminado usuario saliente" << std::endl;
 		std::vector<Client *> operators = (*itChannels)->getOperators() ;
 		std::vector<Client *> users = (*itChannels)->getUsers() ;
 		std::vector<Client *>::iterator itClients = operators.begin();
