@@ -20,6 +20,8 @@
 # define USERLEN	12
 # define RPL_WELCOME_CODE			"001 "
 
+
+# define RPL_CHANNELMODEIS_CODE		"324 "
 # define RPL_NOTOPIC_CODE			"331 "
 # define RPL_NOTOPIC				":No topic is set"
 # define RPL_TOPIC_CODE				"332 "
@@ -41,6 +43,8 @@
 # define ERR_ERRONEUSNICKNAME		":Erroneous nickname"
 # define ERR_NICKNAMEINUSE_CODE		"433 "
 # define ERR_NICKNAMEINUSE			":Nickname is already in use"
+# define ERR_USERNOTINCHANNEL_CODE	"441 "
+# define ERR_USERNOTINCHANNEL		":They aren't on that channel" //Is really used in hexchat
 # define ERR_NOTONCHANNEL_CODE		"442 "
 # define ERR_NOTONCHANNEL			":You're not on that channel"
 # define ERR_USERONCHANNEL_CODE		"443 "
@@ -51,8 +55,12 @@
 # define ERR_ALREADYREGISTERED		":You may not reregister"
 # define ERR_PASSWDMISMATCH_CODE	"464 "
 # define ERR_PASSWDMISMATCH			":Password incorrect"
+# define ERR_KEYSET_CODE			"467 "
+# define ERR_KEYSET					":Channel key already set"
 # define ERR_CHANNELISFULL_CODE		"471 "
 # define ERR_CHANNELISFULL			":Cannot join channel (+l)"
+# define ERR_UNKNOWNMODE_CODE		":472 "
+# define ERR_UNKNOWNMODE			":is unknown mode char to me"
 # define ERR_INVITEONLYCHAN_CODE	"473 "
 # define ERR_INVITEONLYCHAN			":Cannot join channel (+i)"
 # define ERR_BADCHANNELKEY_CODE		"475 "
@@ -65,8 +73,8 @@
 # define ARGV_STATUS					3
 
 typedef void (*cmdHandler)(std::vector<std::string>, Client &);
-typedef void (*modeHandler)(Channel &, std::string);
-typedef void (*modeHandlerNoArgv)(Channel &);
+typedef bool (*modeHandler)(Channel &, std::string);
+typedef bool (*modeHandlerNoArgv)(Channel &);
 
 class Handler {
 	private:
@@ -87,26 +95,31 @@ class Handler {
 		static std::list<Channel>::iterator			findChannel(const std::string &channelName);
 		static std::string							vectorToString(std::vector<std::string> vectorTopic, char delim);
 		static std::string							createKickMessage(std::vector<std::string> &input);
-		static void									getStatus(const char &symbol, int &status);
-		static void									parseModeString(std::vector<std::string> &flagVector, std::vector<std::string> &argvVector, int &status, std::string const &modeStr);
 		static bool									isCharInStr(std::string const &ref, const char &c);
-		static void									addModeFlag(std::vector<std::string> &flagVector, int &status, char c);
 		static void									authClientToChannel(Channel &channel, std::string &password, Client &client);
-		static void									deleteChannel(std::list<Channel> channels, std::string channelName);
+		static void									sendChannelModeIs(Client &client, Channel &channel);
+		static std::string							getClientPrefix(Client const &client);
+		static void									sendMsgClientsInChannel(Channel &channel, Client &client, std::string cmd, std::string argv);
+		static void									sendMsgClientsInChannelKick(Channel &channel, Client &client, std::string cmd, std::string kickedClient, std::string argv);
+		static void									sendMsgClientsInChannelNoPrintCh(Channel &channel, Client &client, std::string cmd, std::string argv);
+		static int									getStatusSymbol(std::string str);
+		static bool									parseFlagString(std::vector<std::string> &flagVector, std::string flags, Client &client);
+		static void									appendToFlagStr(int &status, int &newStatus, std::string &flag, std::string &flagSendStr);
+		static void									deleteChannel(std::list<Channel> &channels, std::string channelName);
 	//it is common to all the instances
 
 	//Mode Function Pointers
-		static void									activateInviteMode(Channel &channel);
-		static void									deactivateInviteMode(Channel &channel);
-		static void									activateTopicPrivMode(Channel &channel);
-		static void									deactivateTopicPrivMode(Channel &channel);
-		static void									deactivateUserLimitMode(Channel &channel);
+		static bool									activateInviteMode(Channel &channel);
+		static bool									deactivateInviteMode(Channel &channel);
+		static bool									activateTopicPrivMode(Channel &channel);
+		static bool									deactivateTopicPrivMode(Channel &channel);
+		static bool									deactivateUserLimitMode(Channel &channel);
 
-		static void									activateUserLimitMode(Channel &channel, std::string newLimit);
-		static void									activatePasswordMode(Channel &channel, std::string newPassword);
-		static void									deactivatePasswordMode(Channel &channel, std::string newPassword);
-		static void									activateOperatorMode(Channel &channel, std::string targetClient);
-		static void									deactivateOperatorMode(Channel &channel, std::string targetClient);
+		static bool									activateUserLimitMode(Channel &channel, std::string newLimit);
+		static bool									activatePasswordMode(Channel &channel, std::string newPassword);
+		static bool									deactivatePasswordMode(Channel &channel, std::string newPassword);
+		static bool									activateOperatorMode(Channel &channel, std::string targetClient);
+		static bool									deactivateOperatorMode(Channel &channel, std::string targetClient);
 
 	public:
 		Handler(void);

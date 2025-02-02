@@ -8,10 +8,10 @@ Client::Client(void):
 	 nick(""), username("") {}
 */
 
-Client::Client(int receivedFd, const Server &newServer):
+Client::Client(int receivedFd, const Server &newServer, std::string ip):
 	fd(receivedFd), verified(false) ,registered(false),
 	//oper(false),
-	 nick(""), username(""), connectedToServer(&newServer) {}
+	 nick(""), username(""), ipAddr(ip), connectedToServer(&newServer) {}
 
 Client::~Client(void) {}
 
@@ -190,4 +190,8 @@ void	Client::removeChannel(std::string &channelStr)
 		}
 		itChannels++;
 	}
+}
+
+std::string	Client::getIpAddr(void) const{
+	return ipAddr;
 }
