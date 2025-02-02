@@ -1144,3 +1144,7 @@ void	Handler::deleteChannel(std::list<Channel> &channels, std::string channelNam
 			++it;
 	}
 }
+
+std::list<Channel>& Handler::getChannels() {
+	return channels;
+}
