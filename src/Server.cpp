@@ -6,7 +6,7 @@
 /*   By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/24 18:26:33 by igcastil          #+#    #+#             */
-/*   Updated: 2025/02/02 11:42:57 by igcastil         ###   ########.fr       */
+/*   Updated: 2025/02/02 11:55:24 by igcastil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -90,13 +90,13 @@ void Server::initSocket()
 		throw(std::runtime_error("server can not listen on socket "));
 	std::cout << "Server listening on port " << this->port << std::endl;
 		//TESTING BLOCK
-	int rcvbuf_size;
+/* 	int rcvbuf_size;
 	socklen_t optlen = sizeof(rcvbuf_size);
 	if (getsockopt(listenSocketFd, SOL_SOCKET, SO_RCVBUF, &rcvbuf_size, &optlen) < 0) {
 		std::cout << "getsockopt error " << std::endl;
 		return ;
 	}
-	std::cout << "listenSocketFd buffer size: " << rcvbuf_size << std::endl;
+	std::cout << "listenSocketFd buffer size: " << rcvbuf_size << std::endl; */
 	//END OF TESTING BLOCK
 	this->connectedSocket.fd = listenSocketFd; // listenSocketFd is the first fd in the vector, since it must be polled for incoming connections which will be accepted and added to the vector as a new connected socket
 	this->connectedSocket.events = POLLIN;
@@ -164,13 +164,13 @@ void Server::acceptClient()
 	clients.push_back(Client(connectedSocketFd, *this, std::string(inet_ntoa(clientAddress.sin_addr)))); // Adds new accepted client to the end of the vector
 	std::cout << "a new client from IP "<< inet_ntoa(clientAddress.sin_addr) << " and port " << ntohs(clientAddress.sin_port) << " has been connected with socket fd " << connectedSocketFd << std::endl;
 	//TESTING BLOCK
-	int rcvbuf_size;
+/* 	int rcvbuf_size;
 	socklen_t optlen = sizeof(rcvbuf_size);
 	if (getsockopt(connectedSocketFd, SOL_SOCKET, SO_RCVBUF, &rcvbuf_size, &optlen) < 0) {
 		std::cout << "getsockopt error " << std::endl;
 		return;
 	}
-	std::cout << "Receive buffer size: " << rcvbuf_size << std::endl;
+	std::cout << "Receive buffer size: " << rcvbuf_size << std::endl; */
 	//END OF TESTING BLOCK
 }
 
@@ -191,9 +191,9 @@ void Server::readFromFd(int clientConnectedfd)
 		disconnectClient(clientConnectedfd);
 		return ;
 	}
-	std::cout << "bytes read by recv: " << bytesRead << std::endl;
+	//std::cout << "bytes read by recv: " << bytesRead << std::endl;
 	buffer[bytesRead] = '\0'; // Null-terminate the buffer
-	std::cout << "1st buffer: " << buffer << std::endl;
+	//std::cout << "1st buffer: " << buffer << std::endl;
 
 	// Check if we have an active buffer for the client; create one if not
 	if (clientBuffers.find(clientConnectedfd) == clientBuffers.end())
