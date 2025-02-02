@@ -321,7 +321,10 @@ void Handler::handleJoinCmd(std::vector<std::string> input, Client &client) {
 
 	channelVector = getChannelVector(*argvIt, client);//more than one channel can be joined at once (they are separated by commas)
 	if (channelVector.empty())
+	{
+		std::cout << "sale" << std::endl;
 		return;
+	}
 	argvIt++;
 	if (argvIt != input.end())
 		passVector = getPassVector(*argvIt);//last parameter is the password (or passwords) for the channel(s)
@@ -337,12 +340,10 @@ std::vector<std::string> Handler::getChannelVector(std::string channelString, Cl
 
 	while(std::getline(ss, tempChannel, ','))
 	{
-		if (*tempChannel.begin() != '#'){
-				sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOSUCHCHANNEL_CODE + tempChannel + " " + ERR_NOSUCHCHANNEL + "\r\n", client.getSocketFd());
-				channels.clear();
-				return (channels);
-		}
-		channels.push_back(tempChannel);
+		if (*tempChannel.begin() != '#')
+			sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOSUCHCHANNEL_CODE + tempChannel + " " + ERR_NOSUCHCHANNEL + "\r\n", client.getSocketFd());
+		else
+			channels.push_back(tempChannel);
 	}
 	return (channels);
 }
