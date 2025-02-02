@@ -6,7 +6,7 @@
 /*   By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/24 18:26:33 by igcastil          #+#    #+#             */
-/*   Updated: 2025/01/22 18:18:26 by igcastil         ###   ########.fr       */
+/*   Updated: 2025/02/02 11:55:24 by igcastil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -89,6 +89,15 @@ void Server::initSocket()
 	if (listen(listenSocketFd, SOMAXCONN) == -1)//The listen function marks a socket as passive, meaning it will be used to accept incoming connection requests. 2nd arg is an int that defines the maximum length of the queue for pending connections (specifies how many connection requests can be queued up while the server is busy handling other connections)
 		throw(std::runtime_error("server can not listen on socket "));
 	std::cout << "Server listening on port " << this->port << std::endl;
+		//TESTING BLOCK
+/* 	int rcvbuf_size;
+	socklen_t optlen = sizeof(rcvbuf_size);
+	if (getsockopt(listenSocketFd, SOL_SOCKET, SO_RCVBUF, &rcvbuf_size, &optlen) < 0) {
+		std::cout << "getsockopt error " << std::endl;
+		return ;
+	}
+	std::cout << "listenSocketFd buffer size: " << rcvbuf_size << std::endl; */
+	//END OF TESTING BLOCK
 	this->connectedSocket.fd = listenSocketFd; // listenSocketFd is the first fd in the vector, since it must be polled for incoming connections which will be accepted and added to the vector as a new connected socket
 	this->connectedSocket.events = POLLIN;
 	this->connectedSocket.revents = 0;
@@ -154,6 +163,15 @@ void Server::acceptClient()
 	this->fds.push_back(this->connectedSocket);
 	clients.push_back(Client(connectedSocketFd, *this, std::string(inet_ntoa(clientAddress.sin_addr)))); // Adds new accepted client to the end of the vector
 	std::cout << "a new client from IP "<< inet_ntoa(clientAddress.sin_addr) << " and port " << ntohs(clientAddress.sin_port) << " has been connected with socket fd " << connectedSocketFd << std::endl;
+	//TESTING BLOCK
+/* 	int rcvbuf_size;
+	socklen_t optlen = sizeof(rcvbuf_size);
+	if (getsockopt(connectedSocketFd, SOL_SOCKET, SO_RCVBUF, &rcvbuf_size, &optlen) < 0) {
+		std::cout << "getsockopt error " << std::endl;
+		return;
+	}
+	std::cout << "Receive buffer size: " << rcvbuf_size << std::endl; */
+	//END OF TESTING BLOCK
 }
 
 /**
@@ -164,7 +182,7 @@ void Server::acceptClient()
  */
 void Server::readFromFd(int clientConnectedfd)
 {
-	char	buffer[1024];
+	char	buffer[SOCKET_SIZE];
 	ssize_t	bytesRead =recv(clientConnectedfd, buffer, sizeof(buffer) - 1, 0);
 	if (bytesRead < 0) // Error handling
 		throw std::runtime_error("Server could not read incoming mesage ");
@@ -173,7 +191,9 @@ void Server::readFromFd(int clientConnectedfd)
 		disconnectClient(clientConnectedfd);
 		return ;
 	}
+	//std::cout << "bytes read by recv: " << bytesRead << std::endl;
 	buffer[bytesRead] = '\0'; // Null-terminate the buffer
+	//std::cout << "1st buffer: " << buffer << std::endl;
 
 	// Check if we have an active buffer for the client; create one if not
 	if (clientBuffers.find(clientConnectedfd) == clientBuffers.end())
@@ -190,7 +210,11 @@ void Server::readFromFd(int clientConnectedfd)
 		return;
 	} */
 	while (Client::findClientByFd(clientConnectedfd, clients) && (pos = clientBuffers[clientConnectedfd].find("\r\n")) != std::string::npos) {
-		std::string message = clientBuffers[clientConnectedfd].substr(0, pos);
+		std::string message;
+		if(pos >= 510)
+			message = clientBuffers[clientConnectedfd].substr(0, 510);//server caps max message length to 510 characters according to rfc
+		else
+			message = clientBuffers[clientConnectedfd].substr(0, pos);
 		clientBuffers[clientConnectedfd].erase(0, pos + 2);  // Remove the processed part from the buffer
 		processMessage(clientConnectedfd, message);
 	}
@@ -235,14 +259,14 @@ void	Server::processMessage(int fd, std::string message) {
 		}
 		if (divMsg[0] == "pass") {
 			if (divMsg.size() != 2) {// there was not a single password supplied (irc protocol does not allow whitespaces in a password)
-				Handler::sendResponse(Handler::prependMyserverName(client->getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + " PASS " + ERR_NEEDMOREPARAMS + "\n", fd);
+				Handler::sendResponse(Handler::prependMyserverName(client->getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + "PASS " + ERR_NEEDMOREPARAMS + "\r\n", fd);
 				return ;
 			}
 			if (divMsg[1] == this->password) {
 				client->setVerified(true);
 				std::cout << "Client with fd " << fd << " password correct!" << std::endl;
 			} else {
-				Handler::sendResponse(Handler::prependMyserverName(client->getSocketFd()) + ERR_PASSWDMISMATCH_CODE + ERR_PASSWDMISMATCH + "\n", fd);
+				Handler::sendResponse(Handler::prependMyserverName(client->getSocketFd()) + ERR_PASSWDMISMATCH_CODE + ERR_PASSWDMISMATCH + "\r\n", fd);
 				return ;
 			}
 		}
@@ -253,11 +277,11 @@ void	Server::processMessage(int fd, std::string message) {
 		if (divMsg[0] == "user")
 			Handler::handleUserCmd(divMsg, *client);
 		if (!client->getUsername().empty() && !client->getNickname().empty())
-			Handler::sendResponse(Handler::prependMyserverName(fd) + RPL_WELCOME_CODE + client->getNickname() + " " + ":Welcome to our IRC network, " + client->getNickname() + "\n", fd);
+			Handler::sendResponse(Handler::prependMyserverName(fd) + RPL_WELCOME_CODE + client->getNickname() + " " + ":Welcome to our IRC network, " + client->getNickname() + "\r\n", fd);
 			//Handler::sendResponse("PING " + Handler::prependMyserverName(fd) + "\n", fd);server MAY send this ping or may not
 	} else if (client->isRegistered() && client->isVerified()) {
 		if ((divMsg[0] == "user" || divMsg[0] == "pass") && client->isRegistered()) {
-			Handler::sendResponse(Handler::prependMyserverName(fd) + ERR_ALREADYREGISTERED_CODE + ERR_ALREADYREGISTERED + "\n", fd);
+			Handler::sendResponse(Handler::prependMyserverName(fd) + ERR_ALREADYREGISTERED_CODE + ERR_ALREADYREGISTERED + "\r\n", fd);
 			return ;
 		}
 		// Forward command to handler

@@ -37,6 +37,8 @@
 # define ERR_NORECIPIENT			":No recipient given"
 # define ERR_NOTEXTTOSEND_CODE		"412 "
 # define ERR_NOTEXTTOSEND			":No text to send"
+# define ERR_UNKNOWNCOMMAND_CODE	"421 "
+# define ERR_UNKNOWNCOMMAND 		":Unknown command"
 # define ERR_NONICKNAMEGIVEN_CODE	"431 "
 # define ERR_NONICKNAMEGIVEN		":No nickname given"
 # define ERR_ERRONEUSNICKNAME_CODE	"432 "
