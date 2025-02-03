@@ -257,8 +257,8 @@ void Handler::handleQuitCmd(std::vector<std::string> input , Client &client) {
 			sendResponse(":" + client.getNickname() + " QUIT :Client has left the server\r\n", (*itClients)->getSocketFd());
 			itClients++;
 		}
-		if ((*itChannels)->getUsers().empty() && (*itChannels)->getOperators().empty())
-			deleteChannel(channels, (*itChannels)->getName()); //Test
+		// if ((*itChannels)->getUsers().empty())
+		// 	deleteChannel(channels, (*itChannels)->getName()); //Test
 		itChannels++;
 	}
 	//disconnect client
@@ -1141,8 +1141,20 @@ void	Handler::handlePartCmd(std::vector<std::string> input, Client &client) {
 			j++;
 		}
         // If the channel is empty, delete it
+		std::vector<Client*> usersVect = channel->getUsers();
+		size_t	j = 0;
+		while (j < usersVect.size()) {
+			std::cout << "Users: " << usersVect[j]->getNickname() << std::endl;
+			j++;
+		}
+		std::vector<Client*> opVect = channel->getOperators();
+		j = 0;
+		while (j < opVect.size()) {
+			std::cout << "Operators: " << opVect[j]->getNickname() << std::endl;
+			j++;
+		}
         if (channel->getUsers().empty() && channel->getOperators().empty()) {
-			std::cout << "Libero en part!!!!" << std::endl;
+			std::cout << "Borrando en part!!!" << std::endl;
             deleteChannel(channels, channelName); // Remove the empty channel
         }
     }

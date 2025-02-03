@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+        */
+/*   By: nvillalt <nvillalt@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/24 18:26:33 by igcastil          #+#    #+#             */
-/*   Updated: 2025/02/03 18:26:20 by igcastil         ###   ########.fr       */
+/*   Updated: 2025/02/03 19:30:13 by nvillalt         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -342,15 +342,15 @@ void Server::disconnectClient(int clientConnectedfd)
 			break;
 		}
 		std::vector<Channel *> clientChannels = it->getClientChannels();
-		std::vector<Channel *>::iterator itChannels = clientChannels.begin();
-		while (itChannels != clientChannels.end())
+		size_t	i = 0;
+		while (i < clientChannels.size())
 		{
-			(*itChannels)->removeClient(it->getNickname());
-			if ((*itChannels)->getUsers().empty() && (*itChannels)->getOperators().empty()) {
-				std::cout << "Hola libero en disconnect!!!!!!" << std::endl;
-				Handler::deleteChannel(Handler::getChannels(), (*itChannels)->getName());
+			clientChannels[i]->removeClient(it->getNickname());
+			if (clientChannels[i]->getUsers().empty() && clientChannels[i]->getOperators().empty()) {
+				std::cout << "Libero en disconnectClient" << std::endl;
+				Handler::deleteChannel(Handler::getChannels(), clientChannels[i]->getName());
 			}
-			itChannels++;
+			i++;
 		}
 		it++;
 	}
