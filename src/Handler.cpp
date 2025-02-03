@@ -462,6 +462,8 @@ void Handler::addClientToChannel(Channel &channel, Client &client)
 	std::string clientsInChannel = getAllClientsInChannel(channel);
 	sendResponse(prependMyserverName(client.getSocketFd()) + RPL_NAMREPLY_CODE + client.getNickname() + " = " + channel.getName() + " :" + clientsInChannel + "\r\n", client.getSocketFd());
 	sendResponse(prependMyserverName(client.getSocketFd()) + RPL_ENDOFNAMES + client.getNickname() + " " + channel.getName() + " :End of /NAMES list" + "\r\n", client.getSocketFd());
+	if (channel.getTopic() != "")
+		sendResponse(prependMyserverName(client.getSocketFd()) + RPL_TOPIC_CODE + channel.getName() + " :" + channel.getTopic() + "\r\n", client.getSocketFd());
 	return;
 }
 
@@ -528,6 +530,8 @@ void Handler::handleTopicCmd(std::vector<std::string> input, Client &client)
 	{
 		std::vector<std::string> vectorTopic(input.begin() + 2, input.end());
 		std::string topic = vectorToString(vectorTopic, ' ');
+		if (topic.at(0) == ':')
+			topic.erase(topic.begin());
 		if (targetChannel->getTopicMode() == true)
 		{
 			std::string userNick = client.getNickname();
@@ -537,6 +541,7 @@ void Handler::handleTopicCmd(std::vector<std::string> input, Client &client)
 			}
 		}
 		targetChannel->setTopic(topic, client);
+		std::cout << "topic: " << topic << std::endl;
 		sendMsgClientsInChannel(*targetChannel, client, "TOPIC", topic);
 		return;
 	}
