@@ -26,6 +26,8 @@
 # define RPL_NOTOPIC				":No topic is set"
 # define RPL_TOPIC_CODE				"332 "
 # define RPL_INVITING_CODE			"341 "
+# define RPL_NAMREPLY_CODE			"353 "
+# define RPL_ENDOFNAMES				"366 "
 
 # define ERR_NOSUCHNICK_CODE		"401 "
 # define ERR_NOSUCHNICK				"No such nick/channel"
@@ -107,6 +109,7 @@ class Handler {
 		static int									getStatusSymbol(std::string str);
 		static bool									parseFlagString(std::vector<std::string> &flagVector, std::string flags, Client &client);
 		static void									appendToFlagStr(int &status, int &newStatus, std::string &flag, std::string &flagSendStr);
+		static std::string							getAllClientsInChannel(Channel &channel);
 		
 	//it is common to all the instances
 
