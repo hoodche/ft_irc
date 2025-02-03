@@ -1141,13 +1141,13 @@ void	Handler::handlePartCmd(std::vector<std::string> input, Client &client) {
 			j++;
 		}
         // If the channel is empty, delete it
-		std::vector<Client*> usersVect = channel->getUsers();
-		size_t	j = 0;
+		usersVect = channel->getUsers();
+		j = 0;
 		while (j < usersVect.size()) {
 			std::cout << "Users: " << usersVect[j]->getNickname() << std::endl;
 			j++;
 		}
-		std::vector<Client*> opVect = channel->getOperators();
+		opVect = channel->getOperators();
 		j = 0;
 		while (j < opVect.size()) {
 			std::cout << "Operators: " << opVect[j]->getNickname() << std::endl;
