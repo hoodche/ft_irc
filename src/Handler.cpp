@@ -136,7 +136,7 @@ void Handler::handleNickCmd(std::vector<std::string> input , Client &client) {
 	}
 	if (isNicknameInUse(input[1], &client))
 	{
-		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NICKNAMEINUSE_CODE + ERR_NICKNAMEINUSE + "\r\n", client.getSocketFd());
+		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NICKNAMEINUSE_CODE + " * " + input[1] + " " + ERR_NICKNAMEINUSE + "\r\n", client.getSocketFd());
 		return ;
 	}
 	sendResponse(":" + client.getNickname() + " NICK " + input[1] + "\r\n", client.getSocketFd());
@@ -1121,10 +1121,13 @@ void	Handler::handlePartCmd(std::vector<std::string> input, Client &client) {
         sendResponse(getClientPrefix(client) + " PART " + channelName + " " + reason + "\r\n", client.getSocketFd());
 
         // Notify other users in the channel about the client leaving
-        std::vector<Client*>::iterator end = channel->getUsers().end();
-        for (std::vector<Client*>::iterator it = channel->getUsers().begin(); it != end; ++it) {
-            sendResponse(":" + (*it)->getNickname() + " PART " + channelName + " " + reason + "\r\n", (*it)->getSocketFd());
-        }
+		std::vector<Client*> users = channel->getUsers();
+        for (std::vector<Client*>::iterator it = users.begin(); it != users.end(); ++it)
+            sendResponse(getClientPrefix(client) + " PART " + channelName + " " + reason + "\r\n", (*it)->getSocketFd());
+		std::vector<Client*> operators = channel->getOperators();
+		for (std::vector<Client*>::iterator it = operators.begin(); it != operators.end(); ++it)
+            sendResponse(getClientPrefix(client) + " PART " + channelName + " " + reason + "\r\n", (*it)->getSocketFd());
+
         // If the channel is empty, delete it
         if (channel->getUsers().empty()) {
             deleteChannel(channels, channelName); // Remove the empty channel

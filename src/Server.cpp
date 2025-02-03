@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+        */
+/*   By: nvillalt <nvillalt@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/24 18:26:33 by igcastil          #+#    #+#             */
-/*   Updated: 2025/02/02 18:47:31 by igcastil         ###   ########.fr       */
+/*   Updated: 2025/02/03 14:04:45 by nvillalt         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -274,11 +274,10 @@ void	Server::processMessage(int fd, std::string message) {
  	if (client->isRegistered() == false && client->isVerified()) {
 		if (divMsg[0] == "nick")
 			Handler::handleNickCmd(divMsg, *client);
-		if (divMsg[0] == "user")
+		if (divMsg[0] == "user" && !client->getNickname().empty())
 			Handler::handleUserCmd(divMsg, *client);
 		if (!client->getUsername().empty() && !client->getNickname().empty())
 			Handler::sendResponse(Handler::prependMyserverName(fd) + RPL_WELCOME_CODE + client->getNickname() + " " + ":Welcome to our IRC network, " + client->getNickname() + "\r\n", fd);
-			//Handler::sendResponse("PING " + Handler::prependMyserverName(fd) + "\n", fd);server MAY send this ping or may not
 	} else if (client->isRegistered() && client->isVerified()) {
 		if ((divMsg[0] == "user" || divMsg[0] == "pass") && client->isRegistered()) {
 			Handler::sendResponse(Handler::prependMyserverName(fd) + ERR_ALREADYREGISTERED_CODE + ERR_ALREADYREGISTERED + "\r\n", fd);
