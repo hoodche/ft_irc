@@ -241,8 +241,6 @@ void Handler::handleQuitCmd(std::vector<std::string> input , Client &client) {
 	while (itChannels != clientChannels.end())
 	{
 		//std::cout << "canal: " << (*itChannels)->getName() << std::endl;
-		if ((*itChannels)->getOperators().empty() && (*itChannels)->getUsers().empty())
-			continue ;
 		(*itChannels)->removeClient(client.getNickname());
 		//std::cout << "eliminado usuario saliente" << std::endl;
 		std::vector<Client *> operators = (*itChannels)->getOperators() ;
@@ -1123,7 +1121,6 @@ void	Handler::handlePartCmd(std::vector<std::string> input, Client &client) {
         sendResponse(getClientPrefix(client) + " PART " + channelName + " " + reason + "\r\n", client.getSocketFd());
 
         // Notify other users in the channel about the client leaving
-        //std::vector<Client*>::iterator end = channel->getUsers().end();
 		std::vector<Client*> users = channel->getUsers();
         for (std::vector<Client*>::iterator it = users.begin(); it != users.end(); ++it)
             sendResponse(getClientPrefix(client) + " PART " + channelName + " " + reason + "\r\n", (*it)->getSocketFd());
