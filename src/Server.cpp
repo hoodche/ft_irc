@@ -6,7 +6,7 @@
 /*   By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/24 18:26:33 by igcastil          #+#    #+#             */
-/*   Updated: 2025/02/02 11:55:24 by igcastil         ###   ########.fr       */
+/*   Updated: 2025/02/02 18:47:31 by igcastil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -335,14 +335,25 @@ void Server::disconnectClient(int clientConnectedfd)
 {
 	close(clientConnectedfd);
 	std::list<Client>::iterator it = clients.begin();
+	//remove client from the clients list in Server and from the channels it is in (deleting channel if client was the last client in it)
 	while(it != clients.end())
 	{
 		if (it->getSocketFd() == clientConnectedfd) {
 			clients.erase(it);
 			break;
 		}
+		std::vector<Channel *> clientChannels = it->getClientChannels();
+		std::vector<Channel *>::iterator itChannels = clientChannels.begin();
+		while (itChannels != clientChannels.end())
+		{
+			(*itChannels)->removeClient(it->getNickname());
+			if ((*itChannels)->getUsers().empty())
+				Handler::deleteChannel(Handler::getChannels(), (*itChannels)->getName());
+			itChannels++;
+		}
 		it++;
 	}
+	// Remove client from the fds vector
 	for (size_t i = 0; i < this->fds.size(); i++)
 	{
 		if (this->fds[i].fd == clientConnectedfd)
@@ -351,6 +362,7 @@ void Server::disconnectClient(int clientConnectedfd)
 			break;
 		}
 	}
+
 	// Remove client buffer from the buffers map
 	clientBuffers.erase(clientConnectedfd);
 	std::cout << "Client FD: " << clientConnectedfd << " has been disconnected" << std::endl;

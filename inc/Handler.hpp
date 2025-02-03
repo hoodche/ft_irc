@@ -107,25 +107,28 @@ class Handler {
 		static int									getStatusSymbol(std::string str);
 		static bool									parseFlagString(std::vector<std::string> &flagVector, std::string flags, Client &client);
 		static void									appendToFlagStr(int &status, int &newStatus, std::string &flag, std::string &flagSendStr);
-		static void									deleteChannel(std::list<Channel> &channels, std::string channelName);
+		
 	//it is common to all the instances
 
 	//Mode Function Pointers
-		static bool									activateInviteMode(Channel &channel);
-		static bool									deactivateInviteMode(Channel &channel);
-		static bool									activateTopicPrivMode(Channel &channel);
-		static bool									deactivateTopicPrivMode(Channel &channel);
-		static bool									deactivateUserLimitMode(Channel &channel);
+		static bool	activateInviteMode(Channel &channel);
+		static bool	deactivateInviteMode(Channel &channel);
+		static bool	activateTopicPrivMode(Channel &channel);
+		static bool	deactivateTopicPrivMode(Channel &channel);
+		static bool	deactivateUserLimitMode(Channel &channel);
 
-		static bool									activateUserLimitMode(Channel &channel, std::string newLimit);
-		static bool									activatePasswordMode(Channel &channel, std::string newPassword);
-		static bool									deactivatePasswordMode(Channel &channel, std::string newPassword);
-		static bool									activateOperatorMode(Channel &channel, std::string targetClient);
-		static bool									deactivateOperatorMode(Channel &channel, std::string targetClient);
+		static bool	activateUserLimitMode(Channel &channel, std::string newLimit);
+		static bool	activatePasswordMode(Channel &channel, std::string newPassword);
+		static bool	deactivatePasswordMode(Channel &channel, std::string newPassword);
+		static bool	activateOperatorMode(Channel &channel, std::string targetClient);
+		static bool	deactivateOperatorMode(Channel &channel, std::string targetClient);
 
 	public:
 		Handler(void);
 		void parseCommand(std::vector<std::string> divMsg, Client &client);
+
+		static void	deleteChannel(std::list<Channel> &channels, std::string channelName);
+		static std::list<Channel>& getChannels();
 
 		// Utils
 		static std::string prependMyserverName(int clientFd);

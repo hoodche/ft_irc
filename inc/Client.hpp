@@ -55,8 +55,8 @@ class Client {
 		static Client				*findClientByName(std::string name, std::list<Client> &clients);
 		bool						isClientInChannel(std::string &channelName);
 		
-		void			removeChannel(std::string &channelStr);
-		void				removeInvitedChannels(std::string &channelName);
+		void						removeChannel(std::string &channelStr);
+		void						removeInvitedChannels(std::string &channelName);
 };
 
 #endif
