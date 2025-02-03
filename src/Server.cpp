@@ -6,7 +6,7 @@
 /*   By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/24 18:26:33 by igcastil          #+#    #+#             */
-/*   Updated: 2025/02/03 17:47:29 by igcastil         ###   ########.fr       */
+/*   Updated: 2025/02/03 18:26:20 by igcastil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -187,7 +187,7 @@ void Server::readFromFd(int clientConnectedfd)
 	if (bytesRead < 0) // Error handling
 		throw std::runtime_error("Server could not read incoming mesage ");
 	else if (bytesRead == 0) { // Client has closed the connection
-		std::cout << "Client has closed the connection" << std::endl;
+		std::cout << "Client " << clientConnectedfd << " has closed the connection. calling disconnectClient()" << std::endl;
 		disconnectClient(clientConnectedfd);
 		return ;
 	}
