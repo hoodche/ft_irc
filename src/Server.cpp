@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: nvillalt <nvillalt@student.42.fr>          +#+  +:+       +#+        */
+/*   By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/24 18:26:33 by igcastil          #+#    #+#             */
-/*   Updated: 2025/02/03 14:04:45 by nvillalt         ###   ########.fr       */
+/*   Updated: 2025/02/03 17:47:29 by igcastil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -346,8 +346,10 @@ void Server::disconnectClient(int clientConnectedfd)
 		while (itChannels != clientChannels.end())
 		{
 			(*itChannels)->removeClient(it->getNickname());
-			if ((*itChannels)->getUsers().empty())
+			if ((*itChannels)->getUsers().empty() && (*itChannels)->getOperators().empty()) {
+				std::cout << "Hola libero en disconnect!!!!!!" << std::endl;
 				Handler::deleteChannel(Handler::getChannels(), (*itChannels)->getName());
+			}
 			itChannels++;
 		}
 		it++;
