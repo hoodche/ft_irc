@@ -110,6 +110,7 @@ class Handler {
 		static bool									parseFlagString(std::vector<std::string> &flagVector, std::string flags, Client &client);
 		static void									appendToFlagStr(int &status, int &newStatus, std::string &flag, std::string &flagSendStr);
 		static std::string							getAllClientsInChannel(Channel &channel);
+		static void									leaveAllChannels(Client &client);
 		
 	//it is common to all the instances
 
