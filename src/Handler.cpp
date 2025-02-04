@@ -162,6 +162,8 @@ void Handler::handlePrivmsgCmd(std::vector<std::string> input , Client &client) 
 	}
 	if (input[2][0] != ':')
 		input.resize(3); //Adjust trailing
+	else
+		input[2].erase(input[2].begin()); //erase :
 	if (input[1][0] != '#')// message target is a user
 	{
 		if(!isNicknameInUse(input[1], &client))
@@ -175,7 +177,7 @@ void Handler::handlePrivmsgCmd(std::vector<std::string> input , Client &client) 
 		Client* foundClient = Client::findClientByName(input[1], clients);
 		int targetFd = foundClient->getSocketFd();
 		std::vector<std::string> subVector(input.begin() + 2, input.end());
-		std::string outboundMessage = ":" + client.getNickname() + " PRIVMSG " + input[1] + " " + vectorToString(subVector, ' ') + "\r\n";
+		std::string outboundMessage = ":" + client.getNickname() + " PRIVMSG " + input[1] + " :" + vectorToString(subVector, ' ') + "\r\n";
 		sendResponse(outboundMessage, targetFd);
 		return;
 	}
@@ -196,7 +198,7 @@ void Handler::handlePrivmsgCmd(std::vector<std::string> input , Client &client) 
 		{
 			if((*itClients)->getNickname() != client.getNickname())
 			{
-				std::string outboundMessage = ":" + client.getNickname() + " PRIVMSG " + input[1] + " " + vectorToString(subVector, ' ') + "\r\n";
+				std::string outboundMessage = ":" + client.getNickname() + " PRIVMSG " + input[1] + " :" + vectorToString(subVector, ' ') + "\r\n";
 				sendResponse(outboundMessage, (*itClients)->getSocketFd());
 			}
 			itClients++;
@@ -206,7 +208,7 @@ void Handler::handlePrivmsgCmd(std::vector<std::string> input , Client &client) 
 		{
 			if((*itClients)->getNickname() != client.getNickname())
 			{
-				std::string outboundMessage = ":" + client.getNickname() + " PRIVMSG " + input[1] + " " + vectorToString(subVector, ' ') + "\r\n";
+				std::string outboundMessage = ":" + client.getNickname() + " PRIVMSG " + input[1] + " :" + vectorToString(subVector, ' ') + "\r\n";
 				sendResponse(outboundMessage, (*itClients)->getSocketFd());
 			}
 			itClients++;
@@ -1129,6 +1131,7 @@ void	Handler::handlePartCmd(std::vector<std::string> input, Client &client) {
 		if (input[2][0] == ':'){
 			std::vector<std::string> reasonParts(input.begin() + 2, input.end());
 			reason = vectorToString(reasonParts, ' ');
+			reason.erase(reason.begin());
 		}
 		else
 			reason = *(input.begin() + 2);
@@ -1160,10 +1163,10 @@ void	Handler::handlePartCmd(std::vector<std::string> input, Client &client) {
         // Notify other users in the channel about the client leaving
 		std::vector<Client*> users = channel->getUsers();
         for (std::vector<Client*>::iterator it = users.begin(); it != users.end(); ++it)
-            sendResponse(getClientPrefix(client) + " PART " + channelName + " " + reason + "\r\n", (*it)->getSocketFd());
+            sendResponse(getClientPrefix(client) + " PART " + channelName + " :" + reason + "\r\n", (*it)->getSocketFd());
 		std::vector<Client*> operators = channel->getOperators();
 		for (std::vector<Client*>::iterator it = operators.begin(); it != operators.end(); ++it)
-            sendResponse(getClientPrefix(client) + " PART " + channelName + " " + reason + "\r\n", (*it)->getSocketFd());
+            sendResponse(getClientPrefix(client) + " PART " + channelName + " :" + reason + "\r\n", (*it)->getSocketFd());
 
         if (channel->getUsers().empty() && channel->getOperators().empty())
             deleteChannel(channels, channelName);
