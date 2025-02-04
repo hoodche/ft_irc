@@ -257,8 +257,8 @@ void Handler::handleQuitCmd(std::vector<std::string> input , Client &client) {
 			sendResponse(":" + client.getNickname() + " QUIT :Client has left the server\r\n", (*itClients)->getSocketFd());
 			itClients++;
 		}
-		if ((*itChannels)->getUsers().empty())
-			deleteChannel(channels, (*itChannels)->getName()); //Test
+		/* if ((*itChannels)->getUsers().empty() && (*itChannels)->getOperators().empty())
+			deleteChannel(channels, (*itChannels)->getName()); //Test */
 		itChannels++;
 	}
 	//disconnect client
@@ -601,7 +601,7 @@ void Handler::handleKickCmd(std::vector<std::string> input, Client &client)
 				sendMsgClientsInChannelKick(*isInChannel, client, "KICK", clientPtr->getNickname(), msg);
 				clientPtr->removeChannel(input[1]);
 				itChannel->removeClient(*it);
-				if (itChannel->getUsers().empty())
+				if (itChannel->getUsers().empty() && itChannel->getOperators().empty())
 					deleteChannel(channels, itChannel->getName());
 			}
 			it++;
@@ -1160,10 +1160,33 @@ void	Handler::handlePartCmd(std::vector<std::string> input, Client &client) {
 		for (std::vector<Client*>::iterator it = operators.begin(); it != operators.end(); ++it)
             sendResponse(getClientPrefix(client) + " PART " + channelName + " " + reason + "\r\n", (*it)->getSocketFd());
 
+		std::vector<Client*> usersVect = channel->getUsers();
+		size_t j = 0;
+		while (j < usersVect.size()) {
+			std::cout << "Users " << usersVect[j]->getNickname() << std::endl;
+			j++;
+		}
+		std::vector<Client*> opVect = channel->getOperators();
+		j = 0;
+		while (j < opVect.size()) {
+			std::cout << "Operators" << opVect[j]->getNickname() << std::endl;
+			j++;
+		}
         // If the channel is empty, delete it
-        if (channel->getUsers().empty()) {
-            deleteChannel(channels, channelName); // Remove the empty channel
-        }
+		usersVect = channel->getUsers();
+		j = 0;
+		while (j < usersVect.size()) {
+			std::cout << "Users: " << usersVect[j]->getNickname() << std::endl;
+			j++;
+		}
+		opVect = channel->getOperators();
+		j = 0;
+		while (j < opVect.size()) {
+			std::cout << "Operators: " << opVect[j]->getNickname() << std::endl;
+			j++;
+		}
+        if (channel->getUsers().empty() && channel->getOperators().empty())
+            deleteChannel(channels, channelName);
     }
     return;
 }
@@ -1173,10 +1196,12 @@ void	Handler::deleteChannel(std::list<Channel> &channels, std::string channelNam
 		return ;
 	std::list<Channel>::iterator it	= channels.begin();
 	while (it != channels.end()) {
-		if (it->getName() == channelName)
-			it = channels.erase(it);
-		else
-			++it;
+		if (it->getUsers().empty() && it->getOperators().empty()) {
+			if ((it->getName() == channelName))
+				it = channels.erase(it);
+			else
+				++it;
+		}
 	}
 }
 

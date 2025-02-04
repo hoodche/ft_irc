@@ -35,7 +35,7 @@ std::string	Client::getRealname(void) const {
 	return this->realname;
 }
 
-std::vector<Channel *> Client::getClientChannels(void) const {
+std::vector<Channel *> &Client::getClientChannels(void) {
 	return this->clientChannels;
 }
 
