@@ -1162,31 +1162,6 @@ void	Handler::handlePartCmd(std::vector<std::string> input, Client &client) {
 		for (std::vector<Client*>::iterator it = operators.begin(); it != operators.end(); ++it)
             sendResponse(getClientPrefix(client) + " PART " + channelName + " " + reason + "\r\n", (*it)->getSocketFd());
 
-		std::vector<Client*> usersVect = channel->getUsers();
-		size_t j = 0;
-		while (j < usersVect.size()) {
-			std::cout << "Users " << usersVect[j]->getNickname() << std::endl;
-			j++;
-		}
-		std::vector<Client*> opVect = channel->getOperators();
-		j = 0;
-		while (j < opVect.size()) {
-			std::cout << "Operators" << opVect[j]->getNickname() << std::endl;
-			j++;
-		}
-        // If the channel is empty, delete it
-		usersVect = channel->getUsers();
-		j = 0;
-		while (j < usersVect.size()) {
-			std::cout << "Users: " << usersVect[j]->getNickname() << std::endl;
-			j++;
-		}
-		opVect = channel->getOperators();
-		j = 0;
-		while (j < opVect.size()) {
-			std::cout << "Operators: " << opVect[j]->getNickname() << std::endl;
-			j++;
-		}
         if (channel->getUsers().empty() && channel->getOperators().empty())
             deleteChannel(channels, channelName);
     }
