@@ -6,7 +6,7 @@
 /*   By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/24 18:26:33 by igcastil          #+#    #+#             */
-/*   Updated: 2025/02/03 18:26:20 by igcastil         ###   ########.fr       */
+/*   Updated: 2025/02/04 13:25:23 by igcastil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -339,18 +339,18 @@ void Server::disconnectClient(int clientConnectedfd)
 	{
 		if (it->getSocketFd() == clientConnectedfd) {
 			clients.erase(it);
-			break;
-		}
-		std::vector<Channel *> clientChannels = it->getClientChannels();
-		std::vector<Channel *>::iterator itChannels = clientChannels.begin();
-		while (itChannels != clientChannels.end())
-		{
-			(*itChannels)->removeClient(it->getNickname());
-			if ((*itChannels)->getUsers().empty() && (*itChannels)->getOperators().empty()) {
-				std::cout << "Hola libero en disconnect!!!!!!" << std::endl;
-				Handler::deleteChannel(Handler::getChannels(), (*itChannels)->getName());
+			std::vector<Channel *> clientChannels = it->getClientChannels();
+			std::vector<Channel *>::iterator itChannels = clientChannels.begin();
+			while (itChannels != clientChannels.end())
+			{
+				(*itChannels)->removeClient(it->getNickname());
+				if ((*itChannels)->getUsers().empty() && (*itChannels)->getOperators().empty()) {
+					std::cout << "Hola libero en disconnect!!!!!!" << std::endl;
+					Handler::deleteChannel(Handler::getChannels(), (*itChannels)->getName());
+				}
+				itChannels++;
 			}
-			itChannels++;
+			break;
 		}
 		it++;
 	}
@@ -363,7 +363,6 @@ void Server::disconnectClient(int clientConnectedfd)
 			break;
 		}
 	}
-
 	// Remove client buffer from the buffers map
 	clientBuffers.erase(clientConnectedfd);
 	std::cout << "Client FD: " << clientConnectedfd << " has been disconnected" << std::endl;

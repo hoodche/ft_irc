@@ -257,8 +257,8 @@ void Handler::handleQuitCmd(std::vector<std::string> input , Client &client) {
 			sendResponse(":" + client.getNickname() + " QUIT :Client has left the server\r\n", (*itClients)->getSocketFd());
 			itClients++;
 		}
-		if ((*itChannels)->getUsers().empty() && (*itChannels)->getOperators().empty())
-			deleteChannel(channels, (*itChannels)->getName()); //Test
+		/* if ((*itChannels)->getUsers().empty() && (*itChannels)->getOperators().empty())
+			deleteChannel(channels, (*itChannels)->getName()); //Test */
 		itChannels++;
 	}
 	//disconnect client
