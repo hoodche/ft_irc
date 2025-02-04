@@ -314,10 +314,12 @@ void Handler::handleJoinCmd(std::vector<std::string> input, Client &client) {
 		Handler::sendResponse(Handler::prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + " JOIN " + ERR_NEEDMOREPARAMS + "\r\n", client.getSocketFd());
 		return;
 	}
-	if (input.size() > 3)// JOIN <#channel>{,<#channel>} [<password>{,<password>}]
-		return;
 
 	std::vector<std::string>::iterator argvIt = input.begin() + 1;
+	if (*argvIt == "0"){
+		leaveAllChannels(client);
+		return;
+	}
 
 	channelVector = getChannelVector(*argvIt, client);//more than one channel can be joined at once (they are separated by commas)
 	if (channelVector.empty())
@@ -1173,13 +1175,28 @@ void	Handler::deleteChannel(std::list<Channel> &channels, std::string channelNam
 		return ;
 	std::list<Channel>::iterator it	= channels.begin();
 	while (it != channels.end()) {
-		if (it->getName() == channelName)
+		if (it->getName() == channelName){
 			it = channels.erase(it);
-		else
-			++it;
+			return;
+		}
+		it++;
 	}
 }
 
 std::list<Channel>& Handler::getChannels() {
 	return channels;
+}
+
+void	Handler::leaveAllChannels(Client &client)
+{
+	std::vector<Channel *> clientChannels = client.getClientChannels();
+	std::vector<Channel *>::iterator it = clientChannels.begin();
+	while(it != clientChannels.end())
+	{
+		std::vector<std::string> temp;
+		temp.push_back("PART");
+		temp.push_back((*it)->getName());
+		handlePartCmd(temp, client);
+		it++;
+	}
 }
