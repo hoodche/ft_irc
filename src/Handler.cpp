@@ -1,17 +1,15 @@
 #include "../inc/Handler.hpp"
 #include "../inc/Server.hpp" 
-#include "../commands/nick.cpp" 
 
 #include <sstream>
 #include <cctype>
 
-std::list<Channel> Handler::channels; //Static variable must be declared outside the class so the linker can fint it. It is not vinculated to an object,
-										//so the programmer have to do the job
-std::map<std::string, modeHandler>		Handler::cmdModeMap;
+std::list<Channel> 							Handler::channels;
+std::map<std::string, modeHandler>			Handler::cmdModeMap;
 std::map<std::string, modeHandlerNoArgv>	Handler::cmdModeMapNoArgv;
 
 Handler::Handler(void) {
-	initCmdMap(); // Initialise the command map
+	initCmdMap();
 	initModeCmdMaps();
 }
 
@@ -19,7 +17,6 @@ void Handler::initCmdMap(void) {
 	cmdMap["user"] = &handleUserCmd;
 	cmdMap["nick"] = &handleNickCmd;
 	cmdMap["ping"] = &handlePingCmd;
-	//cmdMap["pong"] = &handlePingCmd;
 	cmdMap["join"] = &handleJoinCmd;
 	cmdMap["topic"] = &handleTopicCmd;
 	cmdMap["kick"] = &handleKickCmd;
@@ -45,12 +42,16 @@ void Handler::initModeCmdMaps(void)
 	cmdModeMapNoArgv["-t"] = &deactivateTopicPrivMode;
 }
 
+/**
+ * @brief	directs each command to its respective function
+ * @param	std::vector<std::string> input. Params passed, divided in a vector of strings
+ * @param	Client	&client who sent the command
+ */
+
 void Handler::parseCommand(std::vector<std::string> input, Client &client) {
-	// Check if the command exists in the map. Command extracted as first member of str vector
-	// If command exists and all is good, delete command from str vector
-	// Esto solo está puesto para evitar el -Werror de momento
+
 	std::string	command;
-	if(input[0][0] == ':')//first parameter is sender´s nickname
+	if(input[0][0] == ':')
 		command = input[1];
 	else
 		command = input[0];
@@ -67,17 +68,11 @@ void Handler::parseCommand(std::vector<std::string> input, Client &client) {
  */
 
 void Handler::handleUserCmd(std::vector<std::string> input, Client &client) {
-	// Generally seen like this: <username> 0 * <realname> as per this documentation - https://modern.ircdocs.horse/#user-message
-	// Default client received command: USER nerea 0 * :realname -> input = nerea 0 * :realname
-
-	// Check that we have the 4 required parameters	
-	
 	if (input.size() < 4) {
 		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + " USER " + ERR_NEEDMOREPARAMS "\r\n", client.getSocketFd());
 		return ;
 	}
 
-	// Assign received strings
 	std::string	username = input[1];
 	std::string hostname = input[2];
 	std::string servername = input[3];
@@ -89,26 +84,22 @@ void Handler::handleUserCmd(std::vector<std::string> input, Client &client) {
 		if (i < vecSize - 1)
 			realname += " ";
 	}
-	
-	// Check that username goes according to what is expected, otherwise send an error to the client
+
 	if (username.empty() || username.length() < 1 || username.length() > USERLEN) {
 		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + " USER " + ERR_NEEDMOREPARAMS "\r\n", client.getSocketFd());
 		return ;
 	}
 
-	// Check that the hostname is as expected
 	if (hostname != "0") {
 		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + " USER " + ERR_NEEDMOREPARAMS "\r\n", client.getSocketFd());
 		return ;
 	}
 
-	// Check that the servername is as expected
 	if (servername != "*") {
 		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + " USER " + ERR_NEEDMOREPARAMS "\r\n", client.getSocketFd());
 		return ;
 	}
 
-	// Check that realname starts with a : -> Not sure if this is needed
 	if (realname[0] != ':') {
 		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + " USER " + ERR_NEEDMOREPARAMS "\r\n", client.getSocketFd());
 		return ;
@@ -118,12 +109,13 @@ void Handler::handleUserCmd(std::vector<std::string> input, Client &client) {
 	client.setRealname(realname);
 	client.setRegistered(true);
 }
+
 /**
  * @brief	handles the irc "NICK chosennick" command
  * @param	std::vector<std::string> input whole command (NICK inluded as first element)
  * @param	Client &client who sent the NICK command
- * 
  */
+
 void Handler::handleNickCmd(std::vector<std::string> input , Client &client) {
 	if (input.size() == 1) {
 		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NONICKNAMEGIVEN_CODE + ERR_NONICKNAMEGIVEN + "\r\n", client.getSocketFd());
@@ -144,34 +136,73 @@ void Handler::handleNickCmd(std::vector<std::string> input , Client &client) {
 }
 
 /**
+ * @brief	NICK auxiliary function to check whether the input nickname is valid or not according to RFC
+ * @param	std::string chosen nickname to check its validity
+ */
+
+bool Handler::isNicknameValid(std::string nickname)
+{
+	// Check length (1 to 9 characters)
+	if (nickname.empty() || nickname.length() > 9)
+		return false;
+	// Check the first character (no digits nor - from the allowed set of chars)
+	char c = nickname[0];
+	if (!(std::isalpha(c) || c == '_' || c == '[' || c == ']' || c == '\\' || c == '{' || c == '}' || c == '|'))
+		return false;
+	// Check the rest of the characters
+	for (size_t i = 1; i < nickname.length(); ++i) {
+		if (!(std::isalnum(nickname[i]) || nickname[i] == '_' || nickname[i] == '-' || nickname[i] == '[' || nickname[i] == ']' || nickname[i] == '\\' || nickname[i] == '{' || nickname[i] == '}' || nickname[i] == '|'))
+			return false;
+	}
+	return true;
+}
+
+/**
+ * @brief	NICK auxiliary function to check whether the input nickname is valid or not according to RFC
+ * @param	std::string nickname to check if it's repeated
+ * @param	Client	*client who sent the nickname, to be compared against server's existing nicknames
+ */
+
+bool Handler::isNicknameInUse(std::string nickname, Client *client)
+{
+	const Server* server = client->getServer();
+	const std::list<Client>& clients = server->getClients();
+	for (std::list<Client>::const_iterator it = clients.begin(); it != clients.end(); ++it) {
+		if (it->getNickname() == nickname) {
+			return true;
+		}
+	}
+	return false;
+}
+
+/**
  * @brief	handles the irc PRIVMSG command (sending a message to a user or a channel)
  * @param	std::vector<std::string> input whole command (message target -either a user or a channel- follows after "PRIVMSG" ); third parameter, message, must begin with :
  * @param	Client &client who sent the PRIVMSG command
  * 
  */
 void Handler::handlePrivmsgCmd(std::vector<std::string> input , Client &client) {
-	if(input[0][0] == ':')//first parameter is sender´s nickname
-		input.erase(input.begin());//we do not need sender's nickname, since we have the client object as 2nd argument
-	if (input.size() == 1 || input[1][0] == ':'){
+	if(input[0][0] == ':')
+		input.erase(input.begin());
+	if (input.size() == 1 || input[1][0] == ':') {
 		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NORECIPIENT_CODE + ERR_NORECIPIENT + "\r\n", client.getSocketFd());
 		return ;
 	}
-	if (input.size() == 2){
+	if (input.size() == 2) {
 		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOTEXTTOSEND_CODE + ERR_NOTEXTTOSEND + "\r\n", client.getSocketFd());
 		return ;
 	}
-	if (input[2][0] != ':'){ // message must begin with :
+	if (input[2][0] != ':') {
 		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_TOOMANYTARGETS_CODE + input[1] + input[2] + ERR_TOOMANYTARGETS + + "\r\n", client.getSocketFd());//should implement response for 3,4,5,.... targets
 		return ;
 	}
-	if (input[1][0] != '#')// message target is a user
+	if (input[1][0] != '#')
 	{
 		if(!isNicknameInUse(input[1], &client))
 		{
 			sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOSUCHNICK_CODE + " " + client.getNickname() + " " + input[1] + " " + ERR_NOSUCHNICK + "\r\n", client.getSocketFd());
 			return ;
 		}
-		//send message to input[1] user
 		const Server* server = client.getServer();
 		std::list<Client> clients = server->getClients();
 		Client* foundClient = Client::findClientByName(input[1], clients);
@@ -181,7 +212,7 @@ void Handler::handlePrivmsgCmd(std::vector<std::string> input , Client &client) 
 		sendResponse(outboundMessage, targetFd);
 		return;
 	}
-	if (input[1][0] == '#')// message target is a channel
+	if (input[1][0] == '#')
 	{
 		std::list<Channel>::iterator itChannels = findChannel(input[1]);
 		if (itChannels == channels.end())
@@ -189,7 +220,6 @@ void Handler::handlePrivmsgCmd(std::vector<std::string> input , Client &client) 
 			sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOSUCHNICK_CODE + " " + client.getNickname() + " " + input[1] + " " + ERR_NOSUCHNICK + "\r\n", client.getSocketFd());
 			return ;
 		}
-		//send message to itChannels channel
 		std::vector<Client *> operators = itChannels->getOperators() ;
 		std::vector<Client *> users = itChannels->getUsers() ;
 		std::vector<Client *>::iterator itClients = operators.begin();
@@ -222,27 +252,22 @@ void Handler::handlePrivmsgCmd(std::vector<std::string> input , Client &client) 
  * @brief	handles the irc QUIT command 
  * @param	std::vector<std::string> input whole command 
  * @param	Client &client who sent the QUIT command
- * 
  */
+
 void Handler::handleQuitCmd(std::vector<std::string> input , Client &client) {
-	//respond to leaving client
-	if (input.size() >= 2 && input[1][0] == ':')//quit  + optional quitting message
+	if (input.size() >= 2 && input[1][0] == ':')
 	{
 		std::vector<std::string> subVector(input.begin() + 1, input.end());
 		sendResponse("ERROR " + client.getNickname() + " (Quit " + vectorToString(subVector, ' ') + ")\r\n", client.getSocketFd());
 	}
-	else//quit was not followed by the optional quitting message
+	else
 		sendResponse("ERROR " + client.getNickname() + " (Quit)\r\n", client.getSocketFd());
-	//notify other clients in same channels that client is leaving (and erase leaving client from the channel)	
+
 	std::vector<Channel *> clientChannels = client.getClientChannels();
 	std::vector<Channel *>::iterator itChannels = clientChannels.begin();
-	//debug print
-	//std::cout << "comienza la iteracion por todos los canal del usuario saliente" << std::endl;
 	while (itChannels != clientChannels.end())
 	{
-		//std::cout << "canal: " << (*itChannels)->getName() << std::endl;
 		(*itChannels)->removeClient(client.getNickname());
-		//std::cout << "eliminado usuario saliente" << std::endl;
 		std::vector<Client *> operators = (*itChannels)->getOperators() ;
 		std::vector<Client *> users = (*itChannels)->getUsers() ;
 		std::vector<Client *>::iterator itClients = operators.begin();
@@ -257,26 +282,29 @@ void Handler::handleQuitCmd(std::vector<std::string> input , Client &client) {
 			sendResponse(":" + client.getNickname() + " QUIT :Client has left the server\r\n", (*itClients)->getSocketFd());
 			itClients++;
 		}
-		/* if ((*itChannels)->getUsers().empty() && (*itChannels)->getOperators().empty())
-			deleteChannel(channels, (*itChannels)->getName()); //Test */
 		itChannels++;
 	}
-	//disconnect client
-	Server* server = const_cast<Server*>(client.getServer()); // Remove const qualifier (chapuza!!!)
+	Server* server = const_cast<Server*>(client.getServer());
 	server->disconnectClient(client.getSocketFd());
 }
+
+/**
+ * @brief	Sends a pong to the client to check connection stability
+ * @param	std::string server ip against which the ping has been sent
+ * @param	Client &client who sent the ping command
+ */
 
 void Handler::handlePingCmd(std::vector<std::string> input, Client &client) {
 	std::string message = "PONG " + input[1];
 	sendResponse(message, client.getSocketFd());
 }
 
-/* void Handler::handlePongCmd(std::vector<std::string> input, Client &client) {//weird behavior, why server is sending a PONG command  after receiving clients PONG command (generated as acknowledge to server´s PING)?
-	//server does nothing when receives a PONG command from a client
-	(void)input;//needed to avoid compilation warning
-	(void)client;
-} */
-// Utils
+
+/**
+ * @brief	Sends a pong to the client to check connection stability
+ * @param	std::string server ip against which the ping has been sent
+ */
+
 std::string Handler::prependMyserverName(int clientFd) {
 	struct sockaddr_in myServerAddr;
 	memset(&myServerAddr, 0, sizeof(myServerAddr));
@@ -294,14 +322,10 @@ void Handler::sendResponse(std::string message, int clientFd) {
 	if (bytesSent == -1) {
 		std::cout << "Failed to send response to client" << std::endl;
 	} else {
-		// Debug Print
 		std::cout << "Response sent to client: " << message << std::endl;
 	}
 }
 
-/*					*/
-/*	 JOIN command	*/
-/*					*/
 
 void Handler::handleJoinCmd(std::vector<std::string> input, Client &client) {
 
@@ -309,7 +333,7 @@ void Handler::handleJoinCmd(std::vector<std::string> input, Client &client) {
 	std::vector<std::string>				passVector;
 	std::map<std::string, std::string>		channelDictionary;
 
-	if (input.size() <= 1)// JOIN <#channel>{,<#channel>} [<password>{,<password>}]
+	if (input.size() <= 1)
 	{
 		Handler::sendResponse(Handler::prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + " JOIN " + ERR_NEEDMOREPARAMS + "\r\n", client.getSocketFd());
 		return;
@@ -321,12 +345,12 @@ void Handler::handleJoinCmd(std::vector<std::string> input, Client &client) {
 		return;
 	}
 
-	channelVector = getChannelVector(*argvIt, client);//more than one channel can be joined at once (they are separated by commas)
+	channelVector = getChannelVector(*argvIt, client);
 	if (channelVector.empty())
 		return;
 	argvIt++;
 	if (argvIt != input.end())
-		passVector = getPassVector(*argvIt);//last parameter is the password (or passwords) for the channel(s)
+		passVector = getPassVector(*argvIt);
 	channelDictionary = createDictionary(channelVector, passVector);
 	joinCmdExec(channelDictionary, client);
 }
@@ -377,7 +401,6 @@ std::map<std::string, std::string> Handler::createDictionary(std::vector<std::st
 	return (channelDictionary);
 }
 
-// Verify if the channel exists and call the appropriate function accordingly.
 void Handler::joinCmdExec(std::map<std::string, std::string> channelDictionary, Client &client)
 {
 	std::map<std::string, std::string>::iterator	itMap = channelDictionary.begin();
@@ -495,10 +518,6 @@ std::string Handler::getAllClientsInChannel(Channel &channel)
 	return (clientStr);
 }
 
-/*					*/
-/*	 TOPIC command	*/
-/*					*/
-
 void Handler::handleTopicCmd(std::vector<std::string> input, Client &client)
 {
 	if (input.size() < 2)
@@ -562,10 +581,6 @@ std::string Handler::vectorToString(std::vector<std::string> vectorTopic, char d
 	}
 	return (ss.str());
 }
-
-/*					*/
-/*	 KICK command	*/
-/*					*/
 
 void Handler::handleKickCmd(std::vector<std::string> input, Client &client)
 {
@@ -631,11 +646,6 @@ std::string Handler::createKickMessage(std::vector<std::string> &input)
 	message.erase(0, 1);
 	return message;
 }
-
-/*					*/
-/*	 MODE command	*/
-/*					*/
-
 
 void Handler::handleModeCmd(std::vector<std::string> input, Client &client)
 {
@@ -759,8 +769,7 @@ int		Handler::getStatusSymbol(std::string str)
 
 void Handler::sendChannelModeIs(Client &client, Channel &channel)
 {
-	std::string flagStr("+"); //This init is correct, really. If not modes sets, it sends only "+"
-
+	std::string flagStr("+");
 	std::string argv;
 	if (channel.getInviteMode() == true)
 		flagStr.append("i");
@@ -807,7 +816,6 @@ void Handler::appendToFlagStr(int &status, int &newStatus, std::string &flag, st
 	return;
 }
 
-//Mode Function Pointers
 bool Handler::activateInviteMode(Channel &channel)
 {
 	if (channel.getInviteMode() == false)
@@ -907,7 +915,6 @@ bool Handler::activateOperatorMode(Channel &channel, std::string targetClient)
 {
 	Client* clientPtr = channel.getUserClient(targetClient);
 	if (!clientPtr){
-		//sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOSUCHNICK_CODE + targetClient + " " + ERR_NOSUCHNICK + "\r\n", client.getSocketFd());
 		return false;
 	}
 	channel.removeClient(targetClient);
@@ -929,22 +936,13 @@ bool Handler::deactivateOperatorMode(Channel &channel, std::string targetClient)
 	return true;
 }
 
-/*					*/
-/*	 INVITE command	*/
-/*					*/
-
 /**
  * @brief	handles the irc "INVITE <username> <#channel>" command. Only operators can invite to channels in invite mode
  * @param	std::vector<std::string> input. Params passed divided in a vector of strings
  * @param	Client &client who sent the INVITE command
  */
-
-// As usual, depending on RFC definition, some points might differ. Following Modern IRC definition here:
-// https://modern.ircdocs.horse/#invite-message
-
 void	Handler::handleInviteCmd(std::vector<std::string> input, Client &client) {
 	if (input.size() < 3) {
-		//std::cout << "INVITE cmd needs three arguments INVITE <nickname> <channel>" << std::endl,
 		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + " INVITE " + ERR_NEEDMOREPARAMS "\r\n", client.getSocketFd());
 		return ;
 	}
@@ -957,43 +955,31 @@ void	Handler::handleInviteCmd(std::vector<std::string> input, Client &client) {
 
 	std::string	invitedNickname	= input[1];
 	std::string	invChannelName	= input[2];
-
-	// Find the appropiate channel in our channels list
 	Server				*server	= const_cast<Server *>(client.getServer());
 	std::list<Client>	*clients	= server->getClientsPtr();//????
 	Channel				*invitedChannel	= client.getChannel(invChannelName);
 	if (!invitedChannel) {
-		//std::cout << invChannelName << " does not exist" << std::endl;
 		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOTONCHANNEL_CODE + invChannelName + " " + ERR_NOTONCHANNEL + "\r\n", client.getSocketFd());
 		return ;
 	}
 
-	// Check if channel is in invite mode and client IS an operator -has the right to invite-
 	if (invitedChannel->getInviteMode() && !invitedChannel->isClientOperator(client)) {
-		//std::cout << "Client " << client.getNickname() << " is not an operator of channel " << invChannelName << std::endl;
 		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_CHANOPRIVSNEEDED_CODE + invChannelName + " " + ERR_CHANOPRIVSNEEDED + "\r\n", client.getSocketFd());
 		return ;
 	}
 
 	Client	*invitedClient = Client::findClientByName(invitedNickname, *clients);
 	if (!invitedClient) {
-		//std::cout << "Invited client does not exist" << std::endl;
 		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOSUCHNICK_CODE + invitedNickname + " " + ERR_NOSUCHNICK + "\r\n", client.getSocketFd());
 		return ;
 	}
-	// Check if the client is Already in the channel
 	if (invitedClient->isClientInChannel(invChannelName)) {
-		//std::cout << "Invited client is already in the invited channel" << std::endl;
 		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_USERONCHANNEL_CODE + invitedNickname + " " + invChannelName + " " + ERR_USERONCHANNEL + "\r\n", client.getSocketFd());
 		return ;
 	}
-	// Check if invited user was not already invited to that channel. If it was not, add invited user to array.
 	if (invitedClient->isInvited(*invitedChannel) == false)
 			invitedClient->addInvitedChannel(*invitedChannel);
-	// Inform the invited client he has been invited
-	//sendResponse(prependMyserverName(client.getSocketFd()) + ":" + client.getNickname() + " INVITE " + invitedNickname + " " + invChannelName + "\n", invitedClient->getSocketFd());
 	sendResponse(getClientPrefix(client) + " INVITE " + invitedNickname + " :" + invChannelName + "\r\n", invitedClient->getSocketFd());
-	// Inform inviter user that invitation was successfully issued
 	sendResponse(prependMyserverName(client.getSocketFd()) + RPL_INVITING_CODE + invChannelName + " " + invitedNickname + "\r\n", client.getSocketFd());
 	return ;
 }
@@ -1109,14 +1095,13 @@ void Handler::sendMsgClientsInChannelKick(Channel &channel, Client &client, std:
 	}
 	return;
 }
-// PART <channel>{,<channel>} [<reason>]
+
 void	Handler::handlePartCmd(std::vector<std::string> input, Client &client) {
 	if (input.size() < 2) {
 		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + "PART " + ERR_NEEDMOREPARAMS + "\r\n", client.getSocketFd());
 		return ;
 	}
 
-    // Extract the channels, separated by commas
     std::vector<std::string> partChannels;
     std::istringstream stream(input[1]);
     std::string channelName;
@@ -1124,7 +1109,6 @@ void	Handler::handlePartCmd(std::vector<std::string> input, Client &client) {
         partChannels.push_back(channelName);
     }
 
-    // Extract the reason or default to "Leaving" if none is given
     std::string reason = "Leaving";
     if (input.size() > 2 && input[2][0] == ':') {
         std::vector<std::string> reasonParts(input.begin() + 2, input.end());
@@ -1133,28 +1117,22 @@ void	Handler::handlePartCmd(std::vector<std::string> input, Client &client) {
 
     for (size_t i = 0; i < partChannels.size(); ++i) {
         channelName = partChannels[i];
-
-        // Check if the channel exists
         Channel* channel = client.getChannel(channelName);
         if (!channel) {
             sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOSUCHCHANNEL_CODE + channelName + " " + ERR_NOSUCHCHANNEL + "\r\n", client.getSocketFd());
             continue;
         }
 
-        // Check if the client is actually in the channel
         if (!client.isClientInChannel(channelName)) {
             sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOTONCHANNEL_CODE + channelName + ERR_NOTONCHANNEL + "\r\n", client.getSocketFd());
             continue;
         }
 
-        // Remove the client from the channel
         channel->removeClient(client.getNickname());
         client.removeChannel(channelName);
         
-        // Send response to the client about leaving the channel
         sendResponse(getClientPrefix(client) + " PART " + channelName + " " + reason + "\r\n", client.getSocketFd());
 
-        // Notify other users in the channel about the client leaving
 		std::vector<Client*> users = channel->getUsers();
         for (std::vector<Client*>::iterator it = users.begin(); it != users.end(); ++it)
             sendResponse(getClientPrefix(client) + " PART " + channelName + " " + reason + "\r\n", (*it)->getSocketFd());

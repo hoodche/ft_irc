@@ -1,13 +1,6 @@
 #include "../inc/Client.hpp"
 #include "../inc/Channel.hpp"
 
-/*
-Client::Client(void): 
-	fd(-1), verified(false), registered(false),
-	//oper(false),
-	 nick(""), username("") {}
-*/
-
 Client::Client(int receivedFd, const Server &newServer, std::string ip):
 	fd(receivedFd), verified(false) ,registered(false),
 	//oper(false),

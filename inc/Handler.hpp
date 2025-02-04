@@ -10,7 +10,7 @@
 # include <iostream>
 # include <algorithm>
 # include <string>
-# include <string.h> //for memset
+# include <string.h>
 # include <vector>
 # include <sstream>
 # include <set>
@@ -48,7 +48,7 @@
 # define ERR_NICKNAMEINUSE_CODE		"433 "
 # define ERR_NICKNAMEINUSE			":Nickname is already in use"
 # define ERR_USERNOTINCHANNEL_CODE	"441 "
-# define ERR_USERNOTINCHANNEL		":They aren't on that channel" //Is really used in hexchat
+# define ERR_USERNOTINCHANNEL		":They aren't on that channel"
 # define ERR_NOTONCHANNEL_CODE		"442 "
 # define ERR_NOTONCHANNEL			":You're not on that channel"
 # define ERR_USERONCHANNEL_CODE		"443 "
@@ -126,6 +126,10 @@ class Handler {
 		static bool	deactivatePasswordMode(Channel &channel, std::string newPassword);
 		static bool	activateOperatorMode(Channel &channel, std::string targetClient);
 		static bool	deactivateOperatorMode(Channel &channel, std::string targetClient);
+
+	// Nickname Utils
+		static bool	isNicknameValid(std::string nickname);
+		static bool	isNicknameInUse(std::string nickname, Client *client);
 
 	public:
 		Handler(void);
