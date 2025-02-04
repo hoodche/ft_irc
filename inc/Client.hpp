@@ -34,7 +34,7 @@ class Client {
 		std::string					getRealname(void) const;
 		std::string					getIpAddr(void) const;
 		const Server*				getServer(void) const;
-		std::vector<Channel *> 		getClientChannels(void) const;
+		std::vector<Channel *> 		&getClientChannels(void);
 		bool						isVerified(void) const;
 		bool						isRegistered(void) const;
 		bool						isInvited(Channel &channel) const;
