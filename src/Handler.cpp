@@ -530,6 +530,8 @@ void Handler::handleTopicCmd(std::vector<std::string> input, Client &client)
 	}
 	else
 	{
+		if (input[2][0] != ':')
+			input.resize(3);
 		std::vector<std::string> vectorTopic(input.begin() + 2, input.end());
 		std::string topic = vectorToString(vectorTopic, ' ');
 		if (topic.at(0) == ':')
