@@ -6,7 +6,7 @@
 /*   By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/24 18:26:33 by igcastil          #+#    #+#             */
-/*   Updated: 2025/02/04 13:39:45 by igcastil         ###   ########.fr       */
+/*   Updated: 2025/02/04 13:42:06 by igcastil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -338,7 +338,6 @@ void Server::disconnectClient(int clientConnectedfd)
 	while(it != clients.end())
 	{
 		if (it->getSocketFd() == clientConnectedfd) {
-			clients.erase(it);
 			std::vector<Channel *> clientChannels = it->getClientChannels();
 			std::vector<Channel *>::iterator itChannels = clientChannels.begin();
 			while (itChannels != clientChannels.end())
@@ -350,6 +349,7 @@ void Server::disconnectClient(int clientConnectedfd)
 				}
 				itChannels++;
 			}
+			clients.erase(it);
 			break;
 		}
 		it++;
