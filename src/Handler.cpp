@@ -160,10 +160,10 @@ void Handler::handlePrivmsgCmd(std::vector<std::string> input , Client &client) 
 		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOTEXTTOSEND_CODE + ERR_NOTEXTTOSEND + "\r\n", client.getSocketFd());
 		return ;
 	}
-	if (input[2][0] != ':'){ // message must begin with :
-		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_TOOMANYTARGETS_CODE + input[1] + input[2] + ERR_TOOMANYTARGETS + + "\r\n", client.getSocketFd());//should implement response for 3,4,5,.... targets
-		return ;
-	}
+	//if (input[2][0] != ':'){ // message must begin with :
+	//	sendResponse(prependMyserverName(client.getSocketFd()) + ERR_TOOMANYTARGETS_CODE + input[1] + input[2] + ERR_TOOMANYTARGETS + + "\r\n", client.getSocketFd());//should implement response for 3,4,5,.... targets
+	//	return ;
+	//}
 	if (input[1][0] != '#')// message target is a user
 	{
 		if(!isNicknameInUse(input[1], &client))
@@ -177,6 +177,8 @@ void Handler::handlePrivmsgCmd(std::vector<std::string> input , Client &client) 
 		Client* foundClient = Client::findClientByName(input[1], clients);
 		int targetFd = foundClient->getSocketFd();
 		std::vector<std::string> subVector(input.begin() + 2, input.end());
+		if (subVector[0][0] != ':')
+			subVector[0].insert(0, ":");
 		std::string outboundMessage = ":" + client.getNickname() + " PRIVMSG " + input[1] + " " + vectorToString(subVector, ' ') + "\r\n";
 		sendResponse(outboundMessage, targetFd);
 		return;
@@ -1109,6 +1111,7 @@ void Handler::sendMsgClientsInChannelKick(Channel &channel, Client &client, std:
 	}
 	return;
 }
+
 // PART <channel>{,<channel>} [<reason>]
 void	Handler::handlePartCmd(std::vector<std::string> input, Client &client) {
 	if (input.size() < 2) {
@@ -1126,8 +1129,10 @@ void	Handler::handlePartCmd(std::vector<std::string> input, Client &client) {
 
     // Extract the reason or default to "Leaving" if none is given
     std::string reason = "Leaving";
-    if (input.size() > 2 && input[2][0] == ':') {
+    if (input.size() > 2){
         std::vector<std::string> reasonParts(input.begin() + 2, input.end());
+		if(reasonParts[0][0] == ':')
+			reasonParts[0].insert(0, ":");
         reason = vectorToString(reasonParts, ' ');
     }
 
