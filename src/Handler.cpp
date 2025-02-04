@@ -622,15 +622,11 @@ std::string Handler::createKickMessage(std::vector<std::string> &input)
 
 	if (input.size() >= 4)
 	{
+		if (input[3][0] != ':')
+			input.resize(4);
 		std::vector<std::string> subVector(input.begin() + 3, input.end());
 		message = vectorToString(subVector, ' ');
-		if (message.at(0) != ':')
-		{
-			std::cerr << "KICK ERROR: Incorrect format" << std::endl;
-			return ("");
-		}
 	}
-	message.erase(0, 1);
 	return message;
 }
 
