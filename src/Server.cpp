@@ -6,7 +6,7 @@
 /*   By: nvillalt <nvillalt@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/24 18:26:33 by igcastil          #+#    #+#             */
-/*   Updated: 2025/02/03 14:04:45 by nvillalt         ###   ########.fr       */
+/*   Updated: 2025/02/04 13:59:02 by nvillalt         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -187,7 +187,7 @@ void Server::readFromFd(int clientConnectedfd)
 	if (bytesRead < 0) // Error handling
 		throw std::runtime_error("Server could not read incoming mesage ");
 	else if (bytesRead == 0) { // Client has closed the connection
-		std::cout << "Client has closed the connection" << std::endl;
+		std::cout << "Client " << clientConnectedfd << " has closed the connection. calling disconnectClient()" << std::endl;
 		disconnectClient(clientConnectedfd);
 		return ;
 	}
@@ -338,17 +338,17 @@ void Server::disconnectClient(int clientConnectedfd)
 	while(it != clients.end())
 	{
 		if (it->getSocketFd() == clientConnectedfd) {
+			std::vector<Channel *> clientChannels = it->getClientChannels();
+			std::vector<Channel *>::iterator itChannels = clientChannels.begin();
+			while (itChannels != clientChannels.end())
+			{
+				(*itChannels)->removeClient(it->getNickname());
+				if ((*itChannels)->getUsers().empty() && (*itChannels)->getOperators().empty())
+					Handler::deleteChannel(Handler::getChannels(), (*itChannels)->getName());
+				itChannels++;
+			}
 			clients.erase(it);
 			break;
-		}
-		std::vector<Channel *> clientChannels = it->getClientChannels();
-		std::vector<Channel *>::iterator itChannels = clientChannels.begin();
-		while (itChannels != clientChannels.end())
-		{
-			(*itChannels)->removeClient(it->getNickname());
-			if ((*itChannels)->getUsers().empty())
-				Handler::deleteChannel(Handler::getChannels(), (*itChannels)->getName());
-			itChannels++;
 		}
 		it++;
 	}
@@ -361,7 +361,6 @@ void Server::disconnectClient(int clientConnectedfd)
 			break;
 		}
 	}
-
 	// Remove client buffer from the buffers map
 	clientBuffers.erase(clientConnectedfd);
 	std::cout << "Client FD: " << clientConnectedfd << " has been disconnected" << std::endl;
