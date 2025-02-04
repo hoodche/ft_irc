@@ -321,10 +321,7 @@ void Handler::handleJoinCmd(std::vector<std::string> input, Client &client) {
 
 	channelVector = getChannelVector(*argvIt, client);//more than one channel can be joined at once (they are separated by commas)
 	if (channelVector.empty())
-	{
-		std::cout << "sale" << std::endl;
 		return;
-	}
 	argvIt++;
 	if (argvIt != input.end())
 		passVector = getPassVector(*argvIt);//last parameter is the password (or passwords) for the channel(s)
@@ -453,7 +450,8 @@ void Handler::createChannel(std::string channelName, Client &client)
 	channels.push_back(channel);
 	client.addChannel(channels.back());
 	sendMsgClientsInChannel(channel, client, "JOIN", "");
-	return;
+	sendResponse(prependMyserverName(client.getSocketFd()) + RPL_NAMREPLY_CODE + client.getNickname() + " = " + channelName + " :@" + client.getNickname() + "\r\n", client.getSocketFd());
+	sendResponse(prependMyserverName(client.getSocketFd()) + RPL_ENDOFNAMES + client.getNickname() + " " + channelName + " :End of /NAMES list" + "\r\n", client.getSocketFd());
 }
 
 void Handler::addClientToChannel(Channel &channel, Client &client)
@@ -461,7 +459,38 @@ void Handler::addClientToChannel(Channel &channel, Client &client)
 	channel.addUser(client);
 	client.addChannel(channel);
 	sendMsgClientsInChannel(channel, client, "JOIN", "");
+	std::string clientsInChannel = getAllClientsInChannel(channel);
+	sendResponse(prependMyserverName(client.getSocketFd()) + RPL_NAMREPLY_CODE + client.getNickname() + " = " + channel.getName() + " :" + clientsInChannel + "\r\n", client.getSocketFd());
+	sendResponse(prependMyserverName(client.getSocketFd()) + RPL_ENDOFNAMES + client.getNickname() + " " + channel.getName() + " :End of /NAMES list" + "\r\n", client.getSocketFd());
+	if (channel.getTopic() != "")
+		sendResponse(prependMyserverName(client.getSocketFd()) + RPL_TOPIC_CODE + channel.getName() + " :" + channel.getTopic() + "\r\n", client.getSocketFd());
 	return;
+}
+
+std::string Handler::getAllClientsInChannel(Channel &channel)
+{
+	std::string clientStr;
+	std::vector<Client *> operators = channel.getOperators();
+	std::vector<Client *> users = channel.getUsers();
+	std::vector<Client *>::iterator itClients = operators.begin();
+	while (itClients != operators.end())
+	{
+		clientStr.append("@" + (*itClients)->getNickname());
+		if (itClients + 1 != operators.end())
+			clientStr.append(" ");
+		itClients++;
+	}
+	if (!users.empty() && !operators.empty())
+		clientStr.append(" ");
+	itClients = users.begin();
+	while (itClients != users.end())
+	{
+		clientStr.append((*itClients)->getNickname());
+		if (itClients + 1 != users.end())
+			clientStr.append(" ");
+		itClients++;
+	}
+	return (clientStr);
 }
 
 /*					*/
@@ -501,6 +530,8 @@ void Handler::handleTopicCmd(std::vector<std::string> input, Client &client)
 	{
 		std::vector<std::string> vectorTopic(input.begin() + 2, input.end());
 		std::string topic = vectorToString(vectorTopic, ' ');
+		if (topic.at(0) == ':')
+			topic.erase(topic.begin());
 		if (targetChannel->getTopicMode() == true)
 		{
 			std::string userNick = client.getNickname();
@@ -510,6 +541,7 @@ void Handler::handleTopicCmd(std::vector<std::string> input, Client &client)
 			}
 		}
 		targetChannel->setTopic(topic, client);
+		std::cout << "topic: " << topic << std::endl;
 		sendMsgClientsInChannel(*targetChannel, client, "TOPIC", topic);
 		return;
 	}
@@ -1158,7 +1190,6 @@ void	Handler::handlePartCmd(std::vector<std::string> input, Client &client) {
     }
     return;
 }
-
 
 void	Handler::deleteChannel(std::list<Channel> &channels, std::string channelName) {
 	if (channels.empty())
