@@ -1153,10 +1153,8 @@ void	Handler::handlePartCmd(std::vector<std::string> input, Client &client) {
 			std::cout << "Operators: " << opVect[j]->getNickname() << std::endl;
 			j++;
 		}
-        if (channel->getUsers().empty() && channel->getOperators().empty()) {
-			std::cout << "Borrando en part!!!" << std::endl;
-            deleteChannel(channels, channelName); // Remove the empty channel
-        }
+        if (channel->getUsers().empty() && channel->getOperators().empty())
+            deleteChannel(channels, channelName);
     }
     return;
 }
@@ -1168,7 +1166,6 @@ void	Handler::deleteChannel(std::list<Channel> &channels, std::string channelNam
 	std::list<Channel>::iterator it	= channels.begin();
 	while (it != channels.end()) {
 		if (it->getUsers().empty() && it->getOperators().empty()) {
-			std::cout << "Libero en delete channel!" << std::endl;
 			if ((it->getName() == channelName))
 				it = channels.erase(it);
 			else
