@@ -73,7 +73,7 @@ void Handler::handleUserCmd(std::vector<std::string> input, Client &client) {
 	// Check that we have the 4 required parameters	
 	
 	if (input.size() < 4) {
-		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + " USER " + ERR_NEEDMOREPARAMS "\r\n", client.getSocketFd());
+		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + "USER " + ERR_NEEDMOREPARAMS "\r\n", client.getSocketFd());
 		return ;
 	}
 
@@ -92,25 +92,25 @@ void Handler::handleUserCmd(std::vector<std::string> input, Client &client) {
 	
 	// Check that username goes according to what is expected, otherwise send an error to the client
 	if (username.empty() || username.length() < 1 || username.length() > USERLEN) {
-		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + " USER " + ERR_NEEDMOREPARAMS "\r\n", client.getSocketFd());
+		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + "USER " + ERR_NEEDMOREPARAMS "\r\n", client.getSocketFd());
 		return ;
 	}
 
 	// Check that the hostname is as expected
 	if (hostname != "0") {
-		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + " USER " + ERR_NEEDMOREPARAMS "\r\n", client.getSocketFd());
+		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + "USER " + ERR_NEEDMOREPARAMS "\r\n", client.getSocketFd());
 		return ;
 	}
 
 	// Check that the servername is as expected
 	if (servername != "*") {
-		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + " USER " + ERR_NEEDMOREPARAMS "\r\n", client.getSocketFd());
+		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + "USER " + ERR_NEEDMOREPARAMS "\r\n", client.getSocketFd());
 		return ;
 	}
 
 	// Check that realname starts with a : -> Not sure if this is needed
 	if (realname[0] != ':') {
-		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + " USER " + ERR_NEEDMOREPARAMS "\r\n", client.getSocketFd());
+		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + "USER " + ERR_NEEDMOREPARAMS "\r\n", client.getSocketFd());
 		return ;
 	}
 	realname = realname.substr(1);
@@ -311,7 +311,7 @@ void Handler::handleJoinCmd(std::vector<std::string> input, Client &client) {
 
 	if (input.size() <= 1)// JOIN <#channel>{,<#channel>} [<password>{,<password>}]
 	{
-		Handler::sendResponse(Handler::prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + " JOIN " + ERR_NEEDMOREPARAMS + "\r\n", client.getSocketFd());
+		Handler::sendResponse(Handler::prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + "JOIN " + ERR_NEEDMOREPARAMS + "\r\n", client.getSocketFd());
 		return;
 	}
 
@@ -904,7 +904,6 @@ bool Handler::activateOperatorMode(Channel &channel, std::string targetClient)
 {
 	Client* clientPtr = channel.getUserClient(targetClient);
 	if (!clientPtr){
-		//sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOSUCHNICK_CODE + targetClient + " " + ERR_NOSUCHNICK + "\r\n", client.getSocketFd());
 		return false;
 	}
 	channel.removeClient(targetClient);
