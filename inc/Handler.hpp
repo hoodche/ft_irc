@@ -30,7 +30,7 @@
 # define RPL_ENDOFNAMES				"366 "
 
 # define ERR_NOSUCHNICK_CODE		"401 "
-# define ERR_NOSUCHNICK				"No such nick/channel"
+# define ERR_NOSUCHNICK				":No such nick/channel"
 # define ERR_NOSUCHCHANNEL_CODE		"403 "
 # define ERR_NOSUCHCHANNEL			":No such channel"
 # define ERR_TOOMANYTARGETS_CODE	"407 "

@@ -545,7 +545,6 @@ void Handler::handleTopicCmd(std::vector<std::string> input, Client &client)
 			}
 		}
 		targetChannel->setTopic(topic, client);
-		std::cout << "topic: " << topic << std::endl;
 		sendMsgClientsInChannel(*targetChannel, client, "TOPIC", topic);
 		return;
 	}
@@ -943,7 +942,7 @@ bool Handler::deactivateOperatorMode(Channel &channel, std::string targetClient)
 void	Handler::handleInviteCmd(std::vector<std::string> input, Client &client) {
 	if (input.size() < 3) {
 		//std::cout << "INVITE cmd needs three arguments INVITE <nickname> <channel>" << std::endl,
-		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + " INVITE " + ERR_NEEDMOREPARAMS "\r\n", client.getSocketFd());
+		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + "INVITE " + ERR_NEEDMOREPARAMS "\r\n", client.getSocketFd());
 		return ;
 	}
 
@@ -967,22 +966,21 @@ void	Handler::handleInviteCmd(std::vector<std::string> input, Client &client) {
 	}
 
 	// Check if channel is in invite mode and client IS an operator -has the right to invite-
-	if (invitedChannel->getInviteMode() && !invitedChannel->isClientOperator(client)) {
-		//std::cout << "Client " << client.getNickname() << " is not an operator of channel " << invChannelName << std::endl;
-		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_CHANOPRIVSNEEDED_CODE + invChannelName + " " + ERR_CHANOPRIVSNEEDED + "\r\n", client.getSocketFd());
+	if (!invitedChannel->isClientOperator(client)) {
+		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_CHANOPRIVSNEEDED_CODE + client.getNickname() + " " + invChannelName + " " + ERR_CHANOPRIVSNEEDED + "\r\n", client.getSocketFd());
 		return ;
 	}
 
 	Client	*invitedClient = Client::findClientByName(invitedNickname, *clients);
 	if (!invitedClient) {
 		//std::cout << "Invited client does not exist" << std::endl;
-		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOSUCHNICK_CODE + invitedNickname + " " + ERR_NOSUCHNICK + "\r\n", client.getSocketFd());
+		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOSUCHNICK_CODE + client.getNickname() + " " + invitedNickname + " " + ERR_NOSUCHNICK + "\r\n", client.getSocketFd());
 		return ;
 	}
 	// Check if the client is Already in the channel
 	if (invitedClient->isClientInChannel(invChannelName)) {
 		//std::cout << "Invited client is already in the invited channel" << std::endl;
-		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_USERONCHANNEL_CODE + invitedNickname + " " + invChannelName + " " + ERR_USERONCHANNEL + "\r\n", client.getSocketFd());
+		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_USERONCHANNEL_CODE + client.getNickname() + " " + invitedNickname + " " + invChannelName + " " + ERR_USERONCHANNEL + "\r\n", client.getSocketFd());
 		return ;
 	}
 	// Check if invited user was not already invited to that channel. If it was not, add invited user to array.
