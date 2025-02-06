@@ -11,15 +11,14 @@
 /* ************************************************************************** */
 
 #include "../inc/Server.hpp"
-#include "../inc/Handler.hpp"
 #include <arpa/inet.h> // for htons
 #include <stdexcept>   // for std::runtime_error
-#include <poll.h>      // for POLLIN
 #include <fcntl.h>     // for fcntl
 #include <iostream>
 #include <unistd.h> // for read
 #include <csignal> //for SIGINT and SIGQUIT
 #include <string.h> //for memset
+#include <sstream>
 #include <cctype>  // for std::tolower
 
 Server::Server() : listenSocketFd(-1)

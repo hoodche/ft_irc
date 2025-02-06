@@ -3,7 +3,6 @@
 # define CLIENT_HPP
 
 # include <string>
-# include <iostream>
 # include <vector>
 # include <list>
 

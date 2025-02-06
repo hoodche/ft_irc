@@ -15,13 +15,11 @@
 
 #include "../inc/Client.hpp"
 #include "../inc/Handler.hpp"
-#include "../inc/Channel.hpp"
 #include <string>
 #include <netinet/in.h>
 #include <vector>
 #include <poll.h> // for struct pollfd
 #include <map>
-#include <sstream>
 
 # define SOCKET_SIZE	131072	// 131072 Bytes = 128KB is the size of sockets, found out by calling getsockopt() in a test
 

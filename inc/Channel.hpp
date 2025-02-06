@@ -3,7 +3,6 @@
 
 # include <vector>
 # include <string>
-# include <map>
 # include "../inc/Client.hpp"
 
 class Channel {

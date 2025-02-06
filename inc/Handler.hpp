@@ -1,19 +1,13 @@
-
 #ifndef HANDLER_HPP
 # define HANDLER_HPP
 
 # include "../inc/Client.hpp"
 # include "../inc/Channel.hpp"
 # include <netinet/in.h>
-# include <sys/socket.h>
-# include <arpa/inet.h> 
-# include <iostream>
 # include <algorithm>
 # include <string>
-# include <string.h> //for memset
 # include <vector>
 # include <sstream>
-# include <set>
 # include <map>
 # include <list>
 
@@ -150,7 +144,6 @@ class Handler {
 		static void	handlePrivmsgCmd(std::vector<std::string> input, Client &client);
 		static void	handleQuitCmd(std::vector<std::string> input, Client &client);
 		static void handlePartCmd(std::vector<std::string> input, Client &client);
-		//static void handlePongCmd(std::vector<std::string> input, Client &client);
 };
 
 #endif
