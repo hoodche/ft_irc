@@ -47,6 +47,11 @@ void Handler::initModeCmdMaps(void)
 	cmdModeMapNoArgv["-t"] = &deactivateTopicPrivMode;
 }
 
+/**
+ * @brief	main function used to redirect input commands to their respective functions
+ * @param	std::vector<std::string> input - commands and arguments sent by client divided in a vector of strings
+ * @param	Client &client - reference to the client who sent the command
+ */
 void Handler::parseCommand(std::vector<std::string> input, Client &client) {
 	// Check if the command exists in the map. Command extracted as first member of str vector
 	// If command exists and all is good, delete command from str vector
@@ -63,11 +68,10 @@ void Handler::parseCommand(std::vector<std::string> input, Client &client) {
 }
 
 /**
- * @brief	handles the irc "USER <username> <hostname> <servername> :<realname>" command
- * @param	std::vector<std::string> input. Params passed divided in a vector of strings
- * @param	Client &client who sent the USER command
+ * @brief	handles the irc "USER <username> <hostname> <servername> :<realname>" command. Used to register a new user.
+ * @param	std::vector<std::string> input - params passed divided in a vector of strings
+ * @param	Client &client - client who sent the USER command
  */
-
 void Handler::handleUserCmd(std::vector<std::string> input, Client &client) {
 	// Generally seen like this: <username> 0 * <realname> as per this documentation - https://modern.ircdocs.horse/#user-message
 	// Default client received command: USER nerea 0 * :realname -> input = nerea 0 * :realname
@@ -79,7 +83,6 @@ void Handler::handleUserCmd(std::vector<std::string> input, Client &client) {
 		return ;
 	}
 
-	// Assign received strings
 	std::string	username = input[1];
 	std::string hostname = input[2];
 	std::string servername = input[3];
@@ -92,25 +95,21 @@ void Handler::handleUserCmd(std::vector<std::string> input, Client &client) {
 			realname += " ";
 	}
 	
-	// Check that username goes according to what is expected, otherwise send an error to the client
 	if (username.empty() || username.length() < 1 || username.length() > USERLEN) {
 		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + "USER " + ERR_NEEDMOREPARAMS "\r\n", client.getSocketFd());
 		return ;
 	}
 
-	// Check that the hostname is as expected
 	if (hostname != "0") {
 		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + "USER " + ERR_NEEDMOREPARAMS "\r\n", client.getSocketFd());
 		return ;
 	}
 
-	// Check that the servername is as expected
 	if (servername != "*") {
 		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + "USER " + ERR_NEEDMOREPARAMS "\r\n", client.getSocketFd());
 		return ;
 	}
 
-	// Check that realname starts with a : -> Not sure if this is needed
 	if (realname[0] != ':') {
 		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + "USER " + ERR_NEEDMOREPARAMS "\r\n", client.getSocketFd());
 		return ;
@@ -120,11 +119,11 @@ void Handler::handleUserCmd(std::vector<std::string> input, Client &client) {
 	client.setRealname(realname);
 	client.setRegistered(true);
 }
+
 /**
- * @brief	handles the irc "NICK chosennick" command
- * @param	std::vector<std::string> input whole command (NICK inluded as first element)
+ * @brief	handles the irc "NICK chosennick" command. Used to set a new nickname.
+ * @param	std::vector<std::string> input whole command (NICK included as first element, following params are command arguments)
  * @param	Client &client who sent the NICK command
- * 
  */
 void Handler::handleNickCmd(std::vector<std::string> input , Client &client) {
 	if (input.size() == 1) {
@@ -145,6 +144,10 @@ void Handler::handleNickCmd(std::vector<std::string> input , Client &client) {
 	client.setNickname(input[1]);
 }
 
+/**
+ * @brief Checks the validity of the input nickname
+ * @param std::string nickname - input nickname, sent by the client
+ */
 bool Handler::isNicknameValid(std::string nickname)
 {
 	// Check length (1 to 9 characters)
@@ -162,6 +165,11 @@ bool Handler::isNicknameValid(std::string nickname)
 	return true;
 }
 
+/**
+ * @brief	Checks whether the nickname is already in use by a different client
+ * @param std::string nickname - input nickname sent by the client
+ * @param	Client *client - client who sent the nickname, used to get the other clients and compare nicknames
+ */
 bool Handler::isNicknameInUse(std::string nickname, Client *client)
 {
 	const Server* server = client->getServer();
@@ -176,9 +184,8 @@ bool Handler::isNicknameInUse(std::string nickname, Client *client)
 
 /**
  * @brief	handles the irc PRIVMSG command (sending a message to a user or a channel)
- * @param	std::vector<std::string> input whole command (message target -either a user or a channel- follows after "PRIVMSG" ); third parameter, message, must begin with :
+ * @param	std::vector<std::string> input whole command (message target -either a user or a channel- follows after "PRIVMSG" );
  * @param	Client &client who sent the PRIVMSG command
- * 
  */
 void Handler::handlePrivmsgCmd(std::vector<std::string> input , Client &client) {
 	if(input[0][0] == ':')//first parameter is sender´s nickname
@@ -248,12 +255,10 @@ void Handler::handlePrivmsgCmd(std::vector<std::string> input , Client &client) 
 	}
 }
 
-
 /**
- * @brief	handles the irc QUIT command 
+ * @brief	handles the irc QUIT command, which disconnects the user
  * @param	std::vector<std::string> input whole command 
  * @param	Client &client who sent the QUIT command
- * 
  */
 void Handler::handleQuitCmd(std::vector<std::string> input , Client &client) {
 	//respond to leaving client
@@ -302,12 +307,10 @@ void Handler::handlePingCmd(std::vector<std::string> input, Client &client) {
 	sendResponse(message, client.getSocketFd());
 }
 
-/* void Handler::handlePongCmd(std::vector<std::string> input, Client &client) {//weird behavior, why server is sending a PONG command  after receiving clients PONG command (generated as acknowledge to server´s PING)?
-	//server does nothing when receives a PONG command from a client
-	(void)input;//needed to avoid compilation warning
-	(void)client;
-} */
-// Utils
+/**
+ * @brief function used to detect and prepend the server address to messages
+ * @param int clientFd - FD of the client who is sending a command
+ */
 std::string Handler::prependMyserverName(int clientFd) {
 	struct sockaddr_in myServerAddr;
 	memset(&myServerAddr, 0, sizeof(myServerAddr));
@@ -320,27 +323,32 @@ std::string Handler::prependMyserverName(int clientFd) {
 	return (":" + std::string(inet_ntoa(myServerAddr.sin_addr)) + " ");
 }
 
+/**
+ * @brief function used to send responses from the server to the clients
+ * @param std::string message - message the server wants to send
+ * @param int	clientFd - FD of the client the server wants to respond to
+ */
 void Handler::sendResponse(std::string message, int clientFd) {
-	ssize_t bytesSent = send(clientFd, message.c_str(), message.size(), 0); // Flag 0 = Default behaviour. man send to see further behaviour.
+	ssize_t bytesSent = send(clientFd, message.c_str(), message.size(), 0);
 	if (bytesSent == -1) {
 		std::cout << "Failed to send response to client" << std::endl;
 	} else {
-		// Debug Print
 		std::cout << "Response sent to client: " << message << std::endl;
 	}
 }
 
-/*					*/
-/*	 JOIN command	*/
-/*					*/
-
+/**
+ * @brief	handles the irc "JOIN <#channel>{,<#channel>} [<password>{,<password>}]" command. Used to join one or several channels
+ * @param	std::vector<std::string> input whole command (JOIN included as first element, following params are command arguments -channels and passwords-)
+ * @param	Client &client who sent the JOIN command
+ */
 void Handler::handleJoinCmd(std::vector<std::string> input, Client &client) {
 
 	std::vector<std::string>				channelVector;
 	std::vector<std::string>				passVector;
 	std::map<std::string, std::string>		channelDictionary;
 
-	if (input.size() <= 1)// JOIN <#channel>{,<#channel>} [<password>{,<password>}]
+	if (input.size() <= 1)
 	{
 		Handler::sendResponse(Handler::prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + "JOIN " + ERR_NEEDMOREPARAMS + "\r\n", client.getSocketFd());
 		return;
@@ -362,6 +370,10 @@ void Handler::handleJoinCmd(std::vector<std::string> input, Client &client) {
 	joinCmdExec(channelDictionary, client);
 }
 
+/**
+ * @attention	
+ * The following methods are auxiliary functions called in handleJoinCmd
+ */
 std::vector<std::string> Handler::getChannelVector(std::string channelString, Client &client)
 {
 	std::vector<std::string>	channels;
@@ -525,11 +537,17 @@ std::string Handler::getAllClientsInChannel(Channel &channel)
 	}
 	return (clientStr);
 }
+/**
+ * @attention !!
+ * End of handleJoinCmd auxiliary functions
+ */
 
-/*					*/
-/*	 TOPIC command	*/
-/*					*/
 
+/**
+ * @brief	handles the irc "TOPIC <channel> [<topic>]" command. Used to change or view the topic of a given channel
+ * @param	std::vector<std::string> input whole command (TOPIC included as first element, following params are command arguments)
+ * @param	Client &client who sent the TOPIC command
+ */
 void Handler::handleTopicCmd(std::vector<std::string> input, Client &client)
 {
 	if (input.size() < 2)
@@ -595,10 +613,11 @@ std::string Handler::vectorToString(std::vector<std::string> vectorTopic, char d
 	return (ss.str());
 }
 
-/*					*/
-/*	 KICK command	*/
-/*					*/
-
+/**
+ * @brief	handles the irc "KICK <channel> <user> *( "," <user> ) [<comment>]" command. Used to kick a client from a channel
+ * @param	std::vector<std::string> input whole command (KICK included as first element, following params are command arguments -channels and passwords-)
+ * @param	Client &client who sent the KICK command
+ */
 void Handler::handleKickCmd(std::vector<std::string> input, Client &client)
 {
 	if (input.size() < 3)
@@ -660,11 +679,11 @@ std::string Handler::createKickMessage(std::vector<std::string> &input)
 	return message;
 }
 
-/*					*/
-/*	 MODE command	*/
-/*					*/
-
-
+/**
+ * @brief	handles the irc "MODE <target> [<modestring> [<mode arguments>...]]" command. Used to set or remove options (or modes) from a given target.
+ * @param	std::vector<std::string> input whole command (MODE included as first element, following params are command arguments -channels and passwords-)
+ * @param	Client &client who sent the MODE command
+ */
 void Handler::handleModeCmd(std::vector<std::string> input, Client &client)
 {
 	(void)client;
@@ -748,6 +767,11 @@ void Handler::handleModeCmd(std::vector<std::string> input, Client &client)
 	return;
 }
 
+
+/**
+ * @attention	
+ * The following methods are auxiliary functions called in handleModeCmd
+ */
 bool Handler::parseFlagString(std::vector<std::string> &flagVector, std::string flags, Client &client)
 {
 	int status = PLUS_STATUS;
@@ -787,7 +811,7 @@ int		Handler::getStatusSymbol(std::string str)
 
 void Handler::sendChannelModeIs(Client &client, Channel &channel)
 {
-	std::string flagStr("+"); //This init is correct, really. If not modes sets, it sends only "+"
+	std::string flagStr("+"); //This init is correct. If no modes are set, it only sends "+"
 
 	std::string argv;
 	if (channel.getInviteMode() == true)
@@ -955,20 +979,16 @@ bool Handler::deactivateOperatorMode(Channel &channel, std::string targetClient)
 	std::cout << "Operator privileges removed to: " << targetClient << std::endl;
 	return true;
 }
-
-/*					*/
-/*	 INVITE command	*/
-/*					*/
+/**
+ * @attention	 !!
+ * End of the MODE auxiliary functions
+ */
 
 /**
  * @brief	handles the irc "INVITE <username> <#channel>" command. Only operators can invite to channels in invite mode
  * @param	std::vector<std::string> input. Params passed divided in a vector of strings
  * @param	Client &client who sent the INVITE command
  */
-
-// As usual, depending on RFC definition, some points might differ. Following Modern IRC definition here:
-// https://modern.ircdocs.horse/#invite-message
-
 void	Handler::handleInviteCmd(std::vector<std::string> input, Client &client) {
 	if (input.size() < 3) {
 		//std::cout << "INVITE cmd needs three arguments INVITE <nickname> <channel>" << std::endl,
@@ -1024,6 +1044,10 @@ void	Handler::handleInviteCmd(std::vector<std::string> input, Client &client) {
 	return ;
 }
 
+/**
+ * @brief	sets a client prefix which uses the client nickname, username and ip address
+ * @param Client &client - client whose prefix we want to generate
+ */
 std::string Handler::getClientPrefix(Client const &client) {
 	std::string prefix(":");
 	prefix.append(client.getNickname());
@@ -1034,6 +1058,13 @@ std::string Handler::getClientPrefix(Client const &client) {
 	return (prefix);
 }
 
+/**
+ * @brief sends a message to all clients in an specified channel
+ * @param	Channel &channel - channel we want to communicate to
+ * @param Client &client - client sending the message
+ * @param std::string cmd - command we need to send
+ * @param std::string argv - arguments
+ */
 void Handler::sendMsgClientsInChannel(Channel &channel, Client &client, std::string cmd, std::string argv){
 
 	std::vector<Client *> operators = channel.getOperators();
@@ -1068,6 +1099,10 @@ void Handler::sendMsgClientsInChannel(Channel &channel, Client &client, std::str
 	return;
 }
 
+/**
+ * @attention !!
+ * Next functions are variations of the previously explained one, used for different cases and messages
+ */
 void Handler::sendMsgClientsInChannelNoPrintCh(Channel &channel, Client &client, std::string cmd, std::string argv){
 
 	std::vector<Client *> operators = channel.getOperators();
@@ -1135,8 +1170,18 @@ void Handler::sendMsgClientsInChannelKick(Channel &channel, Client &client, std:
 	}
 	return;
 }
+/**
+ * @attention !!
+ * End of send message to clients in channels functions
+ */
 
-// PART <channel>{,<channel>} [<reason>]
+
+
+/**
+ * @brief	handles the irc "PART <channel>{,<channel>} [<reason>]" command. Used to leave one or several channels and give a reason (optional)
+ * @param	std::vector<std::string> input whole command (PART included as first element, following params are command arguments -channels and reason-)
+ * @param	Client &client who sent the PART command
+ */
 void	Handler::handlePartCmd(std::vector<std::string> input, Client &client) {
 	if (input.size() < 2) {
 		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + "PART " + ERR_NEEDMOREPARAMS + "\r\n", client.getSocketFd());
@@ -1200,6 +1245,11 @@ void	Handler::handlePartCmd(std::vector<std::string> input, Client &client) {
     return;
 }
 
+/**
+ * @brief remove a channel from the list of channels once it's empty
+ * @param std::list<Channel> &channels - list of channels
+ * @param std::string channelName - channel to remove from the list
+ */
 void	Handler::deleteChannel(std::list<Channel> &channels, std::string channelName) {
 	if (channels.empty())
 		return ;
@@ -1213,10 +1263,17 @@ void	Handler::deleteChannel(std::list<Channel> &channels, std::string channelNam
 	}
 }
 
+/**
+ * @brief returns the list of channels
+ */
 std::list<Channel>& Handler::getChannels() {
 	return channels;
 }
 
+/**
+ * @brief leave all channels a client is in. It can be done with join /0
+ * @param Client &client - client who's leaving
+ */
 void	Handler::leaveAllChannels(Client &client)
 {
 	std::vector<Channel *> clientChannels = client.getClientChannels();
