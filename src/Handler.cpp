@@ -139,7 +139,7 @@ void Handler::handleNickCmd(std::vector<std::string> input , Client &client) {
 		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NICKNAMEINUSE_CODE + "* " + input[1] + " " + ERR_NICKNAMEINUSE + "\r\n", client.getSocketFd());
 		return ;
 	}
-	sendResponse(":" + client.getNickname() + " NICK " + input[1] + "\r\n", client.getSocketFd());
+	sendResponse(getClientPrefix(client) + " NICK " + input[1] + "\r\n", client.getSocketFd());
 	client.setNickname(input[1]);
 }
 
@@ -177,7 +177,7 @@ void Handler::handlePrivmsgCmd(std::vector<std::string> input , Client &client) 
 		Client* foundClient = Client::findClientByName(input[1], clients);
 		int targetFd = foundClient->getSocketFd();
 		std::vector<std::string> subVector(input.begin() + 2, input.end());
-		std::string outboundMessage = ":" + client.getNickname() + " PRIVMSG " + input[1] + " :" + vectorToString(subVector, ' ') + "\r\n";
+		std::string outboundMessage = getClientPrefix(client) + " PRIVMSG " + input[1] + " " + vectorToString(subVector, ' ') + "\r\n";
 		sendResponse(outboundMessage, targetFd);
 		return;
 	}
@@ -198,7 +198,7 @@ void Handler::handlePrivmsgCmd(std::vector<std::string> input , Client &client) 
 		{
 			if((*itClients)->getNickname() != client.getNickname())
 			{
-				std::string outboundMessage = ":" + client.getNickname() + " PRIVMSG " + input[1] + " :" + vectorToString(subVector, ' ') + "\r\n";
+				std::string outboundMessage = getClientPrefix(client) + " PRIVMSG " + input[1] + " " + vectorToString(subVector, ' ') + "\r\n";
 				sendResponse(outboundMessage, (*itClients)->getSocketFd());
 			}
 			itClients++;
@@ -208,7 +208,7 @@ void Handler::handlePrivmsgCmd(std::vector<std::string> input , Client &client) 
 		{
 			if((*itClients)->getNickname() != client.getNickname())
 			{
-				std::string outboundMessage = ":" + client.getNickname() + " PRIVMSG " + input[1] + " :" + vectorToString(subVector, ' ') + "\r\n";
+				std::string outboundMessage = getClientPrefix(client) + " PRIVMSG " + input[1] + " " + vectorToString(subVector, ' ') + "\r\n";
 				sendResponse(outboundMessage, (*itClients)->getSocketFd());
 			}
 			itClients++;
@@ -248,13 +248,13 @@ void Handler::handleQuitCmd(std::vector<std::string> input , Client &client) {
 		std::vector<Client *>::iterator itClients = operators.begin();
 		while (itClients != operators.end())
 		{
-			sendResponse(":" + client.getNickname() + " QUIT :Client has left the server\r\n", (*itClients)->getSocketFd());
+			sendResponse(getClientPrefix(client) + " QUIT :Client has left the server\r\n", (*itClients)->getSocketFd());
 			itClients++;
 		}
 		itClients = users.begin();
 		while (itClients != users.end())
 		{
-			sendResponse(":" + client.getNickname() + " QUIT :Client has left the server\r\n", (*itClients)->getSocketFd());
+			sendResponse(getClientPrefix(client) + " QUIT :Client has left the server\r\n", (*itClients)->getSocketFd());
 			itClients++;
 		}
 		/* if ((*itChannels)->getUsers().empty() && (*itChannels)->getOperators().empty())
@@ -973,7 +973,7 @@ void	Handler::handleInviteCmd(std::vector<std::string> input, Client &client) {
 	Client	*invitedClient = Client::findClientByName(invitedNickname, *clients);
 	if (!invitedClient) {
 		//std::cout << "Invited client does not exist" << std::endl;
-		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOSUCHNICK_CODE + client.getNickname() + " " invitedNickname + " " + ERR_NOSUCHNICK + "\r\n", client.getSocketFd());
+		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOSUCHNICK_CODE + client.getNickname() + " " + invitedNickname + " " + ERR_NOSUCHNICK + "\r\n", client.getSocketFd());
 		return ;
 	}
 	// Check if the client is Already in the channel
