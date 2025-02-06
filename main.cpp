@@ -1,14 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   main.cpp                                           :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/12/22 13:18:44 by igcastil          #+#    #+#             */
-/*   Updated: 2025/01/07 17:48:46 by igcastil         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
 
 #include <iostream>
 #include <cstring>
@@ -71,6 +60,8 @@ int	argsOk(int argc, char **argv)
 	}
 	return 1;
 }
+
+// Main function
 int main(int argc, char **argv)
 {
 	if (!argsOk(argc, argv))
