@@ -42,7 +42,7 @@
 # define ERR_NICKNAMEINUSE_CODE		"433 "
 # define ERR_NICKNAMEINUSE			":Nickname is already in use"
 # define ERR_USERNOTINCHANNEL_CODE	"441 "
-# define ERR_USERNOTINCHANNEL		":They aren't on that channel" //Is really used in hexchat
+# define ERR_USERNOTINCHANNEL		":They aren't on that channel"
 # define ERR_NOTONCHANNEL_CODE		"442 "
 # define ERR_NOTONCHANNEL			":You're not on that channel"
 # define ERR_USERONCHANNEL_CODE		"443 "

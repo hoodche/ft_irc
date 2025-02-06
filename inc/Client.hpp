@@ -45,7 +45,6 @@ class Client {
 		void						setVerified(bool tf);
 		void						setRegistered(bool tf);
 
-		void						addServer(Server &newServer);
 		void						addChannel(Channel &newChannel);
 		void						addInvitedChannel(Channel &invitedChannel);
 		void						removeInvitation(Channel &channel);

@@ -1,9 +1,5 @@
 #include "../inc/Channel.hpp"
 
-//Init all the possible modes that the subject requires. 
-//TODO: Chech how our client default modes
-//Default constructor. It is defined because it is a standard, but never used
-
 Channel::Channel(void){
 	this->name = "";
 	this->topic = "";
@@ -15,14 +11,13 @@ Channel::Channel(void){
 
 // Usable constructor. We init the instance using a Client. Following the rfc, this 
 // user is the default operator
-
 Channel::Channel(Client &firstOperator){
 	this->name = "";
 	this->topic = "";
 	this->password = "";
 	this->isTopicMode = false;
 	this->isInviteMode = false;
-	this->userLimit = 0; // On 0, there is no limit // On 0, there is no limit
+	this->userLimit = 0; // On 0, there is no limit
 	this->operators.push_back(&firstOperator);
 }
 
@@ -70,7 +65,6 @@ void Channel::setTopic(std::string const channelTopic, Client &client)
 
 void Channel::addUser(Client &client)
 {
-	//Add something to return if we get a repeated user
 	users.push_back(&client);
 	return ;
 }
