@@ -4,6 +4,10 @@
 
 #include <sstream>
 #include <cctype>
+#include <sys/socket.h>
+#include <arpa/inet.h> 
+#include <iostream>
+#include <string.h>
 
 std::list<Channel> Handler::channels; //Static variable must be declared outside the class so the linker can fint it. It is not vinculated to an object,
 										//so the programmer have to do the job
@@ -19,7 +23,6 @@ void Handler::initCmdMap(void) {
 	cmdMap["user"] = &handleUserCmd;
 	cmdMap["nick"] = &handleNickCmd;
 	cmdMap["ping"] = &handlePingCmd;
-	//cmdMap["pong"] = &handlePingCmd;
 	cmdMap["join"] = &handleJoinCmd;
 	cmdMap["topic"] = &handleTopicCmd;
 	cmdMap["kick"] = &handleKickCmd;
