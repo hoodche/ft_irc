@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: igcastil <igcastil@student.42madrid.com    +#+  +:+       +#+        */
+/*   By: nvillalt <nvillalt@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/24 18:26:33 by igcastil          #+#    #+#             */
-/*   Updated: 2025/02/02 11:55:24 by igcastil         ###   ########.fr       */
+/*   Updated: 2025/02/04 13:59:02 by nvillalt         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -187,7 +187,7 @@ void Server::readFromFd(int clientConnectedfd)
 	if (bytesRead < 0) // Error handling
 		throw std::runtime_error("Server could not read incoming mesage ");
 	else if (bytesRead == 0) { // Client has closed the connection
-		std::cout << "Client has closed the connection" << std::endl;
+		std::cout << "Client " << clientConnectedfd << " has closed the connection. calling disconnectClient()" << std::endl;
 		disconnectClient(clientConnectedfd);
 		return ;
 	}
@@ -274,11 +274,10 @@ void	Server::processMessage(int fd, std::string message) {
  	if (client->isRegistered() == false && client->isVerified()) {
 		if (divMsg[0] == "nick")
 			Handler::handleNickCmd(divMsg, *client);
-		if (divMsg[0] == "user")
+		if (divMsg[0] == "user" && !client->getNickname().empty())
 			Handler::handleUserCmd(divMsg, *client);
 		if (!client->getUsername().empty() && !client->getNickname().empty())
 			Handler::sendResponse(Handler::prependMyserverName(fd) + RPL_WELCOME_CODE + client->getNickname() + " " + ":Welcome to our IRC network, " + client->getNickname() + "\r\n", fd);
-			//Handler::sendResponse("PING " + Handler::prependMyserverName(fd) + "\n", fd);server MAY send this ping or may not
 	} else if (client->isRegistered() && client->isVerified()) {
 		if ((divMsg[0] == "user" || divMsg[0] == "pass") && client->isRegistered()) {
 			Handler::sendResponse(Handler::prependMyserverName(fd) + ERR_ALREADYREGISTERED_CODE + ERR_ALREADYREGISTERED + "\r\n", fd);
@@ -335,14 +334,25 @@ void Server::disconnectClient(int clientConnectedfd)
 {
 	close(clientConnectedfd);
 	std::list<Client>::iterator it = clients.begin();
+	//remove client from the clients list in Server and from the channels it is in (deleting channel if client was the last client in it)
 	while(it != clients.end())
 	{
 		if (it->getSocketFd() == clientConnectedfd) {
+			std::vector<Channel *> clientChannels = it->getClientChannels();
+			std::vector<Channel *>::iterator itChannels = clientChannels.begin();
+			while (itChannels != clientChannels.end())
+			{
+				(*itChannels)->removeClient(it->getNickname());
+				if ((*itChannels)->getUsers().empty() && (*itChannels)->getOperators().empty())
+					Handler::deleteChannel(Handler::getChannels(), (*itChannels)->getName());
+				itChannels++;
+			}
 			clients.erase(it);
 			break;
 		}
 		it++;
 	}
+	// Remove client from the fds vector
 	for (size_t i = 0; i < this->fds.size(); i++)
 	{
 		if (this->fds[i].fd == clientConnectedfd)
