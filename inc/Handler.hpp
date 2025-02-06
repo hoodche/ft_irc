@@ -121,6 +121,10 @@ class Handler {
 		static bool	activateOperatorMode(Channel &channel, std::string targetClient);
 		static bool	deactivateOperatorMode(Channel &channel, std::string targetClient);
 
+	// Nick utils
+		static bool	isNicknameValid(std::string nickname);
+		static bool	isNicknameInUse(std::string nickname, Client *client);
+
 	public:
 		Handler(void);
 		void parseCommand(std::vector<std::string> divMsg, Client &client);
