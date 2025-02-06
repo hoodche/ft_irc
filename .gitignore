@@ -1,3 +1,5 @@
 ircserv
 client
 .vscode
+src/*.o
+src/*.d
