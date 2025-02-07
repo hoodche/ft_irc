@@ -23,7 +23,7 @@ class Server
 		struct sockaddr_in serverAddress, clientAddress;
 		std::vector<struct pollfd> fds;
 		struct pollfd connectedSocket;
-		std::map<int, std::string> clientBuffers;
+		std::map<int, std::string> clientInboundBuffers;
 
 	public:
 		static bool signalReceived;
@@ -36,6 +36,7 @@ class Server
 		static void signalHandler(int signum);
 		void acceptClient();
 		void readFromFd(int fd);
+		void sendToFd(int fd);
 		void printClients(void) const;
 		static std::string trimMessage(std::string str);
 		void disconnectClient(int clientConnectedfd);

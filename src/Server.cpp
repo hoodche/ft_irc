@@ -107,6 +107,8 @@ void Server::init(int port, std::string password)
 				else
 					this->readFromFd(fds[i].fd);
 			}
+			else if (fds[i].revents & POLLOUT)
+					this->sendToFd(fds[i].fd);
 		}
 	}
 	this->closeFds();
@@ -158,6 +160,41 @@ void Server::readFromFd(int clientConnectedfd)
 	}
 	buffer[bytesRead] = '\0'; 
 
+	if (clientInboundBuffers.find(clientConnectedfd) == clientInboundBuffers.end())
+		clientInboundBuffers[clientConnectedfd] = "";
+	clientInboundBuffers[clientConnectedfd].append(buffer);
+
+	size_t	pos;
+	while (Client::findClientByFd(clientConnectedfd, clients) && (pos = clientInboundBuffers[clientConnectedfd].find("\r\n")) != std::string::npos) {
+		std::string message;
+		if(pos >= 510)
+			message = clientInboundBuffers[clientConnectedfd].substr(0, 510);
+		else
+			message = clientInboundBuffers[clientConnectedfd].substr(0, pos);
+		clientInboundBuffers[clientConnectedfd].erase(0, pos + 2);
+		processMessage(clientConnectedfd, message);
+	}
+}
+
+
+/**
+ * @brief	sends what is in client outboundBuffer to a connected socket when 
+ * 			poll function detects a POLLOUT event in it
+ * @param	int clientConnectedfd socket fd where data will be sent
+ */
+void Server::sendToFd(int clientConnectedfd)
+{
+	char	buffer[SOCKET_SIZE];
+	ssize_t	bytesRead =recv(clientConnectedfd, buffer, sizeof(buffer) - 1, 0);
+	if (bytesRead < 0)
+		throw std::runtime_error("Server could not read incoming mesage ");
+	else if (bytesRead == 0) { 
+		std::cout << "Client " << clientConnectedfd << " has closed the connection. calling disconnectClient()" << std::endl;
+		disconnectClient(clientConnectedfd);
+		return ;
+	}
+	buffer[bytesRead] = '\0'; 
+
 	if (clientBuffers.find(clientConnectedfd) == clientBuffers.end())
 		clientBuffers[clientConnectedfd] = "";
 	clientBuffers[clientConnectedfd].append(buffer);
@@ -173,6 +210,8 @@ void Server::readFromFd(int clientConnectedfd)
 		processMessage(clientConnectedfd, message);
 	}
 }
+
+
 
 void toLowerCase(std::string& str) {
 	for (size_t i = 0; i < str.size(); ++i) {
@@ -256,7 +295,7 @@ void Server::printClients() const
 	std::cout << "Currently connected clients and saved buffer:" << std::endl;
 
 	std::map<int, std::string>::const_iterator it;
-	for (it = clientBuffers.begin(); it != clientBuffers.end(); ++it) {
+	for (it = clientInboundBuffers.begin(); it != clientInboundBuffers.end(); ++it) {
 		int clientFd = it->first;  // The client socket FD
 		const std::string& buffer = it->second;  // The client's accumulated buffer
 
@@ -299,7 +338,7 @@ void Server::disconnectClient(int clientConnectedfd)
 			break;
 		}
 	}
-	clientBuffers.erase(clientConnectedfd);
+	clientInboundBuffers.erase(clientConnectedfd);
 	std::cout << "Client FD: " << clientConnectedfd << " has been disconnected" << std::endl;
 }
 
