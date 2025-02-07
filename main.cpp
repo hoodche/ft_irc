@@ -37,9 +37,9 @@ int	argsOk(int argc, char **argv)
 	}
 	try
 	{
-		if (static_cast<std::string>(argv[1]).find_first_not_of("0123456789") != std::string::npos)
+		if (static_cast<std::string>(argv[1]).find_first_not_of("0123456789") != std::string::npos || static_cast<std::string>(argv[1]).empty())
 		{
-			std::cout << "port number only with digits please" << std::endl;
+			std::cout << "port number must contain digits (and only digits) please" << std::endl;
 			return 0;
 		}
 		if(myStoi(argv[1]) < 1024 || myStoi(argv[1]) > 65535 )
