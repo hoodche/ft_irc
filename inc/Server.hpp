@@ -24,6 +24,7 @@ class Server
 		std::vector<struct pollfd> fds;
 		struct pollfd connectedSocket;
 		std::map<int, std::string> clientInboundBuffers;
+		std::map<int, std::string> clientOutboundBuffers;
 
 	public:
 		static bool signalReceived;
