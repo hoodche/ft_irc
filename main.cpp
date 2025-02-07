@@ -47,6 +47,11 @@ int	argsOk(int argc, char **argv)
 			std::cout << "port number must be >= 1024 and <= 65535" << std::endl;
 			return 0;
 		}
+		if (static_cast<std::string>(argv[2]).empty())
+		{
+			std::cout << "there must be a password (between 1 and 20 characters)" << std::endl;
+			return 0;
+		}
 		if(strlen(argv[2]) > 20 )
 		{
 			std::cout << "password must not have more than 20 characters" << std::endl;
