@@ -21,12 +21,12 @@ class Server
 		std::string password;
 		int listenSocketFd;
 		struct sockaddr_in serverAddress, clientAddress;
-		std::vector<struct pollfd> fds;
 		struct pollfd connectedSocket;
 		std::map<int, std::string> clientInboundBuffers;
-		std::map<int, std::string> clientOutboundBuffers;
 
 	public:
+	
+		std::vector<struct pollfd> fds;
 		static bool signalReceived;
 		Server();
 		std::list<Client> getClients(void) const;

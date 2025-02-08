@@ -22,7 +22,9 @@ class Client {
 		std::string				ipAddr;
 		const Server			*connectedToServer;
 
+
 	public:
+		std::string				outboundBuffer;
 		Client(int receivedFd, const Server &newServer, std::string ip);
 		~Client(void);
 

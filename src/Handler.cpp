@@ -62,7 +62,7 @@ void Handler::parseCommand(std::vector<std::string> input, Client &client) {
 	if (cmdMap.find(command) != cmdMap.end()) {
 		cmdMap[command](input, client);
 	} else
-		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_UNKNOWNCOMMAND_CODE + command + " " + ERR_UNKNOWNCOMMAND "\r\n", client.getSocketFd());
+		write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_UNKNOWNCOMMAND_CODE + command + " " + ERR_UNKNOWNCOMMAND "\r\n", client);
 }
 
 /**
@@ -72,7 +72,7 @@ void Handler::parseCommand(std::vector<std::string> input, Client &client) {
  */
 void Handler::handleUserCmd(std::vector<std::string> input, Client &client) {
 	if (input.size() < 4) {
-		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + "USER " + ERR_NEEDMOREPARAMS "\r\n", client.getSocketFd());
+		write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + "USER " + ERR_NEEDMOREPARAMS "\r\n", client);
 		return ;
 	}
 	std::string	username = input[1];
@@ -86,19 +86,19 @@ void Handler::handleUserCmd(std::vector<std::string> input, Client &client) {
 			realname += " ";
 	}
 	if (username.empty() || username.length() < 1 || username.length() > USERLEN) {
-		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + "USER " + ERR_NEEDMOREPARAMS "\r\n", client.getSocketFd());
+		write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + "USER " + ERR_NEEDMOREPARAMS "\r\n", client);
 		return ;
 	}
 	if (hostname != "0") {
-		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + "USER " + ERR_NEEDMOREPARAMS "\r\n", client.getSocketFd());
+		write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + "USER " + ERR_NEEDMOREPARAMS "\r\n", client);
 		return ;
 	}
 	if (servername != "*") {
-		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + "USER " + ERR_NEEDMOREPARAMS "\r\n", client.getSocketFd());
+		write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + "USER " + ERR_NEEDMOREPARAMS "\r\n", client);
 		return ;
 	}
 	if (realname[0] != ':') {
-		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + "USER " + ERR_NEEDMOREPARAMS "\r\n", client.getSocketFd());
+		write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + "USER " + ERR_NEEDMOREPARAMS "\r\n", client);
 		return ;
 	}
 	realname = realname.substr(1);
@@ -114,20 +114,20 @@ void Handler::handleUserCmd(std::vector<std::string> input, Client &client) {
  */
 void Handler::handleNickCmd(std::vector<std::string> input , Client &client) {
 	if (input.size() == 1) {
-		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NONICKNAMEGIVEN_CODE + ERR_NONICKNAMEGIVEN + "\r\n", client.getSocketFd());
+		write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_NONICKNAMEGIVEN_CODE + ERR_NONICKNAMEGIVEN + "\r\n", client);
 		return ;
 	}
 	if (!isNicknameValid(input[1]))
 	{
-		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_ERRONEUSNICKNAME_CODE + ERR_ERRONEUSNICKNAME + "\r\n", client.getSocketFd());
+		write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_ERRONEUSNICKNAME_CODE + ERR_ERRONEUSNICKNAME + "\r\n", client);
 		return ;
 	}
 	if (isNicknameInUse(input[1], &client))
 	{
-		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NICKNAMEINUSE_CODE + "* " + input[1] + " " + ERR_NICKNAMEINUSE + "\r\n", client.getSocketFd());
+		write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_NICKNAMEINUSE_CODE + "* " + input[1] + " " + ERR_NICKNAMEINUSE + "\r\n", client);
 		return ;
 	}
-	sendResponse(getClientPrefix(client) + " NICK " + input[1] + "\r\n", client.getSocketFd());
+	write2OutboundBuffer(getClientPrefix(client) + " NICK " + input[1] + "\r\n", client);
 	client.setNickname(input[1]);
 }
 
@@ -176,11 +176,11 @@ void Handler::handlePrivmsgCmd(std::vector<std::string> input , Client &client) 
 		input.erase(input.begin());
 
 	if (input.size() == 1 || input[1][0] == ':'){
-		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NORECIPIENT_CODE + ERR_NORECIPIENT + "\r\n", client.getSocketFd());
+		write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_NORECIPIENT_CODE + ERR_NORECIPIENT + "\r\n", client);
 		return ;
 	}
 	if (input.size() == 2){
-		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOTEXTTOSEND_CODE + ERR_NOTEXTTOSEND + "\r\n", client.getSocketFd());
+		write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_NOTEXTTOSEND_CODE + ERR_NOTEXTTOSEND + "\r\n", client);
 		return ;
 	}
 	if (input[2][0] != ':')
@@ -188,32 +188,30 @@ void Handler::handlePrivmsgCmd(std::vector<std::string> input , Client &client) 
 	else
 		input[2].erase(input[2].begin());
 
-	if (input[1][0] != '#')
+	if (input[1][0] != '#')//send message to input[1] user
 	{
 		if(!isNicknameInUse(input[1], &client)) {
-			sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOSUCHNICK_CODE + client.getNickname() + " " + input[1] + " " + ERR_NOSUCHNICK + "\r\n", client.getSocketFd());
+			write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_NOSUCHNICK_CODE + client.getNickname() + " " + input[1] + " " + ERR_NOSUCHNICK + "\r\n", client);
 			return ;
 		}
 
 		const Server* server = client.getServer();
 		std::list<Client> clients = server->getClients();
 		Client* foundClient = Client::findClientByName(input[1], clients);
-		int targetFd = foundClient->getSocketFd();
+		//int targetFd = foundClient->getSocketFd();
 		std::vector<std::string> subVector(input.begin() + 2, input.end());
 		std::string outboundMessage = getClientPrefix(client) + " PRIVMSG " + input[1] + " " + vectorToString(subVector, ' ') + "\r\n";
-		sendResponse(outboundMessage, targetFd);
-
+		write2OutboundBuffer(outboundMessage, *foundClient);
 		return;
 	}
-	if (input[1][0] == '#')
+	if (input[1][0] == '#')// message target is a channel
 	{
 		std::list<Channel>::iterator itChannels = findChannel(input[1]);
 		if (itChannels == channels.end())
 		{
-			sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOSUCHNICK_CODE + client.getNickname() + " " + input[1] + " " + ERR_NOSUCHNICK + "\r\n", client.getSocketFd());
+			write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_NOSUCHNICK_CODE + client.getNickname() + " " + input[1] + " " + ERR_NOSUCHNICK + "\r\n", client);
 			return ;
 		}
-
 		std::vector<Client *> operators = itChannels->getOperators() ;
 		std::vector<Client *> users = itChannels->getUsers() ;
 		std::vector<Client *>::iterator itClients = operators.begin();
@@ -223,7 +221,7 @@ void Handler::handlePrivmsgCmd(std::vector<std::string> input , Client &client) 
 			if((*itClients)->getNickname() != client.getNickname())
 			{
 				std::string outboundMessage = getClientPrefix(client) + " PRIVMSG " + input[1] + " " + vectorToString(subVector, ' ') + "\r\n";
-				sendResponse(outboundMessage, (*itClients)->getSocketFd());
+				write2OutboundBuffer(outboundMessage, *(*itClients));
 			}
 			itClients++;
 		}
@@ -233,7 +231,7 @@ void Handler::handlePrivmsgCmd(std::vector<std::string> input , Client &client) 
 			if((*itClients)->getNickname() != client.getNickname())
 			{
 				std::string outboundMessage = getClientPrefix(client) + " PRIVMSG " + input[1] + " " + vectorToString(subVector, ' ') + "\r\n";
-				sendResponse(outboundMessage, (*itClients)->getSocketFd());
+				write2OutboundBuffer(outboundMessage, *(*itClients));
 			}
 			itClients++;
 		}
@@ -251,10 +249,10 @@ void Handler::handleQuitCmd(std::vector<std::string> input , Client &client) {
 	if (input.size() >= 2 && input[1][0] == ':')
 	{
 		std::vector<std::string> subVector(input.begin() + 1, input.end());
-		sendResponse("ERROR " + client.getNickname() + " (Quit " + vectorToString(subVector, ' ') + ")\r\n", client.getSocketFd());
+		write2OutboundBuffer("ERROR " + client.getNickname() + " (Quit " + vectorToString(subVector, ' ') + ")\r\n", client);
 	}
 	else
-		sendResponse("ERROR " + client.getNickname() + " (Quit)\r\n", client.getSocketFd());
+		write2OutboundBuffer("ERROR " + client.getNickname() + " (Quit)\r\n", client);
 	std::vector<Channel *> clientChannels = client.getClientChannels();
 	std::vector<Channel *>::iterator itChannels = clientChannels.begin();
 	while (itChannels != clientChannels.end())
@@ -265,13 +263,13 @@ void Handler::handleQuitCmd(std::vector<std::string> input , Client &client) {
 		std::vector<Client *>::iterator itClients = operators.begin();
 		while (itClients != operators.end())
 		{
-			sendResponse(getClientPrefix(client) + " QUIT :Client has left the server\r\n", (*itClients)->getSocketFd());
+			write2OutboundBuffer(getClientPrefix(client) + " QUIT :Client has left the server\r\n", *(*itClients));
 			itClients++;
 		}
 		itClients = users.begin();
 		while (itClients != users.end())
 		{
-			sendResponse(getClientPrefix(client) + " QUIT :Client has left the server\r\n", (*itClients)->getSocketFd());
+			write2OutboundBuffer(getClientPrefix(client) + " QUIT :Client has left the server\r\n", *(*itClients));
 			itClients++;
 		}
 		itChannels++;
@@ -287,7 +285,7 @@ void Handler::handleQuitCmd(std::vector<std::string> input , Client &client) {
  */
 void Handler::handlePingCmd(std::vector<std::string> input, Client &client) {
 	std::string message = "PONG " + input[1];
-	sendResponse(message, client.getSocketFd());
+	write2OutboundBuffer(message, client);
 }
 
 /**
@@ -309,16 +307,39 @@ std::string Handler::prependMyserverName(int clientFd) {
 /**
  * @brief function used to send responses from the server to the clients
  * @param std::string message - message the server wants to send
+ * @param  Client *client the server wants to respond to
+ */
+void Handler::write2OutboundBuffer(std::string message, Client &client) {
+	//std::cerr << "called write2OutboundBuffer " << message << client.getSocketFd() << std::endl;
+	client.outboundBuffer.append(message);//TO DO client.outboundBuffer must be made private, a getter must be created
+	Server* server = const_cast<Server*>(client.getServer());
+	for (size_t i = 0; i < server->fds.size(); i++)//TO DO Server()->fds has been made public. must be remade private and its getter created
+	{
+		if (server->fds[i].fd == client.getSocketFd())
+		{
+			server->fds[i].events = POLLOUT;
+			break;
+		}
+	}
+
+	//client.getServer()->updatePollfd(client.getSocketFd(), POLLOUT);
+	//std::cerr << "called write2OutboundBuffer. client.outboundBuffer: " << client.outboundBuffer << std::endl;
+
+}
+
+/**
+ * @brief function used to send responses from the server to the clients
+ * @param std::string message - message the server wants to send
  * @param int	clientFd - FD of the client the server wants to respond to
  */
-void Handler::sendResponse(std::string message, int clientFd) {
+/* void Handler::sendResponse(std::string message, int clientFd) {
 	ssize_t bytesSent = send(clientFd, message.c_str(), message.size(), 0);
 	if (bytesSent == -1) {
 		std::cout << "Failed to send response to client" << std::endl;
 	} else {
 		std::cout << "Response sent to client: " << message << std::endl;
 	}
-}
+} */
 
 /**
  * @brief	handles the irc "JOIN <#channel>{,<#channel>} [<password>{,<password>}]" command. Used to join one or several channels
@@ -333,7 +354,7 @@ void Handler::handleJoinCmd(std::vector<std::string> input, Client &client) {
 
 	if (input.size() <= 1)
 	{
-		Handler::sendResponse(Handler::prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + "JOIN " + ERR_NEEDMOREPARAMS + "\r\n", client.getSocketFd());
+		Handler::write2OutboundBuffer(Handler::prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + "JOIN " + ERR_NEEDMOREPARAMS + "\r\n", client);
 		return;
 	}
 
@@ -366,7 +387,7 @@ std::vector<std::string> Handler::getChannelVector(std::string channelString, Cl
 	while(std::getline(ss, tempChannel, ','))
 	{
 		if (*tempChannel.begin() != '#')
-			sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOSUCHCHANNEL_CODE + tempChannel + " " + ERR_NOSUCHCHANNEL + "\r\n", client.getSocketFd());
+			write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_NOSUCHCHANNEL_CODE + tempChannel + " " + ERR_NOSUCHCHANNEL + "\r\n", client);
 		else
 			channels.push_back(tempChannel);
 	}
@@ -445,7 +466,7 @@ void Handler::authClientToChannel(Channel &channel, std::string &password, Clien
 		if (channel.getPassword() != password)
 		{
 			passBool = false;
-			sendResponse(prependMyserverName(client.getSocketFd()) + ERR_BADCHANNELKEY_CODE + channel.getName() + " " + ERR_BADCHANNELKEY + "\r\n", client.getSocketFd());
+			write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_BADCHANNELKEY_CODE + channel.getName() + " " + ERR_BADCHANNELKEY + "\r\n", client);
 		}
 	}
 	if (channel.getUserLimit() != 0)
@@ -453,7 +474,7 @@ void Handler::authClientToChannel(Channel &channel, std::string &password, Clien
 		if ((channel.getOperators().size() + channel.getUsers().size())  >= channel.getUserLimit())
 		{
 			limitBool = false;
-			sendResponse(prependMyserverName(client.getSocketFd()) + ERR_CHANNELISFULL_CODE + channel.getName() + " " + ERR_CHANNELISFULL + "\r\n", client.getSocketFd());
+			write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_CHANNELISFULL_CODE + channel.getName() + " " + ERR_CHANNELISFULL + "\r\n", client);
 		}
 	}
 	if (channel.getInviteMode() == true)
@@ -463,7 +484,7 @@ void Handler::authClientToChannel(Channel &channel, std::string &password, Clien
 		else
 		{
 			inviteBool = false;
-			sendResponse(prependMyserverName(client.getSocketFd()) + ERR_INVITEONLYCHAN_CODE + channel.getName() + " " + ERR_INVITEONLYCHAN + "\r\n", client.getSocketFd());
+			write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_INVITEONLYCHAN_CODE + channel.getName() + " " + ERR_INVITEONLYCHAN + "\r\n", client);
 		}
 	}
 	if (passBool == true && limitBool == true && inviteBool == true)
@@ -478,8 +499,8 @@ void Handler::createChannel(std::string channelName, Client &client)
 	channels.push_back(channel);
 	client.addChannel(channels.back());
 	sendMsgClientsInChannel(channel, client, "JOIN", "");
-	sendResponse(prependMyserverName(client.getSocketFd()) + RPL_NAMREPLY_CODE + client.getNickname() + " = " + channelName + " :@" + client.getNickname() + "\r\n", client.getSocketFd());
-	sendResponse(prependMyserverName(client.getSocketFd()) + RPL_ENDOFNAMES + client.getNickname() + " " + channelName + " :End of /NAMES list" + "\r\n", client.getSocketFd());
+	write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + RPL_NAMREPLY_CODE + client.getNickname() + " = " + channelName + " :@" + client.getNickname() + "\r\n", client);
+	write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + RPL_ENDOFNAMES + client.getNickname() + " " + channelName + " :End of /NAMES list" + "\r\n", client);
 }
 
 void Handler::addClientToChannel(Channel &channel, Client &client)
@@ -488,10 +509,10 @@ void Handler::addClientToChannel(Channel &channel, Client &client)
 	client.addChannel(channel);
 	sendMsgClientsInChannel(channel, client, "JOIN", "");
 	std::string clientsInChannel = getAllClientsInChannel(channel);
-	sendResponse(prependMyserverName(client.getSocketFd()) + RPL_NAMREPLY_CODE + client.getNickname() + " = " + channel.getName() + " :" + clientsInChannel + "\r\n", client.getSocketFd());
-	sendResponse(prependMyserverName(client.getSocketFd()) + RPL_ENDOFNAMES + client.getNickname() + " " + channel.getName() + " :End of /NAMES list" + "\r\n", client.getSocketFd());
+	write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + RPL_NAMREPLY_CODE + client.getNickname() + " = " + channel.getName() + " :" + clientsInChannel + "\r\n", client);
+	write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + RPL_ENDOFNAMES + client.getNickname() + " " + channel.getName() + " :End of /NAMES list" + "\r\n", client);
 	if (channel.getTopic() != "")
-		sendResponse(prependMyserverName(client.getSocketFd()) + RPL_TOPIC_CODE + channel.getName() + " :" + channel.getTopic() + "\r\n", client.getSocketFd());
+		write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + RPL_TOPIC_CODE + channel.getName() + " :" + channel.getTopic() + "\r\n", client);
 	return;
 }
 
@@ -535,28 +556,28 @@ void Handler::handleTopicCmd(std::vector<std::string> input, Client &client)
 {
 	if (input.size() < 2)
 	{
-		Handler::sendResponse(Handler::prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + "TOPIC " + ERR_NEEDMOREPARAMS + "\r\n", client.getSocketFd());
+		Handler::write2OutboundBuffer(Handler::prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + "TOPIC " + ERR_NEEDMOREPARAMS + "\r\n", client);
 		return;
 	}
 
 	std::list<Channel>::iterator itChannel = findChannel(input[1]);
 	if (itChannel == channels.end()){
-		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOSUCHCHANNEL_CODE + client.getNickname() + " " + input[1] + " " + ERR_NOSUCHCHANNEL + "\r\n", client.getSocketFd());
+		write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_NOSUCHCHANNEL_CODE + client.getNickname() + " " + input[1] + " " + ERR_NOSUCHCHANNEL + "\r\n", client);
 		return;
 	}
 
 	Channel *targetChannel = client.getChannel(input[1]); //RFC does not clarify if the client can get the topic of a channel he is not in. We assume he can´t
 	if (!targetChannel){
-		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOTONCHANNEL_CODE + input[1] + " " + ERR_NOTONCHANNEL + "\r\n", client.getSocketFd());
+		write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_NOTONCHANNEL_CODE + input[1] + " " + ERR_NOTONCHANNEL + "\r\n", client);
 		return;
 	}
 	if (input.size() == 2){
 		if (targetChannel->getTopic() == ""){
-			sendResponse(prependMyserverName(client.getSocketFd()) + RPL_NOTOPIC_CODE + targetChannel->getName() + " " + RPL_NOTOPIC + "\r\n", client.getSocketFd());
+			write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + RPL_NOTOPIC_CODE + targetChannel->getName() + " " + RPL_NOTOPIC + "\r\n", client);
 			return;
 		}
 		else{
-			sendResponse(prependMyserverName(client.getSocketFd()) + RPL_TOPIC_CODE + targetChannel->getName() + " :" + targetChannel->getTopic() + "\r\n", client.getSocketFd());
+			write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + RPL_TOPIC_CODE + targetChannel->getName() + " :" + targetChannel->getTopic() + "\r\n", client);
 			return;
 		}
 	}
@@ -572,7 +593,7 @@ void Handler::handleTopicCmd(std::vector<std::string> input, Client &client)
 		{
 			std::string userNick = client.getNickname();
 			if (!targetChannel->getOperatorClient(userNick)){
-				sendResponse(prependMyserverName(client.getSocketFd()) + ERR_CHANOPRIVSNEEDED_CODE + targetChannel->getName() + " " + ERR_CHANOPRIVSNEEDED + "\r\n", client.getSocketFd());
+				write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_CHANOPRIVSNEEDED_CODE + targetChannel->getName() + " " + ERR_CHANOPRIVSNEEDED + "\r\n", client);
 				return;
 			}
 		}
@@ -605,19 +626,19 @@ void Handler::handleKickCmd(std::vector<std::string> input, Client &client)
 {
 	if (input.size() < 3)
 	{
-		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + client.getNickname() + " KICK " + ERR_NEEDMOREPARAMS + "\r\n", client.getSocketFd());
+		write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + client.getNickname() + " KICK " + ERR_NEEDMOREPARAMS + "\r\n", client);
 		return;
 	}
 	std::list<Channel>::iterator itChannel = findChannel(input[1]);
 	if (itChannel == channels.end()){
-		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOSUCHCHANNEL_CODE + client.getNickname() + " " + input[1] + " " + ERR_NOSUCHCHANNEL + "\r\n", client.getSocketFd());
+		write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_NOSUCHCHANNEL_CODE + client.getNickname() + " " + input[1] + " " + ERR_NOSUCHCHANNEL + "\r\n", client);
 		std::cerr << "KICK ERROR: Channel does not exist" << std::endl;
 		return;
 	}
 
 	Channel *isInChannel = client.getChannel(input[1]);
 	if (!isInChannel){
-		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOTONCHANNEL_CODE + client.getNickname() + " " + input[1] + " " + ERR_NOTONCHANNEL + "\r\n", client.getSocketFd());
+		write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_NOTONCHANNEL_CODE + client.getNickname() + " " + input[1] + " " + ERR_NOTONCHANNEL + "\r\n", client);
 		return;
 	}
 
@@ -629,7 +650,7 @@ void Handler::handleKickCmd(std::vector<std::string> input, Client &client)
 		{
 			Client *clientPtr = itChannel->getClient(*it);
 			if (!clientPtr){
-				sendResponse(prependMyserverName(client.getSocketFd()) + ERR_USERNOTINCHANNEL_CODE + client.getNickname() + " " + *it + " " + input[1] + " " + ERR_USERNOTINCHANNEL + "\r\n", client.getSocketFd());
+				write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_USERNOTINCHANNEL_CODE + client.getNickname() + " " + *it + " " + input[1] + " " + ERR_USERNOTINCHANNEL + "\r\n", client);
 				std::cerr << "KICK ERROR: Target client is not in channel" << std::endl;
 			}
 			else{
@@ -644,7 +665,7 @@ void Handler::handleKickCmd(std::vector<std::string> input, Client &client)
 		}
 	}
 	else
-		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_CHANOPRIVSNEEDED_CODE + client.getNickname() + " " + input[1] + " " + ERR_CHANOPRIVSNEEDED + "\r\n", client.getSocketFd());
+		write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_CHANOPRIVSNEEDED_CODE + client.getNickname() + " " + input[1] + " " + ERR_CHANOPRIVSNEEDED + "\r\n", client);
 	return;
 }
 
@@ -677,20 +698,20 @@ void Handler::handleModeCmd(std::vector<std::string> input, Client &client)
 
 	status = 0;
 	if (input.size() < 2){
-		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + client.getNickname() + " MODE " + ERR_NEEDMOREPARAMS + "\r\n", client.getSocketFd());
+		write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + client.getNickname() + " MODE " + ERR_NEEDMOREPARAMS + "\r\n", client);
 		return;
 	}
 
 	std::list<Channel>::iterator itChannel = findChannel(input[1]);
 	if (itChannel == channels.end())
 	{
-		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOSUCHCHANNEL_CODE + client.getNickname() + " " + input[1] + " " + ERR_NOSUCHCHANNEL + "\r\n", client.getSocketFd());
+		write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_NOSUCHCHANNEL_CODE + client.getNickname() + " " + input[1] + " " + ERR_NOSUCHCHANNEL + "\r\n", client);
 		return;
 	}
 
 	std::string temp = client.getNickname();
 	if (!itChannel->getOperatorClient(temp)){
-		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_CHANOPRIVSNEEDED_CODE + client.getNickname() + " " + input[1] + " " + ERR_CHANOPRIVSNEEDED + "\r\n", client.getSocketFd());
+		write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_CHANOPRIVSNEEDED_CODE + client.getNickname() + " " + input[1] + " " + ERR_CHANOPRIVSNEEDED + "\r\n", client);
 		return;
 	}
 
@@ -735,13 +756,13 @@ void Handler::handleModeCmd(std::vector<std::string> input, Client &client)
 				else{
 					if (*flagIt == "+k" || *flagIt == "-k"){
 						if (itChannel->getPassword() != "")
-							sendResponse(prependMyserverName(client.getSocketFd()) + ERR_KEYSET_CODE + client.getNickname() + " " + itChannel->getName() + " " + ERR_KEYSET + "\r\n", client.getSocketFd());
+							write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_KEYSET_CODE + client.getNickname() + " " + itChannel->getName() + " " + ERR_KEYSET + "\r\n", client);
 					}
 				}
 				argvIt++;
 			}
 			else
-				sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + client.getNickname() + " MODE " + itChannel->getName() + " " + *flagIt + " " + ERR_NEEDMOREPARAMS + "\r\n", client.getSocketFd()); //This message is deprecated and hexchat does not use it, but it is useful for debug purposes
+				write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + client.getNickname() + " MODE " + itChannel->getName() + " " + *flagIt + " " + ERR_NEEDMOREPARAMS + "\r\n", client); //This message is deprecated and hexchat does not use it, but it is useful for debug purposes
 		}
 		flagIt++;
 	}
@@ -764,7 +785,7 @@ bool Handler::parseFlagString(std::vector<std::string> &flagVector, std::string 
 	while (itStr != flags.end())
 	{
 		if (!isCharInStr(ref, *itStr)){
-			sendResponse(prependMyserverName(client.getSocketFd()) + ERR_CHANOPRIVSNEEDED_CODE + client.getNickname() + " " + *itStr + " " + ERR_CHANOPRIVSNEEDED + "\r\n", client.getSocketFd());
+			write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_CHANOPRIVSNEEDED_CODE + client.getNickname() + " " + *itStr + " " + ERR_CHANOPRIVSNEEDED + "\r\n", client);
 			return (false);
 		}
 		if (*itStr == '+')
@@ -813,7 +834,7 @@ void Handler::sendChannelModeIs(Client &client, Channel &channel)
 	}
 	if (channel.getTopicMode() == true)
 		flagStr.append("t");
-	sendResponse(prependMyserverName(client.getSocketFd()) + RPL_CHANNELMODEIS_CODE + client.getNickname() + " " + flagStr + " " + argv + "\r\n", client.getSocketFd());
+	write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + RPL_CHANNELMODEIS_CODE + client.getNickname() + " " + flagStr + " " + argv + "\r\n", client);
 }
 
 bool Handler::isCharInStr(std::string const &ref, const char &c)
@@ -974,13 +995,13 @@ bool Handler::deactivateOperatorMode(Channel &channel, std::string targetClient)
  */
 void	Handler::handleInviteCmd(std::vector<std::string> input, Client &client) {
 	if (input.size() < 3) {
-		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + "INVITE " + ERR_NEEDMOREPARAMS "\r\n", client.getSocketFd());
+		write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + "INVITE " + ERR_NEEDMOREPARAMS "\r\n", client);
 		return ;
 	}
 
 	std::list<Channel>::iterator itChannel = findChannel(input[2]);
 	if (itChannel == channels.end()){
-		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOSUCHCHANNEL_CODE + client.getNickname() + " " + input[1] + " " + ERR_NOSUCHCHANNEL + "\r\n", client.getSocketFd());
+		write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_NOSUCHCHANNEL_CODE + client.getNickname() + " " + input[1] + " " + ERR_NOSUCHCHANNEL + "\r\n", client);
 		return;
 	}
 
@@ -990,26 +1011,26 @@ void	Handler::handleInviteCmd(std::vector<std::string> input, Client &client) {
 	std::list<Client>	*clients	= server->getClientsPtr();//????
 	Channel				*invitedChannel	= client.getChannel(invChannelName);
 	if (!invitedChannel) {
-		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOTONCHANNEL_CODE + invChannelName + " " + ERR_NOTONCHANNEL + "\r\n", client.getSocketFd());
+		write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_NOTONCHANNEL_CODE + invChannelName + " " + ERR_NOTONCHANNEL + "\r\n", client);
 		return ;
 	}
 	if (!invitedChannel->isClientOperator(client)) {
-		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_CHANOPRIVSNEEDED_CODE + client.getNickname() + " " + invChannelName + " " + ERR_CHANOPRIVSNEEDED + "\r\n", client.getSocketFd());
+		write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_CHANOPRIVSNEEDED_CODE + client.getNickname() + " " + invChannelName + " " + ERR_CHANOPRIVSNEEDED + "\r\n", client);
 		return ;
 	}
 	Client	*invitedClient = Client::findClientByName(invitedNickname, *clients);
 	if (!invitedClient) {
-		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOSUCHNICK_CODE + client.getNickname() + " " + invitedNickname + " " + ERR_NOSUCHNICK + "\r\n", client.getSocketFd());
+		write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_NOSUCHNICK_CODE + client.getNickname() + " " + invitedNickname + " " + ERR_NOSUCHNICK + "\r\n", client);
 		return ;
 	}
 	if (invitedClient->isClientInChannel(invChannelName)) {
-		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_USERONCHANNEL_CODE + client.getNickname() + " " + invitedNickname + " " + invChannelName + " " + ERR_USERONCHANNEL + "\r\n", client.getSocketFd());
+		write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_USERONCHANNEL_CODE + client.getNickname() + " " + invitedNickname + " " + invChannelName + " " + ERR_USERONCHANNEL + "\r\n", client);
 		return ;
 	}
 	if (invitedClient->isInvited(*invitedChannel) == false)
 			invitedClient->addInvitedChannel(*invitedChannel);
-	sendResponse(getClientPrefix(client) + " INVITE " + invitedNickname + " :" + invChannelName + "\r\n", invitedClient->getSocketFd());
-	sendResponse(prependMyserverName(client.getSocketFd()) + RPL_INVITING_CODE + invChannelName + " " + invitedNickname + "\r\n", client.getSocketFd());
+	write2OutboundBuffer(getClientPrefix(client) + " INVITE " + invitedNickname + " :" + invChannelName + "\r\n", *invitedClient);
+	write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + RPL_INVITING_CODE + invChannelName + " " + invitedNickname + "\r\n", client);
 	return ;
 }
 
@@ -1057,12 +1078,12 @@ void Handler::sendMsgClientsInChannel(Channel &channel, Client &client, std::str
 	response.append("\r\n");
 
 	while (opIt != operators.end()){
-		sendResponse(response, (*opIt)->getSocketFd());
+		write2OutboundBuffer(response, *(*opIt));
 		opIt++;
 	}
 
 	while (usersIt != users.end()){
-		sendResponse(response, (*usersIt)->getSocketFd());
+		write2OutboundBuffer(response, *(*usersIt));
 		usersIt++;
 	}
 	return;
@@ -1093,12 +1114,12 @@ void Handler::sendMsgClientsInChannelNoPrintCh(Channel &channel, Client &client,
 	response.append("\r\n");
 
 	while (opIt != operators.end()){
-		sendResponse(response, (*opIt)->getSocketFd());
+		write2OutboundBuffer(response, *(*opIt));
 		opIt++;
 	}
 
 	while (usersIt != users.end()){
-		sendResponse(response, (*usersIt)->getSocketFd());
+		write2OutboundBuffer(response, *(*usersIt));
 		usersIt++;
 	}
 	return;
@@ -1129,12 +1150,12 @@ void Handler::sendMsgClientsInChannelKick(Channel &channel, Client &client, std:
 	response.append("\r\n");
 
 	while (opIt != operators.end()){
-		sendResponse(response, (*opIt)->getSocketFd());
+		write2OutboundBuffer(response, *(*opIt));
 		opIt++;
 	}
 
 	while (usersIt != users.end()){
-		sendResponse(response, (*usersIt)->getSocketFd());
+		write2OutboundBuffer(response, *(*usersIt));
 		usersIt++;
 	}
 	return;
@@ -1153,7 +1174,7 @@ void Handler::sendMsgClientsInChannelKick(Channel &channel, Client &client, std:
  */
 void	Handler::handlePartCmd(std::vector<std::string> input, Client &client) {
 	if (input.size() < 2) {
-		sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + "PART " + ERR_NEEDMOREPARAMS + "\r\n", client.getSocketFd());
+		write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + "PART " + ERR_NEEDMOREPARAMS + "\r\n", client);
 		return ;
 	}
 	std::vector<std::string> partChannels;
@@ -1179,26 +1200,26 @@ void	Handler::handlePartCmd(std::vector<std::string> input, Client &client) {
 
 			Channel* channel = client.getChannel(channelName);
 			if (!channel) {
-					sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOSUCHCHANNEL_CODE + channelName + " " + ERR_NOSUCHCHANNEL + "\r\n", client.getSocketFd());
+					write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_NOSUCHCHANNEL_CODE + channelName + " " + ERR_NOSUCHCHANNEL + "\r\n", client);
 					continue;
 			}
 
 			if (!client.isClientInChannel(channelName)) {
-					sendResponse(prependMyserverName(client.getSocketFd()) + ERR_NOTONCHANNEL_CODE + channelName + ERR_NOTONCHANNEL + "\r\n", client.getSocketFd());
+					write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_NOTONCHANNEL_CODE + channelName + ERR_NOTONCHANNEL + "\r\n", client);
 					continue;
 			}
 
 			channel->removeClient(client.getNickname());
 			client.removeChannel(channelName);
 			
-			sendResponse(getClientPrefix(client) + " PART " + channelName + " " + reason + "\r\n", client.getSocketFd());
+			write2OutboundBuffer(getClientPrefix(client) + " PART " + channelName + " " + reason + "\r\n", client);
 
 	std::vector<Client*> users = channel->getUsers();
 			for (std::vector<Client*>::iterator it = users.begin(); it != users.end(); ++it)
-					sendResponse(getClientPrefix(client) + " PART " + channelName + " :" + reason + "\r\n", (*it)->getSocketFd());
+					write2OutboundBuffer(getClientPrefix(client) + " PART " + channelName + " :" + reason + "\r\n", *(*it));
 	std::vector<Client*> operators = channel->getOperators();
 	for (std::vector<Client*>::iterator it = operators.begin(); it != operators.end(); ++it)
-					sendResponse(getClientPrefix(client) + " PART " + channelName + " :" + reason + "\r\n", (*it)->getSocketFd());
+					write2OutboundBuffer(getClientPrefix(client) + " PART " + channelName + " :" + reason + "\r\n", *(*it));
 
 			if (channel->getUsers().empty() && channel->getOperators().empty())
 					deleteChannel(channels, channelName);

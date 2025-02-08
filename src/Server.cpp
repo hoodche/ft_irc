@@ -180,38 +180,27 @@ void Server::readFromFd(int clientConnectedfd)
 /**
  * @brief	sends what is in client outboundBuffer to a connected socket when 
  * 			poll function detects a POLLOUT event in it
- * @param	int clientConnectedfd socket fd where data will be sent
+ * @param	int clientConnectedfd socket fd where data will be sent to
  */
 void Server::sendToFd(int clientConnectedfd)
 {
-	char	buffer[SOCKET_SIZE];
-	ssize_t	bytesRead =recv(clientConnectedfd, buffer, sizeof(buffer) - 1, 0);
-	if (bytesRead < 0)
-		throw std::runtime_error("Server could not read incoming mesage ");
-	else if (bytesRead == 0) { 
-		std::cout << "Client " << clientConnectedfd << " has closed the connection. calling disconnectClient()" << std::endl;
-		disconnectClient(clientConnectedfd);
-		return ;
-	}
-	buffer[bytesRead] = '\0'; 
-
-	if (clientBuffers.find(clientConnectedfd) == clientBuffers.end())
-		clientBuffers[clientConnectedfd] = "";
-	clientBuffers[clientConnectedfd].append(buffer);
-
-	size_t	pos;
-	while (Client::findClientByFd(clientConnectedfd, clients) && (pos = clientBuffers[clientConnectedfd].find("\r\n")) != std::string::npos) {
-		std::string message;
-		if(pos >= 510)
-			message = clientBuffers[clientConnectedfd].substr(0, 510);
-		else
-			message = clientBuffers[clientConnectedfd].substr(0, pos);
-		clientBuffers[clientConnectedfd].erase(0, pos + 2);
-		processMessage(clientConnectedfd, message);
+	Client* recipient	= Client::findClientByFd(clientConnectedfd, clients);
+	ssize_t	bytesSent = send(clientConnectedfd, recipient->outboundBuffer.c_str(), recipient->outboundBuffer.size(), 0);
+	if (bytesSent == -1) {
+		std::cout << "Failed to send response to client" << std::endl;
+	} else
+		std::cout << "Response sent to client: " << recipient->outboundBuffer << std::endl;
+	recipient->outboundBuffer.erase(0, bytesSent);
+	Server* server = const_cast<Server*>(recipient->getServer());
+	for (size_t i = 0; i < server->fds.size(); i++)//TO DO Server()->fds has been made public. must be remade private and its getter created
+	{
+		if (server->fds[i].fd == clientConnectedfd)
+		{
+			server->fds[i].events = POLLIN;//sets the poll fd truct again to POLLIN after sending message
+			break;
+		}
 	}
 }
-
-
 
 void toLowerCase(std::string& str) {
 	for (size_t i = 0; i < str.size(); ++i) {
@@ -245,14 +234,14 @@ void	Server::processMessage(int fd, std::string message) {
 		}
 		if (divMsg[0] == "pass") {
 			if (divMsg.size() != 2) {
-				Handler::sendResponse(Handler::prependMyserverName(client->getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + "PASS " + ERR_NEEDMOREPARAMS + "\r\n", fd);
+				Handler::write2OutboundBuffer(Handler::prependMyserverName(client->getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + "PASS " + ERR_NEEDMOREPARAMS + "\r\n", *client);
 				return ;
 			}
 			if (divMsg[1] == this->password) {
 				client->setVerified(true);
 				std::cout << "Client with fd " << fd << " password correct!" << std::endl;
 			} else {
-				Handler::sendResponse(Handler::prependMyserverName(client->getSocketFd()) + ERR_PASSWDMISMATCH_CODE + ERR_PASSWDMISMATCH + "\r\n", fd);
+				Handler::write2OutboundBuffer(Handler::prependMyserverName(client->getSocketFd()) + ERR_PASSWDMISMATCH_CODE + ERR_PASSWDMISMATCH + "\r\n", *client);
 				return ;
 			}
 		}
@@ -263,10 +252,10 @@ void	Server::processMessage(int fd, std::string message) {
 		if (divMsg[0] == "user" && !client->getNickname().empty())
 			Handler::handleUserCmd(divMsg, *client);
 		if (!client->getUsername().empty() && !client->getNickname().empty())
-			Handler::sendResponse(Handler::prependMyserverName(fd) + RPL_WELCOME_CODE + client->getNickname() + " " + ":Welcome to our IRC network, " + client->getNickname() + "\r\n", fd);
+			Handler::write2OutboundBuffer(Handler::prependMyserverName(fd) + RPL_WELCOME_CODE + client->getNickname() + " " + ":Welcome to our IRC network, " + client->getNickname() + "\r\n", *client);
 	} else if (client->isRegistered() && client->isVerified()) {
 		if ((divMsg[0] == "user" || divMsg[0] == "pass") && client->isRegistered()) {
-			Handler::sendResponse(Handler::prependMyserverName(fd) + ERR_ALREADYREGISTERED_CODE + ERR_ALREADYREGISTERED + "\r\n", fd);
+			Handler::write2OutboundBuffer(Handler::prependMyserverName(fd) + ERR_ALREADYREGISTERED_CODE + ERR_ALREADYREGISTERED + "\r\n", *client);
 			return ;
 		}
 		// Forward command to handler

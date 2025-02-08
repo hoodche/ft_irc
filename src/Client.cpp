@@ -3,7 +3,8 @@
 
 Client::Client(int receivedFd, const Server &newServer, std::string ip):
 	fd(receivedFd), verified(false) ,registered(false),
-	 nick(""), username(""), ipAddr(ip), connectedToServer(&newServer) {}
+	 nick(""), username(""), ipAddr(ip), connectedToServer(&newServer),
+	 outboundBuffer("") {}
 
 Client::~Client(void) {}
 

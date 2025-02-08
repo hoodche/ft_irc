@@ -135,7 +135,7 @@ class Handler {
 
 		// Utils
 		static std::string prependMyserverName(int clientFd);
-		static void sendResponse(std::string message, int clientFd);
+		static void write2OutboundBuffer(std::string message, Client &client);
 
 		// Methods for Auth Functions
 		static void handleUserCmd(std::vector<std::string> input, Client &client);
