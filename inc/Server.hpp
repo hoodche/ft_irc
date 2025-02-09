@@ -21,11 +21,12 @@ class Server
 		std::string password;
 		int listenSocketFd;
 		struct sockaddr_in serverAddress, clientAddress;
-		std::vector<struct pollfd> fds;
 		struct pollfd connectedSocket;
-		std::map<int, std::string> clientBuffers;
+		std::map<int, std::string> clientInboundBuffers;
+		std::vector<struct pollfd> fds;
 
 	public:
+	
 		static bool signalReceived;
 		Server();
 		std::list<Client> getClients(void) const;
@@ -36,11 +37,13 @@ class Server
 		static void signalHandler(int signum);
 		void acceptClient();
 		void readFromFd(int fd);
+		void sendToFd(int fd);
 		void printClients(void) const;
 		static std::string trimMessage(std::string str);
 		void disconnectClient(int clientConnectedfd);
 		void processMessage(int fd, std::string message);
 		std::vector<std::string> splitCmd(std::string trimmedMsg);
+		std::vector<struct pollfd>& getFds(void);
 };
 
 #endif

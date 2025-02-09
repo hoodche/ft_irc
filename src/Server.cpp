@@ -107,6 +107,8 @@ void Server::init(int port, std::string password)
 				else
 					this->readFromFd(fds[i].fd);
 			}
+			else if (fds[i].revents & POLLOUT)
+					this->sendToFd(fds[i].fd);
 		}
 	}
 	this->closeFds();
@@ -158,19 +160,46 @@ void Server::readFromFd(int clientConnectedfd)
 	}
 	buffer[bytesRead] = '\0'; 
 
-	if (clientBuffers.find(clientConnectedfd) == clientBuffers.end())
-		clientBuffers[clientConnectedfd] = "";
-	clientBuffers[clientConnectedfd].append(buffer);
+	if (clientInboundBuffers.find(clientConnectedfd) == clientInboundBuffers.end())
+		clientInboundBuffers[clientConnectedfd] = "";
+	clientInboundBuffers[clientConnectedfd].append(buffer);
 
 	size_t	pos;
-	while (Client::findClientByFd(clientConnectedfd, clients) && (pos = clientBuffers[clientConnectedfd].find("\r\n")) != std::string::npos) {
+	while (Client::findClientByFd(clientConnectedfd, clients) && (pos = clientInboundBuffers[clientConnectedfd].find("\r\n")) != std::string::npos) {
 		std::string message;
 		if(pos >= 510)
-			message = clientBuffers[clientConnectedfd].substr(0, 510);
+			message = clientInboundBuffers[clientConnectedfd].substr(0, 510);
 		else
-			message = clientBuffers[clientConnectedfd].substr(0, pos);
-		clientBuffers[clientConnectedfd].erase(0, pos + 2);
+			message = clientInboundBuffers[clientConnectedfd].substr(0, pos);
+		clientInboundBuffers[clientConnectedfd].erase(0, pos + 2);
 		processMessage(clientConnectedfd, message);
+	}
+}
+
+
+/**
+ * @brief	sends what is in client outboundBuffer to a connected socket when 
+ * 			poll function detects a POLLOUT event in it
+ * @param	int clientConnectedfd socket fd where data will be sent to
+ */
+void Server::sendToFd(int clientConnectedfd)
+{
+	Client* recipient	= Client::findClientByFd(clientConnectedfd, clients);
+	ssize_t	bytesSent = send(clientConnectedfd, recipient->getOutboundBuffer().c_str(), recipient->getOutboundBuffer().size(), 0);
+	//ssize_t	bytesSent = send(clientConnectedfd, recipient->outboundBuffer.c_str(), recipient->outboundBuffer.size(), 0);
+	if (bytesSent == -1) {
+		std::cout << "Failed to send response to client" << std::endl;
+	} else
+		std::cout << "Response sent to client: " << recipient->getOutboundBuffer() << std::endl;
+	recipient->getOutboundBuffer().erase(0, bytesSent);
+	Server* server = const_cast<Server*>(recipient->getServer());
+	for (size_t i = 0; i < server->fds.size(); i++)
+	{
+		if (server->fds[i].fd == clientConnectedfd)
+		{
+			server->fds[i].events = POLLIN;//sets the poll fd truct again to POLLIN after sending message
+			break;
+		}
 	}
 }
 
@@ -206,14 +235,14 @@ void	Server::processMessage(int fd, std::string message) {
 		}
 		if (divMsg[0] == "pass") {
 			if (divMsg.size() != 2) {
-				Handler::sendResponse(Handler::prependMyserverName(client->getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + "PASS " + ERR_NEEDMOREPARAMS + "\r\n", fd);
+				Handler::write2OutboundBuffer(Handler::prependMyserverName(client->getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + "PASS " + ERR_NEEDMOREPARAMS + "\r\n", *client);
 				return ;
 			}
 			if (divMsg[1] == this->password) {
 				client->setVerified(true);
 				std::cout << "Client with fd " << fd << " password correct!" << std::endl;
 			} else {
-				Handler::sendResponse(Handler::prependMyserverName(client->getSocketFd()) + ERR_PASSWDMISMATCH_CODE + ERR_PASSWDMISMATCH + "\r\n", fd);
+				Handler::write2OutboundBuffer(Handler::prependMyserverName(client->getSocketFd()) + ERR_PASSWDMISMATCH_CODE + ERR_PASSWDMISMATCH + "\r\n", *client);
 				return ;
 			}
 		}
@@ -224,10 +253,10 @@ void	Server::processMessage(int fd, std::string message) {
 		if (divMsg[0] == "user" && !client->getNickname().empty())
 			Handler::handleUserCmd(divMsg, *client);
 		if (!client->getUsername().empty() && !client->getNickname().empty())
-			Handler::sendResponse(Handler::prependMyserverName(fd) + RPL_WELCOME_CODE + client->getNickname() + " " + ":Welcome to our IRC network, " + client->getNickname() + "\r\n", fd);
+			Handler::write2OutboundBuffer(Handler::prependMyserverName(fd) + RPL_WELCOME_CODE + client->getNickname() + " " + ":Welcome to our IRC network, " + client->getNickname() + "\r\n", *client);
 	} else if (client->isRegistered() && client->isVerified()) {
 		if ((divMsg[0] == "user" || divMsg[0] == "pass") && client->isRegistered()) {
-			Handler::sendResponse(Handler::prependMyserverName(fd) + ERR_ALREADYREGISTERED_CODE + ERR_ALREADYREGISTERED + "\r\n", fd);
+			Handler::write2OutboundBuffer(Handler::prependMyserverName(fd) + ERR_ALREADYREGISTERED_CODE + ERR_ALREADYREGISTERED + "\r\n", *client);
 			return ;
 		}
 		// Forward command to handler
@@ -256,7 +285,7 @@ void Server::printClients() const
 	std::cout << "Currently connected clients and saved buffer:" << std::endl;
 
 	std::map<int, std::string>::const_iterator it;
-	for (it = clientBuffers.begin(); it != clientBuffers.end(); ++it) {
+	for (it = clientInboundBuffers.begin(); it != clientInboundBuffers.end(); ++it) {
 		int clientFd = it->first;  // The client socket FD
 		const std::string& buffer = it->second;  // The client's accumulated buffer
 
@@ -299,7 +328,7 @@ void Server::disconnectClient(int clientConnectedfd)
 			break;
 		}
 	}
-	clientBuffers.erase(clientConnectedfd);
+	clientInboundBuffers.erase(clientConnectedfd);
 	std::cout << "Client FD: " << clientConnectedfd << " has been disconnected" << std::endl;
 }
 
@@ -317,3 +346,7 @@ std::string Server::trimMessage(std::string str) {
     }
 }
 
+std::vector<struct pollfd>& Server::getFds(void)
+{
+	return this->fds;
+}

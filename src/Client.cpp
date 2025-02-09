@@ -3,7 +3,8 @@
 
 Client::Client(int receivedFd, const Server &newServer, std::string ip):
 	fd(receivedFd), verified(false) ,registered(false),
-	 nick(""), username(""), ipAddr(ip), connectedToServer(&newServer) {}
+	 nick(""), username(""), ipAddr(ip), connectedToServer(&newServer),
+	 outboundBuffer("") {}
 
 Client::~Client(void) {}
 
@@ -30,6 +31,11 @@ std::string	Client::getRealname(void) const {
 std::vector<Channel *> &Client::getClientChannels(void) {
 	return this->clientChannels;
 }
+
+std::string	&Client::getOutboundBuffer(void) {
+	return this->outboundBuffer;
+}
+
 
 bool Client::isVerified(void) const {
 	return this->verified;
@@ -187,3 +193,5 @@ void	Client::removeChannel(std::string &channelStr)
 std::string	Client::getIpAddr(void) const{
 	return ipAddr;
 }
+
+
