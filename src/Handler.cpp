@@ -310,8 +310,8 @@ std::string Handler::prependMyserverName(int clientFd) {
  * @param  Client *client the server wants to respond to
  */
 void Handler::write2OutboundBuffer(std::string message, Client &client) {
-	//std::cerr << "called write2OutboundBuffer " << message << client.getSocketFd() << std::endl;
-	client.outboundBuffer.append(message);//TO DO client.outboundBuffer must be made private, a getter must be created
+	client.getOutboundBuffer().append(message);
+	//client.outboundBuffer.append(message);//TO DO client.outboundBuffer must be made private, a getter must be created
 	Server* server = const_cast<Server*>(client.getServer());
 	for (size_t i = 0; i < server->fds.size(); i++)//TO DO Server()->fds has been made public. must be remade private and its getter created
 	{

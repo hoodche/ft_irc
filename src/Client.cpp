@@ -32,6 +32,11 @@ std::vector<Channel *> &Client::getClientChannels(void) {
 	return this->clientChannels;
 }
 
+std::string	&Client::getOutboundBuffer(void) {
+	return this->outboundBuffer;
+}
+
+
 bool Client::isVerified(void) const {
 	return this->verified;
 }
@@ -188,3 +193,5 @@ void	Client::removeChannel(std::string &channelStr)
 std::string	Client::getIpAddr(void) const{
 	return ipAddr;
 }
+
+

@@ -185,14 +185,15 @@ void Server::readFromFd(int clientConnectedfd)
 void Server::sendToFd(int clientConnectedfd)
 {
 	Client* recipient	= Client::findClientByFd(clientConnectedfd, clients);
-	ssize_t	bytesSent = send(clientConnectedfd, recipient->outboundBuffer.c_str(), recipient->outboundBuffer.size(), 0);
+	ssize_t	bytesSent = send(clientConnectedfd, recipient->getOutboundBuffer().c_str(), recipient->getOutboundBuffer().size(), 0);
+	//ssize_t	bytesSent = send(clientConnectedfd, recipient->outboundBuffer.c_str(), recipient->outboundBuffer.size(), 0);
 	if (bytesSent == -1) {
 		std::cout << "Failed to send response to client" << std::endl;
 	} else
-		std::cout << "Response sent to client: " << recipient->outboundBuffer << std::endl;
-	recipient->outboundBuffer.erase(0, bytesSent);
+		std::cout << "Response sent to client: " << recipient->getOutboundBuffer() << std::endl;
+	recipient->getOutboundBuffer().erase(0, bytesSent);
 	Server* server = const_cast<Server*>(recipient->getServer());
-	for (size_t i = 0; i < server->fds.size(); i++)//TO DO Server()->fds has been made public. must be remade private and its getter created
+	for (size_t i = 0; i < server->fds.size(); i++)
 	{
 		if (server->fds[i].fd == clientConnectedfd)
 		{

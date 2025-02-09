@@ -21,10 +21,11 @@ class Client {
 		std::vector<Channel *>	clientChannels;
 		std::string				ipAddr;
 		const Server			*connectedToServer;
+		std::string				outboundBuffer;
 
 
 	public:
-		std::string				outboundBuffer;
+		
 		Client(int receivedFd, const Server &newServer, std::string ip);
 		~Client(void);
 
@@ -40,6 +41,7 @@ class Client {
 		bool						isRegistered(void) const;
 		bool						isInvited(Channel &channel) const;
 		Channel	*					getChannel(std::string &channelStr);
+		std::string					&getOutboundBuffer(void) ;
 		// Setters
 		void						setNickname(std::string nickname);
 		void						setUsername(std::string user);
