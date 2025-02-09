@@ -311,20 +311,15 @@ std::string Handler::prependMyserverName(int clientFd) {
  */
 void Handler::write2OutboundBuffer(std::string message, Client &client) {
 	client.getOutboundBuffer().append(message);
-	//client.outboundBuffer.append(message);//TO DO client.outboundBuffer must be made private, a getter must be created
 	Server* server = const_cast<Server*>(client.getServer());
-	for (size_t i = 0; i < server->fds.size(); i++)//TO DO Server()->fds has been made public. must be remade private and its getter created
+	for (size_t i = 0; i < server->getFds().size(); i++)
 	{
-		if (server->fds[i].fd == client.getSocketFd())
+		if (server->getFds()[i].fd == client.getSocketFd())
 		{
-			server->fds[i].events = POLLOUT;
+			server->getFds()[i].events = POLLOUT;
 			break;
 		}
 	}
-
-	//client.getServer()->updatePollfd(client.getSocketFd(), POLLOUT);
-	//std::cerr << "called write2OutboundBuffer. client.outboundBuffer: " << client.outboundBuffer << std::endl;
-
 }
 
 /**

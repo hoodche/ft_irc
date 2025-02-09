@@ -346,3 +346,7 @@ std::string Server::trimMessage(std::string str) {
     }
 }
 
+std::vector<struct pollfd>& Server::getFds(void)
+{
+	return this->fds;
+}
