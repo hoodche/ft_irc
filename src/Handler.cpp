@@ -685,8 +685,6 @@ std::string Handler::createKickMessage(std::vector<std::string> &input)
  */
 void Handler::handleModeCmd(std::vector<std::string> input, Client &client)
 {
-	(void)client;
-
 	std::vector<std::string>	flagVector;
 	std::vector<std::string>	argvVector;
 	int							status;	
@@ -703,18 +701,17 @@ void Handler::handleModeCmd(std::vector<std::string> input, Client &client)
 		write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_NOSUCHCHANNEL_CODE + client.getNickname() + " " + input[1] + " " + ERR_NOSUCHCHANNEL + "\r\n", client);
 		return;
 	}
+	
+	if (input.size() == 2){
+		sendChannelModeIs(client, (*itChannel));
+		return;
+	}
 
 	std::string temp = client.getNickname();
 	if (!itChannel->getOperatorClient(temp)){
 		write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_CHANOPRIVSNEEDED_CODE + client.getNickname() + " " + input[1] + " " + ERR_CHANOPRIVSNEEDED + "\r\n", client);
 		return;
 	}
-
-	if (input.size() == 2){
-		sendChannelModeIs(client, (*itChannel));
-		return;
-	}
-
 	if (parseFlagString(flagVector, input[2], client) == false){
 		return;
 	}
@@ -780,7 +777,7 @@ bool Handler::parseFlagString(std::vector<std::string> &flagVector, std::string 
 	while (itStr != flags.end())
 	{
 		if (!isCharInStr(ref, *itStr)){
-			write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_CHANOPRIVSNEEDED_CODE + client.getNickname() + " " + *itStr + " " + ERR_CHANOPRIVSNEEDED + "\r\n", client);
+			write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_UNKNOWNMODE_CODE + client.getNickname() + " " + *itStr + " " + ERR_UNKNOWNMODE + "\r\n", client);
 			return (false);
 		}
 		if (*itStr == '+')
@@ -810,7 +807,7 @@ int		Handler::getStatusSymbol(std::string str)
 
 void Handler::sendChannelModeIs(Client &client, Channel &channel)
 {
-	std::string flagStr("+"); //This init is correct. If no modes are set, it only sends "+"
+	std::string flagStr("+");
 
 	std::string argv;
 	if (channel.getInviteMode() == true)
@@ -829,7 +826,7 @@ void Handler::sendChannelModeIs(Client &client, Channel &channel)
 	}
 	if (channel.getTopicMode() == true)
 		flagStr.append("t");
-	write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + RPL_CHANNELMODEIS_CODE + client.getNickname() + " " + channel.getName() + " " + flagStr + " " + argv + "\r\n", client); //DESDE AQUI, CREO QUE NO ESTÁ BIEN
+	write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + RPL_CHANNELMODEIS_CODE + client.getNickname() + " " + channel.getName() + " " + flagStr + " " + argv + "\r\n", client);
 }
 
 bool Handler::isCharInStr(std::string const &ref, const char &c)

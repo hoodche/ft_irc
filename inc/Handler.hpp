@@ -58,7 +58,7 @@
 # define ERR_KEYSET					":Channel key already set"
 # define ERR_CHANNELISFULL_CODE		"471 "
 # define ERR_CHANNELISFULL			":Cannot join channel (+l)"
-# define ERR_UNKNOWNMODE_CODE		":472 "
+# define ERR_UNKNOWNMODE_CODE		"472 "
 # define ERR_UNKNOWNMODE			":is unknown mode char to me"
 # define ERR_INVITEONLYCHAN_CODE	"473 "
 # define ERR_INVITEONLYCHAN			":Cannot join channel (+i)"
