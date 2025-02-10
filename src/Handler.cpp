@@ -568,7 +568,7 @@ void Handler::handleTopicCmd(std::vector<std::string> input, Client &client)
 	}
 	if (input.size() == 2){
 		if (targetChannel->getTopic() == ""){
-			write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + RPL_NOTOPIC_CODE + targetChannel->getName() + " " + RPL_NOTOPIC + "\r\n", client);
+			write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + RPL_NOTOPIC_CODE + " " + client.getNickname() + " " + targetChannel->getName() + " " + RPL_NOTOPIC + "\r\n", client);
 			return;
 		}
 		else{
