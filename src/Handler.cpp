@@ -79,11 +79,19 @@ void Handler::handleUserCmd(std::vector<std::string> input, Client &client) {
 	std::string hostname = input[2];
 	std::string servername = input[3];
 	std::string realname = "";
-	int	vecSize	= input.size();
-	for (int i = 4; i < vecSize; i++) {
-		realname += input[i];
-		if (i < vecSize - 1)
-			realname += " ";
+	if (input.size() >= 5)
+	{
+		if (input[4][0] != ':')
+			realname = std::string(input[4]);
+		else{
+			int	vecSize	= input.size();
+			for (int i = 4; i < vecSize; i++) {
+				realname += input[i];
+				if (i < vecSize - 1)
+					realname += " ";
+			}
+			realname = realname.substr(1);
+		}
 	}
 	if (username.empty() || username.length() < 1 || username.length() > USERLEN) {
 		write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + client.getNickname() + " USER " + ERR_NEEDMOREPARAMS "\r\n", client);
@@ -97,11 +105,6 @@ void Handler::handleUserCmd(std::vector<std::string> input, Client &client) {
 		write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + client.getNickname() + " USER " + ERR_NEEDMOREPARAMS "\r\n", client);
 		return ;
 	}
-	if (realname[0] != ':') {
-		write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + client.getNickname() + " USER " + ERR_NEEDMOREPARAMS "\r\n", client);
-		return ;
-	}
-	realname = realname.substr(1);
 	client.setUsername(username);
 	client.setRealname(realname);
 	client.setRegistered(true);
