@@ -572,7 +572,7 @@ void Handler::handleTopicCmd(std::vector<std::string> input, Client &client)
 			return;
 		}
 		else{
-			write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + RPL_TOPIC_CODE + targetChannel->getName() + " :" + targetChannel->getTopic() + "\r\n", client);
+			write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + RPL_TOPIC_CODE + " " + client.getNickname() + " " + targetChannel->getName() + " :" + targetChannel->getTopic() + "\r\n", client);
 			return;
 		}
 	}
