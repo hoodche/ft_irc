@@ -62,7 +62,7 @@ void Handler::parseCommand(std::vector<std::string> input, Client &client) {
 	if (cmdMap.find(command) != cmdMap.end()) {
 		cmdMap[command](input, client);
 	} else
-		write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_UNKNOWNCOMMAND_CODE + command + " " + ERR_UNKNOWNCOMMAND "\r\n", client);
+		write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_UNKNOWNCOMMAND_CODE + client.getNickname() + " " + command + " " + ERR_UNKNOWNCOMMAND "\r\n", client);
 }
 
 /**
@@ -72,8 +72,8 @@ void Handler::parseCommand(std::vector<std::string> input, Client &client) {
  */
 void Handler::handleUserCmd(std::vector<std::string> input, Client &client) {
 	if (input.size() < 4) {
-		write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + "USER " + ERR_NEEDMOREPARAMS "\r\n", client);
-		return ;
+		write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + client.getNickname() + " USER " + ERR_NEEDMOREPARAMS "\r\n", client);
+		return  ;
 	}
 	std::string	username = input[1];
 	std::string hostname = input[2];
@@ -86,19 +86,19 @@ void Handler::handleUserCmd(std::vector<std::string> input, Client &client) {
 			realname += " ";
 	}
 	if (username.empty() || username.length() < 1 || username.length() > USERLEN) {
-		write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + "USER " + ERR_NEEDMOREPARAMS "\r\n", client);
+		write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + client.getNickname() + " USER " + ERR_NEEDMOREPARAMS "\r\n", client);
 		return ;
 	}
 	if (hostname != "0") {
-		write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + "USER " + ERR_NEEDMOREPARAMS "\r\n", client);
+		write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + client.getNickname() + " USER " + ERR_NEEDMOREPARAMS "\r\n", client);
 		return ;
 	}
 	if (servername != "*") {
-		write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + "USER " + ERR_NEEDMOREPARAMS "\r\n", client);
+		write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + client.getNickname() + " USER " + ERR_NEEDMOREPARAMS "\r\n", client);
 		return ;
 	}
 	if (realname[0] != ':') {
-		write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + "USER " + ERR_NEEDMOREPARAMS "\r\n", client);
+		write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_NEEDMOREPARAMS_CODE + client.getNickname() + " USER " + ERR_NEEDMOREPARAMS "\r\n", client);
 		return ;
 	}
 	realname = realname.substr(1);
@@ -176,11 +176,11 @@ void Handler::handlePrivmsgCmd(std::vector<std::string> input , Client &client) 
 		input.erase(input.begin());
 
 	if (input.size() == 1 || input[1][0] == ':'){
-		write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_NORECIPIENT_CODE + ERR_NORECIPIENT + "\r\n", client);
+		write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_NORECIPIENT_CODE + client.getNickname() + " " + ERR_NORECIPIENT + "\r\n", client);
 		return ;
 	}
 	if (input.size() == 2){
-		write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_NOTEXTTOSEND_CODE + ERR_NOTEXTTOSEND + "\r\n", client);
+		write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_NOTEXTTOSEND_CODE + client.getNickname() + " " + ERR_NOTEXTTOSEND + "\r\n", client);
 		return ;
 	}
 	if (input[2][0] != ':')
@@ -807,7 +807,7 @@ int		Handler::getStatusSymbol(std::string str)
 
 void Handler::sendChannelModeIs(Client &client, Channel &channel)
 {
-	std::string flagStr("+");
+	std::string flagStr("+"); //This init is correct. If no modes are set, it only sends "+"
 
 	std::string argv;
 	if (channel.getInviteMode() == true)
