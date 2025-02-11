@@ -125,6 +125,8 @@ void Handler::handleNickCmd(std::vector<std::string> input , Client &client) {
 		write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_ERRONEUSNICKNAME_CODE + ERR_ERRONEUSNICKNAME + "\r\n", client);
 		return ;
 	}
+	if (input[1].size() > NICKLEN)
+		input[1] = input[1].substr(0, NICKLEN);
 	if (isNicknameInUse(input[1], &client))
 	{
 		write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + ERR_NICKNAMEINUSE_CODE + "* " + input[1] + " " + ERR_NICKNAMEINUSE + "\r\n", client);
@@ -140,7 +142,7 @@ void Handler::handleNickCmd(std::vector<std::string> input , Client &client) {
  */
 bool Handler::isNicknameValid(std::string nickname)
 {
-	if (nickname.empty() || nickname.length() > 9)
+	if (nickname.empty())
 		return false;
 	char c = nickname[0];
 	if (!(std::isalpha(c) || c == '_' || c == '[' || c == ']' || c == '\\' || c == '{' || c == '}' || c == '|'))
