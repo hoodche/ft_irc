@@ -165,9 +165,7 @@ bool Handler::isNicknameInUse(std::string nickname, Client *client)
 
 	toLowerCase(nickname);
 	for (std::list<Client>::const_iterator it = clients.begin(); it != clients.end(); ++it) {
-		newNick = it->getNickname();
-		toLowerCase(newNick);
-		if (newNick == nickname)
+		if  (it->getNickname() == nickname)
 			return true;
 	}
 	return false;
