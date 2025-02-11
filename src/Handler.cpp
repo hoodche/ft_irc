@@ -201,7 +201,6 @@ void Handler::handlePrivmsgCmd(std::vector<std::string> input , Client &client) 
 		const Server* server = client.getServer();
 		std::list<Client> clients = server->getClients();
 		Client* foundClient = Client::findClientByName(input[1], clients);
-		//int targetFd = foundClient->getSocketFd();
 		std::vector<std::string> subVector(input.begin() + 2, input.end());
 		std::string outboundMessage = getClientPrefix(client) + " PRIVMSG " + input[1] + " " + vectorToString(subVector, ' ') + "\r\n";
 		write2OutboundBuffer(outboundMessage, *foundClient);
@@ -493,6 +492,8 @@ void Handler::createChannel(std::string channelName, Client &client)
 {
 	Channel channel(client);
 
+	if (channelName.size() > CHANNELLEN)
+		channelName = channelName.substr(0, CHANNELLEN);
 	channel.setName(channelName);
 	channels.push_back(channel);
 	client.addChannel(channels.back());
