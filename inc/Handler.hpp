@@ -12,8 +12,9 @@
 # include <map>
 # include <list>
 
-# define USERLEN	12
-# define CHANNELLEN	32
+# define USERLEN					12
+# define CHANNELLEN					32
+# define NICKLEN					9
 # define RPL_WELCOME_CODE			"001 "
 
 
