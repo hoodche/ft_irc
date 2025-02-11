@@ -46,4 +46,6 @@ class Server
 		std::vector<struct pollfd>& getFds(void);
 };
 
+void toLowerCase(std::string& str);
+
 #endif
