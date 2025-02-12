@@ -15,8 +15,9 @@
 # define USERLEN					12
 # define CHANNELLEN					32
 # define NICKLEN					9
-# define RPL_WELCOME_CODE			"001 "
+# define MAX_NAME_USERS				2	
 
+# define RPL_WELCOME_CODE			"001 "
 
 # define RPL_CHANNELMODEIS_CODE		"324 "
 # define RPL_NOTOPIC_CODE			"331 "
@@ -106,8 +107,8 @@ class Handler {
 		static int									getStatusSymbol(std::string str);
 		static bool									parseFlagString(std::vector<std::string> &flagVector, std::string flags, Client &client);
 		static void									appendToFlagStr(int &status, int &newStatus, std::string &flag, std::string &flagSendStr);
-		static std::string							getAllClientsInChannel(Channel &channel);
 		static void									leaveAllChannels(Client &client);
+		static void									sendNames(Channel &channel, Client &client);
 		
 	//it is common to all the instances
 

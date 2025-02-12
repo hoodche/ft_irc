@@ -509,39 +509,56 @@ void Handler::addClientToChannel(Channel &channel, Client &client)
 	channel.addUser(client);
 	client.addChannel(channel);
 	sendMsgClientsInChannel(channel, client, "JOIN", "");
-	std::string clientsInChannel = getAllClientsInChannel(channel);
-	write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + RPL_NAMREPLY_CODE + client.getNickname() + " = " + channel.getName() + " :" + clientsInChannel + "\r\n", client);
-	write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + RPL_ENDOFNAMES + client.getNickname() + " " + channel.getName() + " :End of /NAMES list" + "\r\n", client);
+	sendNames(channel, client);
 	if (channel.getTopic() != "")
 		write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + RPL_TOPIC_CODE + client.getNickname() + " " + channel.getName() + " :" + channel.getTopic() + "\r\n", client);
 	return;
 }
 
-std::string Handler::getAllClientsInChannel(Channel &channel)
+void Handler::sendNames(Channel &channel, Client &client)
 {
 	std::string clientStr;
 	std::vector<Client *> operators = channel.getOperators();
 	std::vector<Client *> users = channel.getUsers();
 	std::vector<Client *>::iterator itClients = operators.begin();
+	size_t counter = 0;
+
 	while (itClients != operators.end())
 	{
 		clientStr.append("@" + (*itClients)->getNickname());
-		if (itClients + 1 != operators.end())
+		if (itClients + 1 != operators.end() && counter < MAX_NAME_USERS - 1)
 			clientStr.append(" ");
 		itClients++;
+		counter++;
+		if (counter == MAX_NAME_USERS)
+		{
+			write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + RPL_NAMREPLY_CODE + client.getNickname() + " = " + channel.getName() + " :" + clientStr + "\r\n", client);
+			clientStr.clear();
+			counter = 0;
+		}
 	}
-	if (!users.empty() && !operators.empty())
+	if (!users.empty() && !clientStr.empty())
 		clientStr.append(" ");
 	itClients = users.begin();
 	while (itClients != users.end())
 	{
 		clientStr.append((*itClients)->getNickname());
-		if (itClients + 1 != users.end())
+		if (itClients + 1 != users.end() && counter < MAX_NAME_USERS - 1)
 			clientStr.append(" ");
 		itClients++;
+		counter++;
+		if (counter == MAX_NAME_USERS)
+		{
+			write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + RPL_NAMREPLY_CODE + client.getNickname() + " = " + channel.getName() + " :" + clientStr + "\r\n", client);
+			clientStr.clear();
+			counter = 0;
+		}
 	}
-	return (clientStr);
+	if (!clientStr.empty())
+		write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + RPL_NAMREPLY_CODE + client.getNickname() + " = " + channel.getName() + " :" + clientStr + "\r\n", client);
+	write2OutboundBuffer(prependMyserverName(client.getSocketFd()) + RPL_ENDOFNAMES + client.getNickname() + " " + channel.getName() + " :End of /NAMES list" + "\r\n", client);
 }
+
 /**
  * @attention !!
  * End of handleJoinCmd auxiliary functions
