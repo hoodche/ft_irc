@@ -184,23 +184,29 @@ void Server::readFromFd(int clientConnectedfd)
  */
 void Server::sendToFd(int clientConnectedfd)
 {
+	bool		shouldDisconnectClient = false;
 	Client* recipient	= Client::findClientByFd(clientConnectedfd, clients);
 	ssize_t	bytesSent = send(clientConnectedfd, recipient->getOutboundBuffer().c_str(), recipient->getOutboundBuffer().size(), 0);
 	//ssize_t	bytesSent = send(clientConnectedfd, recipient->outboundBuffer.c_str(), recipient->outboundBuffer.size(), 0);
 	if (bytesSent == -1) {
 		std::cout << "Failed to send response to client" << std::endl;
-	} else
+	} else{
 		std::cout << "Response sent to client: " << recipient->getOutboundBuffer() << std::endl;
+		if (recipient->getOutboundBuffer().compare(0, 5, "ERROR") == 0)//if the message sent is an error message (which is the response to a client's QUIT command), disconnect client
+			shouldDisconnectClient = true;
+	}
 	recipient->getOutboundBuffer().erase(0, bytesSent);
 	Server* server = const_cast<Server*>(recipient->getServer());
 	for (size_t i = 0; i < server->fds.size(); i++)
 	{
 		if (server->fds[i].fd == clientConnectedfd)
 		{
-			server->fds[i].events = POLLIN;//sets the poll fd truct again to POLLIN after sending message
+			server->fds[i].events = POLLIN;//sets the poll fd struct again to POLLIN after sending message
 			break;
 		}
 	}
+	if(shouldDisconnectClient)
+		disconnectClient(clientConnectedfd);
 }
 
 void toLowerCase(std::string& str) {

@@ -278,8 +278,8 @@ void Handler::handleQuitCmd(std::vector<std::string> input , Client &client) {
 		}
 		itChannels++;
 	}
-	Server* server = const_cast<Server*>(client.getServer());
-	server->disconnectClient(client.getSocketFd());
+	//Server* server = const_cast<Server*>(client.getServer());
+	//server->disconnectClient(client.getSocketFd()); //moved inside sendToFd() function so that server can send the ERROR response to the leaving client before disconnecting it
 }
 
 /**
