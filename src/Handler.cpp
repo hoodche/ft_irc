@@ -205,6 +205,7 @@ void Handler::handlePrivmsgCmd(std::vector<std::string> input , Client &client) 
 		Client* foundClient = Client::findClientByName(input[1], clients);
 		std::vector<std::string> subVector(input.begin() + 2, input.end());
 		std::string outboundMessage = getClientPrefix(client) + " PRIVMSG " + input[1] + " " + vectorToString(subVector, ' ') + "\r\n";
+		std::cout << "Found Nickname: " << foundClient->getNickname() << std::endl;
 		write2OutboundBuffer(outboundMessage, *foundClient);
 		return;
 	}
@@ -314,7 +315,10 @@ std::string Handler::prependMyserverName(int clientFd) {
  * @param  Client *client the server wants to respond to
  */
 void Handler::write2OutboundBuffer(std::string message, Client &client) {
+	std::cout << "entra" << std::endl;
+	std::cout << "message: " << message << std::endl;
 	client.getOutboundBuffer().append(message);
+	std::cout << "outboundMessage: " << client.getOutboundBuffer() << std::endl;
 	Server* server = const_cast<Server*>(client.getServer());
 	for (size_t i = 0; i < server->getFds().size(); i++)
 	{

@@ -60,6 +60,16 @@ void Channel::setTopic(std::string const channelTopic, Client &client)
 		}
 		it++;
 	}
+	it = users.begin();
+	while(it != users.end())
+	{
+		if ((*it)->getNickname() == client.getNickname())
+		{
+			this->topic = channelTopic;
+			return;
+		}
+		it++;
+	}
 	return;
 }
 
